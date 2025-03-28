@@ -3,26 +3,7 @@ import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
 
-// Get Supabase credentials from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Debug: Log environment variables (redacted for security)
-console.log("Supabase URL:", supabaseUrl ? " Found" : " Missing");
-console.log("Supabase Anon Key:", supabaseAnonKey ? " Found" : " Missing");
-
-// Create Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    debug: true, // Enable debug logs
-    storage: localStorage,
-    storageKey: 'emailgenius-auth-token'
-  }
-});
+import { supabase } from '@/lib/supabaseClient';
 
 type AuthContextType = {
   user: User | null;

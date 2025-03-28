@@ -8,10 +8,13 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Slack, MessageSquare } from "lucide-react";
 import IntegrationButton from "@/components/IntegrationButton";
+import { initiateGmailAuth, checkGmailConnection } from "@/lib/gmail";
+import { useAuth } from "@/context/AuthContext";
 
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   // Integration states
   const [gmailLoading, setGmailLoading] = useState(false);
@@ -23,39 +26,53 @@ const Settings = () => {
   
   // Check connections status on mount
   useEffect(() => {
+    if (!user) return;
+    
     const checkConnectionStatus = async () => {
-      // This would be replaced with actual API calls in production
-      // For now, just simulate API responses
-      setTimeout(() => {
-        setIsGmailConnected(false);
-        setIsSlackConnected(false);
-        setIsTeamsConnected(false);
-      }, 500);
+      try {
+        const isConnected = await checkGmailConnection();
+        setIsGmailConnected(isConnected);
+        
+        // Check URL params for connection status
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('gmailConnected') === 'true') {
+          toast({
+            title: "Gmail Connected",
+            description: "Successfully connected your Gmail account!",
+          });
+          // Clean up URL
+          window.history.replaceState({}, '', '/settings');
+        } else if (params.get('error') === 'gmail_connection_failed') {
+          toast({
+            title: "Connection Failed",
+            description: "Failed to connect to Gmail. Please try again.",
+            variant: "destructive",
+          });
+          // Clean up URL
+          window.history.replaceState({}, '', '/settings');
+        }
+      } catch (error) {
+        console.error('Error checking connection status:', error);
+      }
     };
     
     checkConnectionStatus();
-  }, []);
+  }, [toast]);
   
   // Handle Gmail connection
   const connectGmail = async () => {
     setGmailLoading(true);
     
     try {
-      // Simulate API delay
-      setTimeout(() => {
-        toast({
-          title: "Gmail Authorization",
-          description: "You would be redirected to Google's auth page",
-        });
-        setGmailLoading(false);
-      }, 2000);
+      await initiateGmailAuth();
     } catch (error) {
-      console.error("Error connecting Gmail:", error);
+      console.error('Gmail connection error:', error);
       toast({
         title: "Connection Failed",
-        description: "Could not connect to Gmail. Please try again.",
+        description: "Failed to connect to Gmail. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setGmailLoading(false);
     }
   };

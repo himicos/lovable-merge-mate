@@ -2,10 +2,38 @@
 import { LucideLayoutGrid, LucideUser, LucideSettings, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 const Sidebar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { user, signOut } = useAuth();
+
+  // Get display name from user metadata or email
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  
+  // Get initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out."
+      });
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <div className="w-[300px] h-screen bg-app-background border-r border-white/10 p-6 flex flex-col">
@@ -39,7 +67,7 @@ const Sidebar = () => {
             </Link>
           </li>
           <li>
-            <button className="nav-item w-full text-left">
+            <button onClick={handleSignOut} className="nav-item w-full text-left">
               <LogOut size={18} />
               <span>Logout</span>
             </button>
@@ -50,9 +78,11 @@ const Sidebar = () => {
       {/* User Profile */}
       <div className="flex items-center gap-3 pt-4 border-t border-white/10">
         <Avatar className="w-10 h-10">
-          <AvatarFallback className="bg-gray-700 text-white">MB</AvatarFallback>
+          <AvatarFallback className="bg-gray-700 text-white">
+            {getInitials(displayName)}
+          </AvatarFallback>
         </Avatar>
-        <span className="font-medium">Maria Brown</span>
+        <span className="font-medium">{displayName}</span>
       </div>
     </div>
   );
