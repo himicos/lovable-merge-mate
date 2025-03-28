@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import cors from 'cors';
 
 const app = express();
-const port = 8081;
+const port = 8080;
 
 app.use(cors());
 app.use(express.json());
@@ -13,7 +13,7 @@ app.use(express.json());
 const oauth2Client = new google.auth.OAuth2(
   process.env.VITE_GOOGLE_CLIENT_ID,
   process.env.VITE_GOOGLE_CLIENT_SECRET,
-  'http://localhost:8081/auth/callback'
+  'http://localhost:8080/auth/callback'
 );
 
 // Handle Gmail OAuth callback

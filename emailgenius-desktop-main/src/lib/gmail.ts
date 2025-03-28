@@ -9,7 +9,7 @@ export interface GmailConnection {
 }
 
 export const GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
-export const GMAIL_REDIRECT_URI = `http://localhost:8081/auth/callback`;
+export const GMAIL_REDIRECT_URI = `http://localhost:8080/auth/callback`;
 
 export async function initiateGmailAuth() {
   const { data: { user } } = await supabase.auth.getUser();
