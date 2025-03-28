@@ -9,6 +9,7 @@ interface IntegrationButtonProps {
   isConnected: boolean;
   isLoading: boolean;
   onClick: () => void;
+  buttonText?: string;
 }
 
 const IntegrationButton = ({
@@ -17,11 +18,12 @@ const IntegrationButton = ({
   isConnected,
   isLoading,
   onClick,
+  buttonText,
 }: IntegrationButtonProps) => {
   return (
     <Button
       onClick={onClick}
-      disabled={isLoading || isConnected}
+      disabled={isLoading}
       className={`group w-full h-10 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-3 relative overflow-hidden
         ${isConnected 
           ? "bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-gray-300" 
@@ -40,7 +42,7 @@ const IntegrationButton = ({
       )}
       
       {icon}
-      {isConnected ? `${name} Connected` : isLoading ? "Redirecting..." : `Connect ${name}`}
+      {isLoading ? "Redirecting..." : buttonText || (isConnected ? `${name} Connected` : `Connect ${name}`)}
     </Button>
   );
 };

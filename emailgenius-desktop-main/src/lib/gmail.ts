@@ -28,18 +28,26 @@ export async function initiateGmailAuth() {
   window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 }
 
-export async function checkGmailConnection(): Promise<boolean> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
+export interface GmailConnectionStatus {
+  isConnected: boolean;
+  email?: string | null;
+}
 
-  const { data: connection, error } = await supabase
+export async function checkGmailConnection(): Promise<GmailConnectionStatus> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { isConnected: false };
+
+  const { data, error } = await supabase
     .from('gmail_connections')
-    .select('id')
+    .select('email')
     .eq('user_id', user.id)
     .single();
 
-  if (error || !connection) return false;
-  return true;
+  if (error || !data) return { isConnected: false };
+  return {
+    isConnected: true,
+    email: data.email
+  };
 }
 
 export async function disconnectGmail(): Promise<void> {

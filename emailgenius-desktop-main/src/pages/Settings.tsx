@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Slack, MessageSquare } from "lucide-react";
 import IntegrationButton from "@/components/IntegrationButton";
-import { initiateGmailAuth, checkGmailConnection } from "@/lib/gmail";
+import { initiateGmailAuth, checkGmailConnection, disconnectGmail } from "@/lib/gmail";
 import { useAuth } from "@/context/AuthContext";
 
 const Settings = () => {
@@ -18,7 +18,10 @@ const Settings = () => {
   
   // Integration states
   const [gmailLoading, setGmailLoading] = useState(false);
-  const [isGmailConnected, setIsGmailConnected] = useState(false);
+  const [gmailStatus, setGmailStatus] = useState<{ isConnected: boolean; email?: string | null }>({ 
+    isConnected: false,
+    email: null
+  });
   const [slackLoading, setSlackLoading] = useState(false);
   const [isSlackConnected, setIsSlackConnected] = useState(false);
   const [teamsLoading, setTeamsLoading] = useState(false);
@@ -30,8 +33,8 @@ const Settings = () => {
     
     const checkConnectionStatus = async () => {
       try {
-        const isConnected = await checkGmailConnection();
-        setIsGmailConnected(isConnected);
+        const status = await checkGmailConnection();
+        setGmailStatus(status);
         
         // Check URL params for connection status
         const params = new URLSearchParams(window.location.search);
@@ -40,6 +43,9 @@ const Settings = () => {
             title: "Gmail Connected",
             description: "Successfully connected your Gmail account!",
           });
+          // Refresh connection status after successful connection
+          const updatedStatus = await checkGmailConnection();
+          setGmailStatus(updatedStatus);
           // Clean up URL
           window.history.replaceState({}, '', '/settings');
         } else if (params.get('error') === 'gmail_connection_failed') {
@@ -57,19 +63,30 @@ const Settings = () => {
     };
     
     checkConnectionStatus();
-  }, [toast]);
+  }, [toast, user]);
   
-  // Handle Gmail connection
-  const connectGmail = async () => {
+  // Handle Gmail connection/disconnection
+  const handleGmailAction = async () => {
     setGmailLoading(true);
     
     try {
-      await initiateGmailAuth();
+      if (gmailStatus.isConnected) {
+        await disconnectGmail();
+        setGmailStatus({ isConnected: false, email: null });
+        toast({
+          title: "Gmail Disconnected",
+          description: "Successfully disconnected your Gmail account.",
+        });
+      } else {
+        await initiateGmailAuth();
+      }
     } catch (error) {
-      console.error('Gmail connection error:', error);
+      console.error('Gmail action error:', error);
       toast({
-        title: "Connection Failed",
-        description: "Failed to connect to Gmail. Please try again.",
+        title: "Action Failed",
+        description: gmailStatus.isConnected
+          ? "Failed to disconnect Gmail. Please try again."
+          : "Failed to connect Gmail. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -143,7 +160,7 @@ const Settings = () => {
               <div className="flex flex-col gap-2">
                 <Label>Email Integrations</Label>
                 <IntegrationButton
-                  name="Gmail"
+                  name={gmailStatus.isConnected ? `Gmail (${gmailStatus.email})` : 'Gmail'}
                   icon={
                     <div className="w-5 h-5 flex items-center justify-center">
                       <img 
@@ -153,9 +170,10 @@ const Settings = () => {
                       />
                     </div>
                   }
-                  isConnected={isGmailConnected}
+                  isConnected={gmailStatus.isConnected}
                   isLoading={gmailLoading}
-                  onClick={connectGmail}
+                  onClick={handleGmailAction}
+                  buttonText={gmailStatus.isConnected ? "Disconnect" : "Connect"}
                 />
               </div>
               
