@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -21,26 +21,34 @@ const queryClient = new QueryClient();
 // Auth callback handler component
 function AuthCallback() {
   const { supabase } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
     // Handle the OAuth callback
     const handleAuthCallback = async () => {
-      const { hash, searchParams } = new URL(window.location.href);
-      const code = searchParams.get('code');
-      
-      if (code) {
-        try {
+      try {
+        const { hash, searchParams } = new URL(window.location.href);
+        const code = searchParams.get('code');
+        const access_token = searchParams.get('access_token');
+        
+        if (code) {
           await supabase.auth.exchangeCodeForSession(code);
-          // Redirect to home after successful authentication
-          window.location.href = '/';
-        } catch (error) {
-          console.error('Error handling auth callback:', error);
+          navigate('/', { replace: true });
+        } else if (access_token) {
+          // Handle magic link or other token-based auth
+          const { data, error } = await supabase.auth.getUser(access_token);
+          if (!error && data?.user) {
+            navigate('/', { replace: true });
+          }
         }
+      } catch (error) {
+        console.error('Error handling auth callback:', error);
+        navigate('/login', { replace: true });
       }
     };
     
     handleAuthCallback();
-  }, [supabase]);
+  }, [supabase, navigate]);
   
   return <div className="flex h-screen items-center justify-center">Processing authentication...</div>;
 }

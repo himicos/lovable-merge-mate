@@ -18,7 +18,9 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    debug: true // Enable debug logs
+    debug: true, // Enable debug logs
+    storage: localStorage,
+    storageKey: 'emailgenius-auth-token'
   }
 });
 
@@ -87,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, {
         user: session?.user ? {
           id: session.user.id,
@@ -96,30 +98,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } : null
       });
 
-      if (session?.user) {
-        setUser(session.user);
-        // After successful sign in, refresh user metadata
-        const { data: { user: refreshedUser }, error } = await supabase.auth.refreshSession();
-        if (refreshedUser && !error) {
-          console.log("Refreshed user data:", {
-            email: refreshedUser.email,
-            metadata: refreshedUser.user_metadata
-          });
-          setUser(refreshedUser);
-          
-          // Redirect to home after successful sign in
-          if (location.pathname === "/login") {
-            navigate("/");
-          }
+      if (event === 'SIGNED_IN') {
+        setUser(session?.user || null);
+        if (location.pathname === '/login' || location.pathname === '/auth/callback') {
+          navigate('/');
         }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
-        // Redirect to login if not already there
-        if (!["/login", "/auth/callback"].includes(location.pathname)) {
-          navigate("/login");
+        if (location.pathname !== '/login') {
+          navigate('/login');
         }
       }
-      setLoading(false);
     });
 
     return () => {
