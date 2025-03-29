@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, Lock, Mail } from "lucide-react";
+import { Home, User, FileText, Lock, Mail } from "lucide-react";
 
 const Login = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -94,10 +94,18 @@ const Login = () => {
             <Home className="h-5 w-5" />
             <span>Home</span>
           </a>
+          <a href="/about" className="flex items-center space-x-2 font-medium">
+            <User className="h-5 w-5" />
+            <span>About</span>
+          </a>
+          <a href="/pricing" className="flex items-center space-x-2 font-medium">
+            <FileText className="h-5 w-5" />
+            <span>Pricing</span>
+          </a>
         </div>
         <div className="h-10 w-32">
           <img 
-            src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+            src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
             alt="Verby Logo"
             className="h-full object-contain"
           />
@@ -226,7 +234,7 @@ const Login = () => {
           {/* Right column with illustration */}
           <div className="relative">
             <img 
-              src="/lovable-uploads/3c467d16-5365-45e8-b91f-bd5b96821614.png" 
+              src="/public/lovable-uploads/3c467d16-5365-45e8-b91f-bd5b96821614.png" 
               alt="Person working on laptop" 
               className="w-full max-w-lg mx-auto"
             />
@@ -242,10 +250,14 @@ const Login = () => {
               <Lock className="h-5 w-5" />
               <span>Privacy</span>
             </a>
+            <a href="/terms" className="flex items-center space-x-2 text-green-800">
+              <FileText className="h-5 w-5" />
+              <span>Terms</span>
+            </a>
           </div>
           <div className="mt-4 md:mt-0">
             <img 
-              src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+              src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
               alt="Verby Logo"
               className="h-10 w-auto"
             />
