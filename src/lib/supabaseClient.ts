@@ -8,6 +8,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing Supabase environment variables');
 }
 
+// Get the current site URL
+const siteUrl = window.location.origin;
+console.log("Current site URL:", siteUrl);
+
 export const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey,
@@ -23,3 +27,4 @@ export const supabase = createClient(
     }
   }
 );
+
