@@ -225,11 +225,18 @@ const Login = () => {
           
           {/* Right column with illustration */}
           <div className="hidden md:flex justify-center items-center">
-            <img 
-              src="/lovable-uploads/1af2611d-14cf-4a00-bf40-f73f41dc8d20.png" 
-              alt="Happy user working on laptop" 
-              className="max-w-full h-auto"
-            />
+            <div className="relative flex flex-col">
+              <img 
+                src="/lovable-uploads/1af2611d-14cf-4a00-bf40-f73f41dc8d20.png" 
+                alt="Happy user working on laptop" 
+                className="max-w-full h-auto mb-8"
+              />
+              <img
+                src="/public/lovable-uploads/9a0057c8-f61a-47a6-a04e-9c96294a37cd.png"
+                alt="Man working on laptop with plant and clock"
+                className="max-w-full h-auto"
+              />
+            </div>
           </div>
         </div>
       </div>
