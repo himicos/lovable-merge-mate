@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, User, FileText, Lock, Mail } from "lucide-react";
+import { Home, Lock, Mail } from "lucide-react";
 
 const Login = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -86,14 +86,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2FCE2] text-green-950 flex flex-col">
+    <div className="min-h-screen bg-[#F2FCE2] text-green-950">
       {/* Navigation */}
       <nav className="flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2 font-medium">
+          <a href="/" className="flex items-center space-x-2 font-medium">
             <Home className="h-5 w-5" />
             <span>Home</span>
-          </div>
+          </a>
         </div>
         <div className="h-10 w-32">
           <img 
@@ -105,22 +105,22 @@ const Login = () => {
       </nav>
 
       {/* Main content */}
-      <div className="container mx-auto px-4 py-8 md:py-12 flex-1 flex items-center">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center w-full">
-          {/* Left column with text - Updated to ensure left alignment */}
-          <div className="w-full space-y-8 text-left">
+      <div className="container mx-auto px-4 py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          {/* Left column with text */}
+          <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-green-800">
                 Less talk,<br />more action
               </h1>
-              <p className="text-xl text-green-700 mb-8">
+              <p className="text-xl text-green-700">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
               </p>
             </div>
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700 hover:scale-105 transition-all duration-300 text-white px-8 py-6 rounded-full text-lg">
+                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 rounded-full text-lg">
                   Get Started
                 </Button>
               </DialogTrigger>
@@ -171,7 +171,7 @@ const Login = () => {
                     </div>
                   )}
                   <DialogFooter className="flex-col sm:flex-col gap-2">
-                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 hover:scale-105 transition-all duration-300" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
                       {isLoading ? "Processing..." : isSignUp ? "Sign up" : "Sign in"}
                     </Button>
                     <div className="relative w-full">
@@ -186,7 +186,7 @@ const Login = () => {
                       type="button" 
                       variant="outline" 
                       onClick={handleGoogleSignIn}
-                      className="w-full hover:scale-105 transition-all duration-300"
+                      className="w-full"
                     >
                       <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" aria-hidden="true">
                         <path
@@ -223,36 +223,25 @@ const Login = () => {
             </Dialog>
           </div>
           
-          {/* Right column with illustration - Fixed image paths */}
-          <div className="hidden md:flex justify-center items-center">
-            <div className="relative flex flex-col">
-              <img 
-                src="/lovable-uploads/1af2611d-14cf-4a00-bf40-f73f41dc8d20.png" 
-                alt="Happy user working on laptop" 
-                className="max-w-full h-auto mb-8"
-              />
-              <img
-                src="/lovable-uploads/9a0057c8-f61a-47a6-a04e-9c96294a37cd.png"
-                alt="Man working on laptop with plant and clock"
-                className="max-w-full h-auto"
-              />
-            </div>
+          {/* Right column with illustration */}
+          <div className="relative">
+            <img 
+              src="/lovable-uploads/3c467d16-5365-45e8-b91f-bd5b96821614.png" 
+              alt="Person working on laptop" 
+              className="w-full max-w-lg mx-auto"
+            />
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="bg-[#F8F6D8] py-6 px-4">
+      <footer className="mt-16 bg-[#F8F6D8] py-6 px-4">
         <div className="container mx-auto flex flex-wrap items-center justify-between">
           <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2 text-green-800">
+            <a href="/privacy" className="flex items-center space-x-2 text-green-800">
               <Lock className="h-5 w-5" />
               <span>Privacy</span>
-            </div>
-            <div className="flex items-center space-x-2 text-green-800">
-              <FileText className="h-5 w-5" />
-              <span>Terms</span>
-            </div>
+            </a>
           </div>
           <div className="mt-4 md:mt-0">
             <img 

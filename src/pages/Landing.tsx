@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, User, FileText, Lock, Mail } from "lucide-react";
+import { Home, Lock, Mail } from "lucide-react";
 
 const Landing = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -86,18 +86,18 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#d8f3d0] text-[#0a5a36] flex flex-col">
+    <div className="min-h-screen bg-[#d8f3d0] text-[#0a5a36]">
       {/* Navigation */}
       <nav className="flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2 font-medium">
+          <a href="/" className="flex items-center space-x-2 font-medium">
             <Home className="h-5 w-5" />
             <span>Home</span>
-          </div>
+          </a>
         </div>
         <div className="h-10 w-32">
           <img 
-            src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+            src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
             alt="Verby Logo"
             className="h-full object-contain"
           />
@@ -105,15 +105,15 @@ const Landing = () => {
       </nav>
 
       {/* Main content */}
-      <div className="container mx-auto px-4 py-8 md:py-12 flex-1 flex items-center">
-        <div className="max-w-2xl mx-auto text-center md:text-left">
+      <div className="container mx-auto px-4 py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Left column with text */}
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-[#0a5a36]">
                 Less talk,<br />more action
               </h1>
-              <p className="text-xl text-[#0a8a36] mb-8">
+              <p className="text-xl text-[#0a8a36]">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
               </p>
             </div>
@@ -222,25 +222,31 @@ const Landing = () => {
               </DialogContent>
             </Dialog>
           </div>
+          
+          {/* Right column with green speech bubble */}
+          <div className="relative flex justify-center items-center">
+            <img 
+              src="/lovable-uploads/bed4f515-0c15-4bde-adb5-9b97df261f0a.png" 
+              alt="Green speech bubble" 
+              className="w-4/5 md:w-full max-w-md mx-auto animate-pulse duration-3000"
+              style={{ filter: "drop-shadow(0px 10px 15px rgba(0, 100, 0, 0.2))" }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="bg-[#f8f3d9] py-6 px-4">
+      <footer className="mt-16 bg-[#f8f3d9] py-6 px-4">
         <div className="container mx-auto flex flex-wrap items-center justify-between">
           <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2 text-[#0a5a36]">
+            <a href="/privacy" className="flex items-center space-x-2 text-[#0a5a36]">
               <Lock className="h-5 w-5" />
               <span>Privacy</span>
-            </div>
-            <div className="flex items-center space-x-2 text-[#0a5a36]">
-              <FileText className="h-5 w-5" />
-              <span>Terms</span>
-            </div>
+            </a>
           </div>
           <div className="mt-4 md:mt-0">
             <img 
-              src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+              src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
               alt="Verby Logo"
               className="h-10 w-auto"
             />
