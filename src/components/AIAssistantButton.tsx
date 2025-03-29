@@ -19,7 +19,7 @@ const AIAssistantButton = () => {
         <img 
           src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
           alt="Verby Logo"
-          className="h-8 w-auto"
+          className="h-8 w-8 object-contain"
         />
       </Button>
     </div>

@@ -86,22 +86,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2FCE2] text-green-950">
+    <div className="min-h-screen bg-[#F2FCE2] text-green-950 flex flex-col">
       {/* Navigation */}
       <nav className="flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center space-x-6">
-          <a href="/" className="flex items-center space-x-2 font-medium">
+          <div className="flex items-center space-x-2 font-medium">
             <Home className="h-5 w-5" />
             <span>Home</span>
-          </a>
-          <a href="/about" className="flex items-center space-x-2 font-medium">
-            <User className="h-5 w-5" />
-            <span>About</span>
-          </a>
-          <a href="/pricing" className="flex items-center space-x-2 font-medium">
-            <FileText className="h-5 w-5" />
-            <span>Pricing</span>
-          </a>
+          </div>
         </div>
         <div className="h-10 w-32">
           <img 
@@ -113,15 +105,15 @@ const Login = () => {
       </nav>
 
       {/* Main content */}
-      <div className="container mx-auto px-4 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div className="container mx-auto px-4 py-8 md:py-12 flex-1 flex items-center">
+        <div className="max-w-2xl mx-auto text-center md:text-left">
           {/* Left column with text */}
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-green-800">
                 Less talk,<br />more action
               </h1>
-              <p className="text-xl text-green-700">
+              <p className="text-xl text-green-700 mb-8">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
               </p>
             </div>
@@ -230,30 +222,21 @@ const Login = () => {
               </DialogContent>
             </Dialog>
           </div>
-          
-          {/* Right column with illustration */}
-          <div className="relative">
-            <img 
-              src="/public/lovable-uploads/3c467d16-5365-45e8-b91f-bd5b96821614.png" 
-              alt="Person working on laptop" 
-              className="w-full max-w-lg mx-auto"
-            />
-          </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="mt-16 bg-[#F8F6D8] py-6 px-4">
+      <footer className="bg-[#F8F6D8] py-6 px-4">
         <div className="container mx-auto flex flex-wrap items-center justify-between">
           <div className="flex items-center space-x-6">
-            <a href="/privacy" className="flex items-center space-x-2 text-green-800">
+            <div className="flex items-center space-x-2 text-green-800">
               <Lock className="h-5 w-5" />
               <span>Privacy</span>
-            </a>
-            <a href="/terms" className="flex items-center space-x-2 text-green-800">
+            </div>
+            <div className="flex items-center space-x-2 text-green-800">
               <FileText className="h-5 w-5" />
               <span>Terms</span>
-            </a>
+            </div>
           </div>
           <div className="mt-4 md:mt-0">
             <img 
