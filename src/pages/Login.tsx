@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, Lock } from "lucide-react";
+import { Home, Lock, Info } from "lucide-react";
 import { RiGoogleFill } from "@remixicon/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -20,6 +20,7 @@ const Login = () => {
   const { user, signInWithGoogle } = useAuth();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const isMobile = useIsMobile();
 
   // Redirect if user is already authenticated
@@ -48,6 +49,38 @@ const Login = () => {
             <Home className="h-5 w-5" />
             <span>Home</span>
           </a>
+          <Dialog open={isAboutDialogOpen} onOpenChange={setIsAboutDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" className="flex items-center space-x-2 font-medium p-0 h-auto hover:bg-transparent">
+                <Info className="h-5 w-5" />
+                <span>About</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white sm:max-w-md rounded-[28px] border-0 shadow-lg">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-semibold text-[#0a5a36]">About Verby</DialogTitle>
+                <DialogDescription className="text-[#0a8a36]">
+                  Verby helps you communicate more effectively
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <p className="text-emerald-800">
+                  Verby is designed to free you from the noise of endless chats, emails, and follow-ups. 
+                  Our mission is to help you communicate with clarity and purpose.
+                </p>
+                <p className="text-emerald-800">
+                  We believe that effective communication should be accessible to everyone, 
+                  which is why we've built Verby with simplicity and effectiveness in mind.
+                </p>
+                <div className="pt-4 border-t border-emerald-100">
+                  <h4 className="font-medium text-emerald-700">Contact Us</h4>
+                  <p className="text-sm text-emerald-600 mt-1">
+                    Have questions or feedback? Reach out to us at contact@verby.app
+                  </p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
         <div className="h-10 w-32">
           <img 
