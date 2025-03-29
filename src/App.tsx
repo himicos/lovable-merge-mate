@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "@/pages/Index";
+import About from "@/pages/About";
 import NotFound from "@/pages/NotFound";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
@@ -97,6 +98,11 @@ function App() {
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/about" element={
+                  <ProtectedRoute>
+                    <About />
                   </ProtectedRoute>
                 } />
                 <Route path="/profile" element={
