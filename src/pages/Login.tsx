@@ -105,7 +105,7 @@ const Login = () => {
         </div>
         <div className="h-10 w-32">
           <img 
-            src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+            src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
             alt="Verby Logo"
             className="h-full object-contain"
           />
@@ -234,7 +234,7 @@ const Login = () => {
           {/* Right column with illustration */}
           <div className="relative">
             <img 
-              src="/public/lovable-uploads/3c467d16-5365-45e8-b91f-bd5b96821614.png" 
+              src="/lovable-uploads/3c467d16-5365-45e8-b91f-bd5b96821614.png" 
               alt="Person working on laptop" 
               className="w-full max-w-lg mx-auto"
             />
@@ -257,7 +257,7 @@ const Login = () => {
           </div>
           <div className="mt-4 md:mt-0">
             <img 
-              src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+              src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
               alt="Verby Logo"
               className="h-10 w-auto"
             />
