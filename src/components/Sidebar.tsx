@@ -37,12 +37,13 @@ const Sidebar = () => {
 
   return (
     <div className="w-[300px] h-screen bg-app-background border-r border-white/10 p-6 flex flex-col">
-      {/* Logo and App Title */}
+      {/* Logo */}
       <div className="flex items-center gap-3 mb-12">
-        <div className="w-10 h-10 rounded-full bg-transparent border-2 border-white flex items-center justify-center">
-          <div className="w-5 h-5 bg-black rounded-full"></div>
-        </div>
-        <h1 className="text-xl font-semibold">AI Assistant</h1>
+        <img 
+          src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png" 
+          alt="Logo" 
+          className="w-10 h-10 object-contain"
+        />
       </div>
       
       {/* Navigation */}
