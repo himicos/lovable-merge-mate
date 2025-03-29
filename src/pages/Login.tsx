@@ -68,7 +68,7 @@ const Login = () => {
                   Less talk, more
                 </h1>
                 <h1 className="text-5xl md:text-6xl font-bold text-verby-dark">
-                  verby
+                  Verby
                 </h1>
               </div>
               <p className="text-xl text-emerald-700">
