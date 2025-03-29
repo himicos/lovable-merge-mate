@@ -231,12 +231,13 @@ const Landing = () => {
             </div>
           </div>
           
-          {/* Right column with illustration */}
-          <div className="relative">
+          {/* Right column with green speech bubble */}
+          <div className="relative flex justify-center items-center">
             <img 
-              src="/lovable-uploads/3c467d16-5365-45e8-b91f-bd5b96821614.png" 
-              alt="Person working on laptop" 
-              className="w-full max-w-lg mx-auto"
+              src="/lovable-uploads/bed4f515-0c15-4bde-adb5-9b97df261f0a.png" 
+              alt="Green speech bubble" 
+              className="w-4/5 md:w-full max-w-md mx-auto animate-pulse duration-3000"
+              style={{ filter: "drop-shadow(0px 10px 15px rgba(0, 100, 0, 0.2))" }}
             />
           </div>
         </div>

@@ -16,7 +16,10 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     storage: localStorage,
     flowType: 'pkce',
     debug: process.env.NODE_ENV !== 'production',
-    // Use the current origin as the site URL to ensure redirects work correctly
-    redirectTo: `${siteUrl}/auth/callback`
+    // Set the callback URL in separate options now
+    cookieOptions: {
+      // Use the current origin as the site URL to ensure redirects work correctly
+      redirect_to: `${siteUrl}/auth/callback`
+    }
   }
 });
