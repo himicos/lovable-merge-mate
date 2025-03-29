@@ -12,6 +12,7 @@ import NotFound from "@/pages/NotFound";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
+import Landing from "@/pages/Landing";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -91,7 +92,7 @@ function App() {
               <Toaster />
               <Sonner />
               <Routes>
-                <Route path="/login" element={<Login />} />
+                <Route path="/login" element={<Landing />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/" element={
                   <ProtectedRoute>
