@@ -15,8 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, Lock, Mail } from "lucide-react";
+import { Home, Lock, Mail, Heart } from "lucide-react";
 import { SocialLinks } from "@/components/SocialLinks";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Landing = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -26,6 +27,7 @@ const Landing = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   // Redirect if user is already authenticated
   if (user) {
@@ -233,19 +235,27 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="mt-16 bg-[#f8f3d9] py-6 px-4">
-        <div className="container mx-auto flex flex-wrap items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <a href="/privacy" className="flex items-center space-x-2 text-[#0a5a36]">
-              <Lock className="h-5 w-5" />
-              <span>Privacy</span>
-            </a>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <img 
-              src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
-              alt="Verby Logo"
-              className="h-10 w-auto"
-            />
+        <div className="container mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center space-x-6">
+              <a href="/privacy" className="flex items-center space-x-2 text-[#0a5a36]">
+                <Lock className="h-5 w-5" />
+                <span>Privacy</span>
+              </a>
+            </div>
+            
+            <div className="flex flex-col items-center md:items-end space-y-2">
+              <img 
+                src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+                alt="Verby Logo"
+                className="h-12 w-auto" 
+              />
+              <div className="flex items-center text-sm text-[#0a5a36]">
+                <span>All rights reserved. Verby. Made with </span>
+                <Heart className="h-4 w-4 mx-1 text-red-500 fill-red-500" />
+                <span>Lovable 2025</span>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
