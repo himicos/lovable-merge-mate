@@ -39,44 +39,234 @@ export type Database = {
         }
         Relationships: []
       }
+      message_queue: {
+        Row: {
+          id: string
+          user_id: string
+          message_id: string
+          source: string
+          priority: number
+          status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+          retry_count: number
+          max_retries: number
+          visible_after: string
+          created_at: string
+          updated_at: string
+          payload: Json
+          error?: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          message_id: string
+          source: string
+          priority?: number
+          status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+          retry_count?: number
+          max_retries?: number
+          visible_after?: string
+          created_at?: string
+          updated_at?: string
+          payload: Json
+          error?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          message_id?: string
+          source?: string
+          priority?: number
+          status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+          retry_count?: number
+          max_retries?: number
+          visible_after?: string
+          created_at?: string
+          updated_at?: string
+          payload?: Json
+          error?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_queue_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      message_responses: {
+        Row: {
+          id: string
+          message_id: string
+          user_id: string
+          response_text: string
+          response_type: 'voice' | 'text'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          user_id: string
+          response_text: string
+          response_type: 'voice' | 'text'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          user_id?: string
+          response_text?: string
+          response_type?: 'voice' | 'text'
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_responses_message_id_fkey"
+            columns: ["message_id"]
+            referencedRelation: "processed_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_responses_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      processed_messages: {
+        Row: {
+          id: string
+          user_id: string
+          original_message_id: string
+          source: string
+          sender: string
+          subject: string | null
+          content: string
+          category: string
+          action: string
+          summary: string | null
+          prompt: string | null
+          requires_voice_response: boolean
+          processed_at: string
+          created_at: string
+          raw_data: Json | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          original_message_id: string
+          source: string
+          sender: string
+          subject?: string | null
+          content: string
+          category: string
+          action: string
+          summary?: string | null
+          prompt?: string | null
+          requires_voice_response?: boolean
+          processed_at?: string
+          created_at?: string
+          raw_data?: Json | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          original_message_id?: string
+          source?: string
+          sender?: string
+          subject?: string | null
+          content?: string
+          category?: string
+          action?: string
+          summary?: string | null
+          prompt?: string | null
+          requires_voice_response?: boolean
+          processed_at?: string
+          created_at?: string
+          raw_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processed_messages_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       secrets: {
         Row: {
           claude_api_key: string | null
-          created_at: string | null
+          google_client_id: string | null
+          google_client_secret: string | null
+          ms_client_id: string | null
+          ms_client_secret: string | null
           elevenlabs_api_key: string | null
-          google_client_id: string
-          google_client_secret: string
-          id: string
-          supabase_anon_key: string
-          supabase_jwt_secret: string
-          supabase_url: string
-          updated_at: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           claude_api_key?: string | null
-          created_at?: string | null
+          google_client_id?: string | null
+          google_client_secret?: string | null
+          ms_client_id?: string | null
+          ms_client_secret?: string | null
           elevenlabs_api_key?: string | null
-          google_client_id: string
-          google_client_secret: string
-          id?: string
-          supabase_anon_key: string
-          supabase_jwt_secret: string
-          supabase_url: string
-          updated_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           claude_api_key?: string | null
-          created_at?: string | null
+          google_client_id?: string | null
+          google_client_secret?: string | null
+          ms_client_id?: string | null
+          ms_client_secret?: string | null
           elevenlabs_api_key?: string | null
-          google_client_id?: string
-          google_client_secret?: string
-          id?: string
-          supabase_anon_key?: string
-          supabase_jwt_secret?: string
-          supabase_url?: string
-          updated_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
+      }
+      user_settings: {
+        Row: {
+          id: string
+          user_id: string
+          marketing_email_policy: string
+          system_alert_policy: string
+          voice_enabled: boolean
+          auto_process_enabled: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          marketing_email_policy?: string
+          system_alert_policy?: string
+          voice_enabled?: boolean
+          auto_process_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          marketing_email_policy?: string
+          system_alert_policy?: string
+          voice_enabled?: boolean
+          auto_process_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
