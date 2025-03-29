@@ -63,11 +63,14 @@ const Login = () => {
           {/* Left column with text */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-6xl font-bold">
-                <span className="text-verby-light">Less talk, more</span>
-                <br />
-                <span className="text-verby-dark">verby</span>
-              </h1>
+              <div className="space-y-1">
+                <h1 className="text-5xl md:text-6xl font-bold text-verby-light">
+                  Less talk, more
+                </h1>
+                <h1 className="text-5xl md:text-6xl font-bold text-verby-dark">
+                  verby
+                </h1>
+              </div>
               <p className="text-xl text-emerald-700">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
               </p>
