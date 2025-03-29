@@ -1,88 +1,109 @@
 
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { Home, User, Settings, Menu, X, Mail, Inbox } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Inbox, Settings, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-const Sidebar = () => {
-  const [open, setOpen] = useState(false);
-  const location = useLocation();
-  const isMobile = useMobile();
+interface SidebarProps {
+  className?: string;
+}
+
+const Sidebar = ({ className }: SidebarProps) => {
+  const [collapsed, setCollapsed] = useState(false);
+  const isMobile = useIsMobile();
   
   const toggleSidebar = () => {
-    setOpen(!open);
-  };
-  
-  const links = [
-    { name: "Home", path: "/", icon: <Home size={20} /> },
-    { name: "Profile", path: "/profile", icon: <User size={20} /> },
-    { name: "Settings", path: "/settings", icon: <Settings size={20} /> },
-  ];
-  
-  // Close sidebar when clicking outside of it on mobile
-  const handleOutsideClick = () => {
-    if (isMobile && open) {
-      setOpen(false);
-    }
+    setCollapsed(!collapsed);
   };
   
   return (
-    <>
-      {/* Mobile menu toggle */}
-      {isMobile && (
-        <button
-          onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 bg-gray-800 p-2 rounded-md"
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+    <div 
+      className={cn(
+        "bg-sidebar h-screen transition-all",
+        collapsed ? "w-20" : "w-64",
+        isMobile && "fixed z-50",
+        isMobile && collapsed && "-translate-x-full",
+        className
       )}
-      
-      {/* Sidebar */}
-      <div
-        className={cn(
-          "bg-sidebar text-white w-64 flex-shrink-0 border-r border-app-border transition-all duration-300 ease-in-out z-40 h-screen fixed lg:relative",
-          isMobile ? (open ? "translate-x-0" : "-translate-x-full") : "translate-x-0"
-        )}
-      >
-        <div className="p-4 flex items-center space-x-2">
-          <Mail size={24} className="text-app-accent" />
-          <span className="text-xl font-bold">EmailGenius</span>
+    >
+      {/* Sidebar content */}
+      <div className="p-4 flex flex-col h-full">
+        <div className="flex items-center mb-8">
+          <h1 className={cn(
+            "font-bold text-2xl transition-opacity",
+            collapsed ? "opacity-0 w-0" : "opacity-100"
+          )}>
+            Email<span className="text-app-accent">Genius</span>
+          </h1>
+          <Button 
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "ml-auto p-2",
+              collapsed && "ml-0"
+            )}
+            onClick={toggleSidebar}
+          >
+            {collapsed ? "→" : "←"}
+          </Button>
         </div>
         
-        <div className="p-4">
-          <div className="flex flex-col space-y-1">
-            {links.map((link) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                onClick={() => isMobile && setOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center px-4 py-3 rounded-md transition-colors",
-                    isActive
-                      ? "bg-sidebar-active text-white"
-                      : "text-gray-400 hover:text-white hover:bg-sidebar-hover"
-                  )
-                }
-              >
-                <span className="mr-3">{link.icon}</span>
-                <span>{link.name}</span>
-              </NavLink>
-            ))}
-          </div>
+        <nav className="flex-1">
+          <ul className="space-y-2">
+            <SidebarItem 
+              to="/" 
+              icon={<Inbox size={22} />} 
+              label="Dashboard" 
+              collapsed={collapsed} 
+            />
+            <SidebarItem 
+              to="/profile" 
+              icon={<User size={22} />} 
+              label="Profile" 
+              collapsed={collapsed} 
+            />
+            <SidebarItem 
+              to="/settings" 
+              icon={<Settings size={22} />} 
+              label="Settings" 
+              collapsed={collapsed} 
+            />
+          </ul>
+        </nav>
+        
+        <div className="mt-auto">
+          {/* Footer content if needed */}
         </div>
       </div>
-      
-      {/* Overlay to close sidebar when clicking outside */}
-      {isMobile && open && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={handleOutsideClick}
-        />
-      )}
-    </>
+    </div>
+  );
+};
+
+interface SidebarItemProps {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  collapsed: boolean;
+}
+
+const SidebarItem = ({ to, icon, label, collapsed }: SidebarItemProps) => {
+  return (
+    <li>
+      <Link 
+        to={to} 
+        className="flex items-center p-3 rounded-lg hover:bg-app-hover transition-colors"
+      >
+        <span className="text-gray-400">{icon}</span>
+        <span className={cn(
+          "ml-3 text-gray-300 transition-all",
+          collapsed ? "opacity-0 w-0" : "opacity-100"
+        )}>
+          {label}
+        </span>
+      </Link>
+    </li>
   );
 };
 
