@@ -94,27 +94,27 @@ const AIAssistantButton = () => {
   }, [chatHistory]);
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className={`ai-button ${expanded ? 'expanded' : ''} ${theme === 'light' ? 'light-mode' : 'dark-mode'}`}>
       {!expanded ? (
-        <Button
-          onClick={() => setExpanded(true)}
-          size="lg"
-          className="rounded-full h-14 w-14 flex items-center justify-center bg-accent hover:bg-accent-hover shadow-lg"
+        <button 
+          onClick={() => setExpanded(true)} 
+          className="w-full h-full flex items-center justify-center"
+          aria-label="Open AI Assistant"
         >
           <img 
             src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
-            alt="Verby Logo"
+            alt="AI Assistant"
             className="h-8 w-auto"
           />
-        </Button>
+        </button>
       ) : (
-        <div className="bg-app-card w-80 rounded-[28px] p-4 shadow-lg">
+        <div className="ai-expanded-content flex flex-col h-full">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-medium">AI Assistant</h3>
+            <h3 className="ai-title font-medium">AI Assistant</h3>
             <button 
               onClick={() => setExpanded(false)}
               aria-label="Close AI Assistant"
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="ai-close-btn"
             >
               <X className="w-5 h-5" />
             </button>
@@ -126,14 +126,10 @@ const AIAssistantButton = () => {
               {chatHistory.map((message) => (
                 <div 
                   key={message.id} 
-                  className={`p-3 rounded-lg ${
-                    message.isUser 
-                      ? "bg-accent text-accent-foreground ml-8" 
-                      : "bg-muted text-muted-foreground mr-8"
-                  }`}
+                  className={message.isUser ? "ai-user-message p-3 rounded-lg" : "ai-assistant-message p-3 rounded-lg"}
                 >
-                  <p className="text-sm break-words">{message.content}</p>
-                  <p className="text-xs mt-1 text-right opacity-70">
+                  <p className="ai-message-text text-sm break-words">{message.content}</p>
+                  <p className="ai-timestamp text-xs mt-1 text-right">
                     {formatTime(message.timestamp)}
                   </p>
                 </div>
@@ -159,11 +155,11 @@ const AIAssistantButton = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Type your message..."
-              className="resize-none min-h-[40px] p-2 text-sm"
+              className="resize-none min-h-[40px] p-2 text-sm ai-input"
             />
             <Button 
               type="submit" 
-              className="h-auto"
+              className="ai-send-btn h-auto"
             >
               <Send className="w-4 h-4" />
             </Button>
