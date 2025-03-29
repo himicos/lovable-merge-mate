@@ -101,35 +101,33 @@ const AIAssistantButton = () => {
           className="w-full h-full flex items-center justify-center"
           aria-label="Open AI Assistant"
         >
-          <img 
-            src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
-            alt="AI Assistant"
-            className="h-8 w-auto"
-          />
+          {/* Simple dot with no logo */}
         </button>
       ) : (
         <div className="ai-expanded-content flex flex-col h-full">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="ai-title font-medium">AI Assistant</h3>
+            <h4 className="text-green-800 font-semibold">Message AI</h4>
             <button 
               onClick={() => setExpanded(false)}
               aria-label="Close AI Assistant"
-              className="ai-close-btn"
+              className="text-green-700 hover:text-green-900"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
           
           {/* Chat messages container with fixed height and overflow control */}
-          <ScrollArea className="flex-1 mb-3 overflow-y-auto max-h-[230px]" type="always">
+          <ScrollArea className="flex-1 mb-3 overflow-y-auto max-h-[330px]" type="always">
             <div className="space-y-3 pr-2">
               {chatHistory.map((message) => (
                 <div 
                   key={message.id} 
-                  className={message.isUser ? "ai-user-message p-3 rounded-lg" : "ai-assistant-message p-3 rounded-lg"}
+                  className={`p-3 rounded-lg ${message.isUser 
+                    ? "bg-green-100 text-green-900" 
+                    : "bg-white text-green-800"}`}
                 >
-                  <p className="ai-message-text text-sm break-words">{message.content}</p>
-                  <p className="ai-timestamp text-xs mt-1 text-right">
+                  <p className="text-sm break-words">{message.content}</p>
+                  <p className="text-xs mt-1 text-right text-green-600">
                     {formatTime(message.timestamp)}
                   </p>
                 </div>
@@ -138,7 +136,7 @@ const AIAssistantButton = () => {
             </div>
           </ScrollArea>
           
-          {/* Voice input moved above the message input */}
+          {/* Voice input above the message input */}
           <div className="mb-3">
             <AIVoiceInput 
               onStart={handleVoiceStart}
@@ -149,17 +147,17 @@ const AIAssistantButton = () => {
             />
           </div>
           
-          {/* Message input and send button at the bottom - fixed alignment */}
+          {/* Message input and send button at the bottom */}
           <form onSubmit={handleSubmit} className="flex items-stretch gap-2 mt-auto">
             <Textarea 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Type your message..."
-              className="resize-none min-h-[40px] p-2 text-sm ai-input"
+              className="resize-none min-h-[40px] p-2 text-sm bg-white text-green-900 border border-green-200"
             />
             <Button 
               type="submit" 
-              className="ai-send-btn h-auto"
+              className="bg-green-600 text-white hover:bg-green-700 h-auto"
             >
               <Send className="w-4 h-4" />
             </Button>

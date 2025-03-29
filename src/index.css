@@ -1,16 +1,19 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --app-background: #f5f8f0;
-  --app-card: #ffffff;
-  --app-accent: #6b8e23;  /* Olive Drab */
-  --app-highlight: #7da029;
+  --app-background: #E9F7EC;
+  --app-card: #F9FFF7;
+  --app-accent: #A8D5BA;
+  --app-highlight: #3E5C4E;
+  --app-text-primary: #0A5A36;
+  --app-text-secondary: #3E5C4E;
 }
 
 :root.dark {
-  --app-background: #1D1F20;  /* Updated darker background */
+  --app-background: #1D1F20;  /* Dark background */
   --app-card: #4a5a29;        /* Slightly lighter for cards */
   --app-accent: #8fb339;      /* Brighter olive for accents */
   --app-highlight: #a2c149;   /* Highlight color */
@@ -95,23 +98,16 @@
   /* AI Assistant Button Styles */
   .ai-button {
     @apply fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-50;
-    box-shadow: 0 4px 12px rgba(107, 142, 35, 0.2);
+    box-shadow: 0 4px 12px rgba(10, 90, 54, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background-color: #A8D5BA; /* New light green color */
+    background-color: #A8D5BA; /* Light green color */
     border-radius: 50%;
     animation: breathe 3s ease-in-out infinite;
   }
 
   @keyframes breathe {
-    0% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
-    100% {
-      transform: scale(1);
-    }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
   }
 
   .ai-button.dark-mode {
@@ -126,18 +122,47 @@
     @apply w-80 rounded-2xl p-4;
     height: 500px;
     max-height: 500px;
+    animation: none;
   }
   
   .ai-button.expanded.dark-mode {
-    background-color: rgba(60, 74, 30, 0.98);
+    background-color: #F0FFF5;
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(10, 90, 54, 0.1);
   }
   
   .ai-button.expanded.light-mode {
-    background-color: rgba(245, 248, 240, 0.98);
+    background-color: #F0FFF5;
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(107, 142, 35, 0.2);
+    border: 1px solid rgba(10, 90, 54, 0.1);
+  }
+  
+  .ai-user-message {
+    @apply bg-green-100 text-green-900;
+  }
+
+  .ai-assistant-message {
+    @apply bg-white text-green-800;
+  }
+  
+  .ai-timestamp {
+    @apply text-green-600;
+  }
+  
+  .ai-input {
+    @apply bg-white text-green-900 border border-green-200;
+  }
+  
+  .ai-send-btn {
+    @apply bg-green-600 text-white hover:bg-green-700;
+  }
+  
+  .ai-title {
+    @apply text-green-800;
+  }
+  
+  .ai-close-btn {
+    @apply text-green-700 hover:text-green-900;
   }
 }
 
@@ -177,5 +202,23 @@
   
   .settings-section-divider {
     @apply border-t border-primary/10 my-4;
+  }
+
+  /* Card styles */
+  .dashboard-card {
+    @apply bg-app-card rounded-xl p-5 shadow-sm border border-green-100;
+  }
+  
+  /* Message list item */
+  .message-item {
+    @apply flex justify-between items-center p-3 rounded-lg cursor-pointer transition-colors;
+  }
+  
+  .message-item:hover {
+    @apply bg-green-50;
+  }
+  
+  .message-item.selected {
+    @apply bg-green-100;
   }
 }

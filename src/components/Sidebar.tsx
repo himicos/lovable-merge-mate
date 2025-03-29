@@ -36,13 +36,13 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-[300px] h-screen bg-app-background border-r border-white/10 p-6 flex flex-col">
+    <div className="w-[300px] h-screen bg-[#3E5C4E] border-r border-[#4a6d5a] p-6 flex flex-col">
       {/* Logo */}
       <div className="flex items-center gap-3 mb-12">
         <img 
           src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png" 
-          alt="Logo" 
-          className="w-12 h-12 md:w-16 md:h-16 object-contain" /* Increased size */
+          alt="Verby Logo" 
+          className="w-16 h-16 object-contain" 
         />
       </div>
       
@@ -50,25 +50,43 @@ const Sidebar = () => {
       <nav className="flex-1">
         <ul className="space-y-2">
           <li>
-            <Link to="/" className={`nav-item ${currentPath === "/" ? "active rounded-lg" : ""}`}>
+            <Link 
+              to="/" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white ${
+                currentPath === "/" ? "bg-[#517c69] font-medium" : "hover:bg-[#4a6d5a] transition-colors"
+              }`}
+            >
               <LucideLayoutGrid size={18} />
               <span>Dashboard</span>
             </Link>
           </li>
           <li>
-            <Link to="/settings" className={`nav-item ${currentPath === "/settings" ? "active rounded-lg" : ""}`}>
+            <Link 
+              to="/settings" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white ${
+                currentPath === "/settings" ? "bg-[#517c69] font-medium" : "hover:bg-[#4a6d5a] transition-colors"
+              }`}
+            >
               <LucideSettings size={18} />
               <span>Settings</span>
             </Link>
           </li>
           <li>
-            <Link to="/profile" className={`nav-item ${currentPath === "/profile" ? "active rounded-lg" : ""}`}>
+            <Link 
+              to="/profile" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white ${
+                currentPath === "/profile" ? "bg-[#517c69] font-medium" : "hover:bg-[#4a6d5a] transition-colors"
+              }`}
+            >
               <LucideUser size={18} />
               <span>Profile</span>
             </Link>
           </li>
           <li>
-            <button onClick={handleSignOut} className="nav-item w-full text-left">
+            <button 
+              onClick={handleSignOut} 
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#4a6d5a] transition-colors text-left"
+            >
               <LogOut size={18} />
               <span>Logout</span>
             </button>
@@ -77,13 +95,11 @@ const Sidebar = () => {
       </nav>
       
       {/* User Profile */}
-      <div className="flex items-center gap-3 pt-4 border-t border-white/10">
-        <Avatar className="w-10 h-10">
-          <AvatarFallback className="bg-gray-700 text-white">
-            {getInitials(displayName)}
-          </AvatarFallback>
+      <div className="flex items-center gap-3 pt-4 border-t border-[#4a6d5a]">
+        <Avatar className="w-10 h-10 bg-[#517c69] text-white">
+          <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
         </Avatar>
-        <span className="font-medium">{displayName}</span>
+        <span className="font-medium text-white">{displayName}</span>
       </div>
     </div>
   );
