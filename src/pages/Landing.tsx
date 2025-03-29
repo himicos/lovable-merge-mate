@@ -111,7 +111,7 @@ const Landing = () => {
           <div className="w-full space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-[#0a5a36]">
-                Less talk,<br />more action
+                Less talk,<br />more verby
               </h1>
               <p className="text-xl text-[#0a8a36]">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
