@@ -85,7 +85,7 @@ function AuthCallback() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <BrowserRouter>
             <AuthProvider>

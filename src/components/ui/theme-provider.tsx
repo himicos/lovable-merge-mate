@@ -4,7 +4,7 @@
 import * as React from "react";
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type Theme = "dark" | "light" | "system";
+type Theme = "dark" | "light";
 
 type ThemeProviderProps = {
   children: ReactNode;
@@ -19,7 +19,7 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-  theme: "system",
+  theme: "light",
   setTheme: () => null,
   toggleTheme: () => null,
 };
@@ -28,7 +28,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = "ui-theme",
   ...props
 }: ThemeProviderProps) {
@@ -40,18 +40,20 @@ export function ThemeProvider({
     const root = window.document.documentElement;
 
     root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      return;
-    }
-
     root.classList.add(theme);
+    
+    // Update custom properties
+    if (theme === 'dark') {
+      document.documentElement.style.setProperty('--app-background', '#3c4a1e');
+      document.documentElement.style.setProperty('--app-card', '#4a5a29');
+      document.documentElement.style.setProperty('--app-accent', '#8fb339');
+      document.documentElement.style.setProperty('--app-highlight', '#a2c149');
+    } else {
+      document.documentElement.style.setProperty('--app-background', '#f5f8f0');
+      document.documentElement.style.setProperty('--app-card', '#ffffff');
+      document.documentElement.style.setProperty('--app-accent', '#6b8e23');
+      document.documentElement.style.setProperty('--app-highlight', '#7da029');
+    }
   }, [theme]);
 
   const value = {
@@ -62,15 +64,9 @@ export function ThemeProvider({
     },
     toggleTheme: () => {
       setTheme((prevTheme) => {
-        if (prevTheme === "light") {
-          const newTheme = "dark";
-          localStorage.setItem(storageKey, newTheme);
-          return newTheme;
-        } else {
-          const newTheme = "light";
-          localStorage.setItem(storageKey, newTheme);
-          return newTheme;
-        }
+        const newTheme = prevTheme === "light" ? "dark" : "light";
+        localStorage.setItem(storageKey, newTheme);
+        return newTheme;
       });
     },
   };

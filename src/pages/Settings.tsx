@@ -5,10 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Slack, MessageSquare } from "lucide-react";
+import { Mail, Slack, MessageSquare, Moon, Sun } from "lucide-react";
 import IntegrationButton from "@/components/IntegrationButton";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/hooks/use-theme";
+import { useTheme } from "@/components/ui/theme-provider";
 
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
@@ -118,6 +118,40 @@ const Settings = () => {
     <Layout>
       <div className="w-full max-w-4xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-8">Settings</h1>
+        
+        {/* Appearance Card - Moved to top for better visibility */}
+        <Card className="bg-app-card mb-6">
+          <CardHeader>
+            <CardTitle>Appearance</CardTitle>
+            <CardDescription>
+              Manage how the dashboard looks and feels
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5 flex items-center gap-2">
+                {theme === 'dark' ? (
+                  <Moon className="h-5 w-5 text-primary" />
+                ) : (
+                  <Sun className="h-5 w-5 text-primary" />
+                )}
+                <div>
+                  <Label htmlFor="theme-toggle">{theme === 'dark' ? 'Dark Theme' : 'Light Theme'}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {theme === 'dark' 
+                      ? 'Using olive drab dark theme' 
+                      : 'Using olive drab light theme'}
+                  </p>
+                </div>
+              </div>
+              <Switch 
+                id="theme-toggle" 
+                checked={theme === 'dark'}
+                onCheckedChange={toggleTheme}
+              />
+            </div>
+          </CardContent>
+        </Card>
         
         {/* Integrations Card */}
         <Card className="bg-app-card mb-6">

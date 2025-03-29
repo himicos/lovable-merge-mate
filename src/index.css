@@ -4,17 +4,17 @@
 @tailwind utilities;
 
 :root {
-  --app-background: #1A1A1A;
-  --app-card: #2A2A2A;
-  --app-accent: #10b981;  /* Primary accent color (green) */
-  --app-highlight: #22c55e;
+  --app-background: #f5f8f0;
+  --app-card: #ffffff;
+  --app-accent: #6b8e23;  /* Olive Drab */
+  --app-highlight: #7da029;
 }
 
-:root:not(.dark) {
-  --app-background: #f5f5f5;
-  --app-card: #ffffff;
-  --app-accent: #10b981;
-  --app-highlight: #22c55e;
+:root.dark {
+  --app-background: #3c4a1e;  /* Dark Olive Drab background */
+  --app-card: #4a5a29;        /* Slightly lighter for cards */
+  --app-accent: #8fb339;      /* Brighter olive for accents */
+  --app-highlight: #a2c149;   /* Highlight color */
 }
 
 @layer base {
@@ -29,6 +29,50 @@
 
   html {
     @apply scroll-smooth;
+  }
+  
+  .dark {
+    --background: 83 45% 21%;
+    --foreground: 60 9% 98%;
+    --card: 83 34% 26%;
+    --card-foreground: 60 9% 98%;
+    --popover: 83 34% 26%;
+    --popover-foreground: 60 9% 98%;
+    --primary: 74 45% 46%;
+    --primary-foreground: 60 9% 98%;
+    --secondary: 78 42% 22%;
+    --secondary-foreground: 60 9% 98%;
+    --muted: 78 42% 22%;
+    --muted-foreground: 60 9% 70%;
+    --accent: 74 45% 46%;
+    --accent-foreground: 60 9% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 60 9% 98%;
+    --border: 78 42% 22%;
+    --input: 78 42% 22%;
+    --ring: 74 45% 46%;
+  }
+  
+  .light {
+    --background: 80 40% 96%;
+    --foreground: 83 45% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 83 45% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 83 45% 15%;
+    --primary: 82 58% 35%;
+    --primary-foreground: 60 9% 98%;
+    --secondary: 60 4.8% 95.9%;
+    --secondary-foreground: 83 45% 15%;
+    --muted: 60 4.8% 95.9%;
+    --muted-foreground: 83 3.8% 46.1%;
+    --accent: 82 58% 35%;
+    --accent-foreground: 60 9% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 60 9% 98%;
+    --border: 83 45% 90%;
+    --input: 83 45% 90%;
+    --ring: 82 58% 35%;
   }
 }
 
@@ -52,16 +96,16 @@
   /* AI Assistant Button Styles */
   .ai-button {
     @apply fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-50;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 4px 12px rgba(107, 142, 35, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .ai-button.dark-mode {
-    background-color: hsl(var(--accent));
+    background-color: var(--app-accent);
   }
 
   .ai-button.light-mode {
-    background-color: hsl(var(--accent));
+    background-color: var(--app-accent);
   }
 
   .ai-button.expanded {
@@ -71,53 +115,18 @@
   }
   
   .ai-button.expanded.dark-mode {
-    background-color: rgba(28, 29, 33, 0.98);
+    background-color: rgba(60, 74, 30, 0.98);
     backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   .ai-button.expanded.light-mode {
-    background-color: rgba(245, 245, 245, 0.98);
+    background-color: rgba(245, 248, 240, 0.98);
     backdrop-filter: blur(8px);
-    border: 1px solid hsla(var(--accent), 0.2);
+    border: 1px solid rgba(107, 142, 35, 0.2);
   }
   
-  .ai-expanded-content {
-    width: 100%;
-    height: 100%;
-  }
-  
-  .ai-title {
-    @apply text-foreground;
-  }
-  
-  .ai-close-btn {
-    @apply rounded-full p-1 hover:bg-muted transition-colors;
-  }
-  
-  .ai-user-message {
-    @apply dark:bg-gray-700/80 bg-gray-200/90 ml-6;
-  }
-  
-  .ai-assistant-message {
-    @apply dark:bg-gray-800/90 bg-gray-100/90 mr-6 dark:border-[hsl(var(--accent))]/30 border-[hsl(var(--accent))]/20 border;
-  }
-  
-  .ai-message-text {
-    @apply text-foreground;
-  }
-  
-  .ai-timestamp {
-    @apply text-muted-foreground;
-  }
-  
-  .ai-input {
-    @apply dark:bg-gray-800/80 bg-gray-100/90 border-[hsl(var(--accent))]/20;
-  }
-  
-  .ai-send-btn {
-    @apply bg-accent hover:bg-accent-hover transition-colors;
-  }
+  /* ... keep existing code (AI expanded content styles) */
 }
 
 @layer components {
@@ -134,5 +143,14 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+  
+  /* Navigation item styles */
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-primary/10 transition-colors;
+  }
+  
+  .nav-item.active {
+    @apply bg-primary text-primary-foreground;
   }
 }
