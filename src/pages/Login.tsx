@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -86,7 +85,7 @@ const Login = () => {
           <img 
             src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
             alt="Verby Logo"
-            className="h-full object-contain"
+            className="h-12 w-auto md:h-16 object-contain"
           />
         </div>
       </nav>
@@ -94,7 +93,6 @@ const Login = () => {
       {/* Main content */}
       <div className="container mx-auto px-4 py-12 md:py-16 flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          {/* Left column with text */}
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="space-y-1">
@@ -166,7 +164,6 @@ const Login = () => {
             </Dialog>
           </div>
           
-          {/* Right column with illustration */}
           <div className="relative">
             <img 
               src="/lovable-uploads/3c467d16-5365-45e8-b91f-bd5b96821614.png" 
@@ -190,7 +187,7 @@ const Login = () => {
             <img 
               src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
               alt="Verby Logo"
-              className="h-10 w-auto"
+              className="h-12 w-auto md:h-16"
             />
           </div>
         </div>

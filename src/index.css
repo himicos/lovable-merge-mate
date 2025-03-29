@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,7 +10,7 @@
 }
 
 :root.dark {
-  --app-background: #3c4a1e;  /* Dark Olive Drab background */
+  --app-background: #1D1F20;  /* Updated darker background */
   --app-card: #4a5a29;        /* Slightly lighter for cards */
   --app-accent: #8fb339;      /* Brighter olive for accents */
   --app-highlight: #a2c149;   /* Highlight color */
@@ -98,14 +97,29 @@
     @apply fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-50;
     box-shadow: 0 4px 12px rgba(107, 142, 35, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: #A8D5BA; /* New light green color */
+    border-radius: 50%;
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 
   .ai-button.dark-mode {
-    background-color: var(--app-accent);
+    background-color: #A8D5BA; /* Keep same color in dark mode */
   }
 
   .ai-button.light-mode {
-    background-color: var(--app-accent);
+    background-color: #A8D5BA; /* Keep same color in light mode */
   }
 
   .ai-button.expanded {
@@ -165,4 +179,3 @@
     @apply border-t border-primary/10 my-4;
   }
 }
-

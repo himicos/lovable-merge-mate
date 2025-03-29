@@ -35,9 +35,9 @@ const Dashboard = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-app-card rounded-xl p-6 shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Welcome to EmailGenius</h2>
+          <h2 className="text-xl font-semibold mb-4">Welcome to Verby</h2>
           <p className="text-gray-300 mb-4">
-            This is a sample dashboard for the EmailGenius application. Connect your email account to get started with AI-powered email management.
+            This is a sample dashboard for the Verby application. Connect your email account to get started with AI-powered email management.
           </p>
           <div className="p-4 bg-app-card-secondary rounded-lg text-sm">
             <p>Configure your settings in the Settings tab to connect your email accounts.</p>

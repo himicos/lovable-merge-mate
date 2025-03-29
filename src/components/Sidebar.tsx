@@ -42,7 +42,7 @@ const Sidebar = () => {
         <img 
           src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png" 
           alt="Logo" 
-          className="w-10 h-10 object-contain"
+          className="w-12 h-12 md:w-16 md:h-16 object-contain" /* Increased size */
         />
       </div>
       
