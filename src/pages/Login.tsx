@@ -64,9 +64,9 @@ const Login = () => {
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold">
-                <span className="!text-emerald-400">Less talk, more</span>
+                <span className="text-verby-light">Less talk, more</span>
                 <br />
-                <span className="!text-emerald-800">verby</span>
+                <span className="text-verby-dark">verby</span>
               </h1>
               <p className="text-xl text-emerald-700">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
