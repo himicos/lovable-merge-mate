@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const AIAssistantButton = () => {
@@ -17,7 +16,11 @@ const AIAssistantButton = () => {
         size="lg"
         className="rounded-full h-14 w-14 flex items-center justify-center bg-accent hover:bg-accent-hover shadow-lg"
       >
-        <Bot size={24} />
+        <img 
+          src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+          alt="Verby Logo"
+          className="h-8 w-auto"
+        />
       </Button>
     </div>
   );

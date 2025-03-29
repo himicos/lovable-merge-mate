@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, User, FileText, Phone, Lock, Mail } from "lucide-react";
+import { Home, User, FileText, Lock, Mail } from "lucide-react";
 
 const Login = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -103,9 +103,13 @@ const Login = () => {
             <span>Pricing</span>
           </a>
         </div>
-        <a href="/contact" className="p-2 rounded-full border border-green-700">
-          <Phone className="h-5 w-5" />
-        </a>
+        <div className="h-10 w-32">
+          <img 
+            src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+            alt="Verby Logo"
+            className="h-full object-contain"
+          />
+        </div>
       </nav>
 
       {/* Main content */}
@@ -225,10 +229,6 @@ const Login = () => {
                 </div>
               </DialogContent>
             </Dialog>
-
-            <div className="pt-24">
-              <h2 className="text-3xl font-bold text-green-800 mb-4">Ready to unlock your best self?</h2>
-            </div>
           </div>
           
           {/* Right column with illustration */}
@@ -239,13 +239,6 @@ const Login = () => {
               className="w-full max-w-lg mx-auto"
             />
           </div>
-        </div>
-        
-        {/* CTA Button */}
-        <div className="flex justify-end mt-8">
-          <Button className="bg-[#F8F6D8] hover:bg-[#F0EEC0] text-green-800 font-medium px-8 py-6 rounded-full text-lg">
-            DM for early access
-          </Button>
         </div>
       </div>
 
@@ -261,19 +254,13 @@ const Login = () => {
               <FileText className="h-5 w-5" />
               <span>Terms</span>
             </a>
-            <a href="/contact" className="flex items-center space-x-2 text-green-800">
-              <Phone className="h-5 w-5" />
-              <span>Contact</span>
-            </a>
           </div>
           <div className="mt-4 md:mt-0">
-            <div className="bg-[#F8F6D8] p-4 rounded-full">
-              <svg className="h-8 w-8 text-green-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor" fillOpacity="0.2" />
-                <path d="M13.5 8C13.5 8.82843 12.8284 9.5 12 9.5C11.1716 9.5 10.5 8.82843 10.5 8C10.5 7.17157 11.1716 6.5 12 6.5C12.8284 6.5 13.5 7.17157 13.5 8Z" fill="currentColor" />
-                <path d="M10.5 12C10.5 11.1716 11.1716 10.5 12 10.5C12.8284 10.5 13.5 11.1716 13.5 12V16C13.5 16.8284 12.8284 17.5 12 17.5C11.1716 17.5 10.5 16.8284 10.5 16V12Z" fill="currentColor" />
-              </svg>
-            </div>
+            <img 
+              src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+              alt="Verby Logo"
+              className="h-10 w-auto"
+            />
           </div>
         </div>
       </footer>
