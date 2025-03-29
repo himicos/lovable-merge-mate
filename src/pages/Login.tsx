@@ -40,7 +40,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2FCE2] text-green-950">
+    <div className="min-h-screen flex flex-col bg-[#F2FCE2] text-green-950">
       {/* Navigation */}
       <nav className="flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center space-x-6">
@@ -59,7 +59,7 @@ const Login = () => {
       </nav>
 
       {/* Main content */}
-      <div className="container mx-auto px-4 py-12 md:py-16">
+      <div className="container mx-auto px-4 py-12 md:py-16 flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Left column with text */}
           <div className="space-y-8">
@@ -142,7 +142,7 @@ const Login = () => {
       </div>
 
       {/* Footer */}
-      <footer className="mt-16 bg-[#F8F6D8] py-6 px-4">
+      <footer className="bg-[#F8F6D8] py-6 px-4 mt-auto">
         <div className="container mx-auto flex flex-wrap items-center justify-between">
           <div className="flex items-center space-x-6">
             <a href="/privacy" className="flex items-center space-x-2 text-green-800">
