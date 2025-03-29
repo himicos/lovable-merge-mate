@@ -65,9 +65,9 @@ const Login = () => {
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="space-y-1">
-                <h1 className="text-5xl md:text-6xl font-bold text-verby-light">
+                <h2 className="text-5xl md:text-6xl font-bold text-verby-light">
                   Less talk, more
-                </h1>
+                </h2>
                 <h1 className="text-5xl md:text-6xl font-bold text-verby-dark">
                   verby
                 </h1>
