@@ -41,232 +41,278 @@ export type Database = {
       }
       message_queue: {
         Row: {
+          created_at: string | null
+          error: string | null
           id: string
-          user_id: string
-          message_id: string
-          source: string
-          priority: number
-          status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
-          retry_count: number
           max_retries: number
-          visible_after: string
-          created_at: string
-          updated_at: string
+          message_id: string
           payload: Json
-          error?: string
+          priority: number
+          retry_count: number
+          source: string
+          status: string
+          updated_at: string | null
+          user_id: string
+          visible_after: string | null
         }
         Insert: {
+          created_at?: string | null
+          error?: string | null
           id?: string
-          user_id: string
-          message_id: string
-          source: string
-          priority?: number
-          status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
-          retry_count?: number
           max_retries?: number
-          visible_after?: string
-          created_at?: string
-          updated_at?: string
+          message_id: string
           payload: Json
-          error?: string
+          priority?: number
+          retry_count?: number
+          source: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          visible_after?: string | null
         }
         Update: {
+          created_at?: string | null
+          error?: string | null
           id?: string
-          user_id?: string
-          message_id?: string
-          source?: string
-          priority?: number
-          status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
-          retry_count?: number
           max_retries?: number
-          visible_after?: string
-          created_at?: string
-          updated_at?: string
+          message_id?: string
           payload?: Json
-          error?: string
+          priority?: number
+          retry_count?: number
+          source?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          visible_after?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "message_queue_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       message_responses: {
         Row: {
+          created_at: string | null
           id: string
-          message_id: string
-          user_id: string
+          message_id: string | null
           response_text: string
-          response_type: 'voice' | 'text'
-          created_at: string
+          response_type: string
+          user_id: string | null
         }
         Insert: {
+          created_at?: string | null
           id?: string
-          message_id: string
-          user_id: string
+          message_id?: string | null
           response_text: string
-          response_type: 'voice' | 'text'
-          created_at?: string
+          response_type: string
+          user_id?: string | null
         }
         Update: {
+          created_at?: string | null
           id?: string
-          message_id?: string
-          user_id?: string
+          message_id?: string | null
           response_text?: string
-          response_type?: 'voice' | 'text'
-          created_at?: string
+          response_type?: string
+          user_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "message_responses_message_id_fkey"
             columns: ["message_id"]
+            isOneToOne: false
             referencedRelation: "processed_messages"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "message_responses_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
         ]
       }
       processed_messages: {
         Row: {
-          id: string
-          user_id: string
-          original_message_id: string
-          source: string
-          sender: string
-          subject: string | null
+          action: Database["public"]["Enums"]["message_action"]
+          category: Database["public"]["Enums"]["message_category"]
           content: string
-          category: string
-          action: string
-          summary: string | null
+          created_at: string | null
+          id: string
+          original_message_id: string
+          processed_at: string | null
           prompt: string | null
-          requires_voice_response: boolean
-          processed_at: string
-          created_at: string
           raw_data: Json | null
+          requires_voice_response: boolean | null
+          sender: string
+          source: Database["public"]["Enums"]["message_source"]
+          subject: string | null
+          summary: string | null
+          user_id: string | null
         }
         Insert: {
-          id?: string
-          user_id: string
-          original_message_id: string
-          source: string
-          sender: string
-          subject?: string | null
+          action: Database["public"]["Enums"]["message_action"]
+          category: Database["public"]["Enums"]["message_category"]
           content: string
-          category: string
-          action: string
-          summary?: string | null
+          created_at?: string | null
+          id?: string
+          original_message_id: string
+          processed_at?: string | null
           prompt?: string | null
-          requires_voice_response?: boolean
-          processed_at?: string
-          created_at?: string
           raw_data?: Json | null
+          requires_voice_response?: boolean | null
+          sender: string
+          source: Database["public"]["Enums"]["message_source"]
+          subject?: string | null
+          summary?: string | null
+          user_id?: string | null
         }
         Update: {
-          id?: string
-          user_id?: string
-          original_message_id?: string
-          source?: string
-          sender?: string
-          subject?: string | null
+          action?: Database["public"]["Enums"]["message_action"]
+          category?: Database["public"]["Enums"]["message_category"]
           content?: string
-          category?: string
-          action?: string
-          summary?: string | null
+          created_at?: string | null
+          id?: string
+          original_message_id?: string
+          processed_at?: string | null
           prompt?: string | null
-          requires_voice_response?: boolean
-          processed_at?: string
-          created_at?: string
           raw_data?: Json | null
+          requires_voice_response?: boolean | null
+          sender?: string
+          source?: Database["public"]["Enums"]["message_source"]
+          subject?: string | null
+          summary?: string | null
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "processed_messages_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       secrets: {
         Row: {
           claude_api_key: string | null
-          google_client_id: string | null
-          google_client_secret: string | null
-          ms_client_id: string | null
-          ms_client_secret: string | null
+          created_at: string | null
           elevenlabs_api_key: string | null
-          created_at: string
-          updated_at: string
+          google_client_id: string
+          google_client_secret: string
+          id: string
+          supabase_anon_key: string
+          supabase_jwt_secret: string
+          supabase_url: string
+          updated_at: string | null
         }
         Insert: {
           claude_api_key?: string | null
-          google_client_id?: string | null
-          google_client_secret?: string | null
-          ms_client_id?: string | null
-          ms_client_secret?: string | null
+          created_at?: string | null
           elevenlabs_api_key?: string | null
-          created_at?: string
-          updated_at?: string
+          google_client_id: string
+          google_client_secret: string
+          id?: string
+          supabase_anon_key: string
+          supabase_jwt_secret: string
+          supabase_url: string
+          updated_at?: string | null
         }
         Update: {
           claude_api_key?: string | null
-          google_client_id?: string | null
-          google_client_secret?: string | null
-          ms_client_id?: string | null
-          ms_client_secret?: string | null
+          created_at?: string | null
           elevenlabs_api_key?: string | null
-          created_at?: string
-          updated_at?: string
+          google_client_id?: string
+          google_client_secret?: string
+          id?: string
+          supabase_anon_key?: string
+          supabase_jwt_secret?: string
+          supabase_url?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      slack_connections: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          id: string
+          scope: string
+          team_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          id?: string
+          scope: string
+          team_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          id?: string
+          scope?: string
+          team_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      teams_connections: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          refresh_token: string
+          scope: string
+          tenant_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          refresh_token: string
+          scope: string
+          tenant_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          refresh_token?: string
+          scope?: string
+          tenant_id?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
       user_settings: {
         Row: {
+          auto_process_enabled: boolean
+          created_at: string | null
           id: string
-          user_id: string
           marketing_email_policy: string
           system_alert_policy: string
+          updated_at: string | null
+          user_id: string | null
           voice_enabled: boolean
-          auto_process_enabled: boolean
-          created_at: string
-          updated_at: string
         }
         Insert: {
+          auto_process_enabled?: boolean
+          created_at?: string | null
           id?: string
-          user_id: string
           marketing_email_policy?: string
           system_alert_policy?: string
+          updated_at?: string | null
+          user_id?: string | null
           voice_enabled?: boolean
-          auto_process_enabled?: boolean
-          created_at?: string
-          updated_at?: string
         }
         Update: {
+          auto_process_enabled?: boolean
+          created_at?: string | null
           id?: string
-          user_id?: string
           marketing_email_policy?: string
           system_alert_policy?: string
+          updated_at?: string | null
+          user_id?: string | null
           voice_enabled?: boolean
-          auto_process_enabled?: boolean
-          created_at?: string
-          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_settings_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -276,7 +322,17 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      message_action:
+        | "generate_prompt"
+        | "create_summary"
+        | "mark_read"
+        | "move"
+      message_category:
+        | "important"
+        | "indirectly_relevant"
+        | "marketing"
+        | "system_alert"
+      message_source: "email" | "slack" | "teams"
     }
     CompositeTypes: {
       [_ in never]: never

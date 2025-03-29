@@ -2,14 +2,13 @@
 import Layout from "@/components/Layout";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useTheme } from "@/components/ui/theme-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Slack, MessageSquare } from "lucide-react";
 import IntegrationButton from "@/components/IntegrationButton";
-import { initiateGmailAuth, checkGmailConnection, disconnectGmail } from "@/lib/gmail";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/hooks/use-theme";
 
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
@@ -27,59 +26,27 @@ const Settings = () => {
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [isTeamsConnected, setIsTeamsConnected] = useState(false);
   
-  // Check connections status on mount
-  useEffect(() => {
-    if (!user) return;
-    
-    const checkConnectionStatus = async () => {
-      try {
-        const status = await checkGmailConnection();
-        setGmailStatus(status);
-        
-        // Check URL params for connection status
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('gmailConnected') === 'true') {
-          toast({
-            title: "Gmail Connected",
-            description: "Successfully connected your Gmail account!",
-          });
-          // Refresh connection status after successful connection
-          const updatedStatus = await checkGmailConnection();
-          setGmailStatus(updatedStatus);
-          // Clean up URL
-          window.history.replaceState({}, '', '/settings');
-        } else if (params.get('error') === 'gmail_connection_failed') {
-          toast({
-            title: "Connection Failed",
-            description: "Failed to connect to Gmail. Please try again.",
-            variant: "destructive",
-          });
-          // Clean up URL
-          window.history.replaceState({}, '', '/settings');
-        }
-      } catch (error) {
-        console.error('Error checking connection status:', error);
-      }
-    };
-    
-    checkConnectionStatus();
-  }, [toast, user]);
-  
   // Handle Gmail connection/disconnection
   const handleGmailAction = async () => {
     setGmailLoading(true);
     
     try {
-      if (gmailStatus.isConnected) {
-        await disconnectGmail();
-        setGmailStatus({ isConnected: false, email: null });
-        toast({
-          title: "Gmail Disconnected",
-          description: "Successfully disconnected your Gmail account.",
-        });
-      } else {
-        await initiateGmailAuth();
-      }
+      setTimeout(() => {
+        if (gmailStatus.isConnected) {
+          setGmailStatus({ isConnected: false, email: null });
+          toast({
+            title: "Gmail Disconnected",
+            description: "Successfully disconnected your Gmail account.",
+          });
+        } else {
+          setGmailStatus({ isConnected: true, email: user?.email });
+          toast({
+            title: "Gmail Connected",
+            description: "Successfully connected your Gmail account!",
+          });
+        }
+        setGmailLoading(false);
+      }, 1500);
     } catch (error) {
       console.error('Gmail action error:', error);
       toast({
@@ -89,7 +56,6 @@ const Settings = () => {
           : "Failed to connect Gmail. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setGmailLoading(false);
     }
   };
@@ -101,9 +67,12 @@ const Settings = () => {
     try {
       // Simulate API delay
       setTimeout(() => {
+        setIsSlackConnected(!isSlackConnected);
         toast({
-          title: "Slack Authorization",
-          description: "You would be redirected to Slack's auth page",
+          title: isSlackConnected ? "Slack Disconnected" : "Slack Connected",
+          description: isSlackConnected 
+            ? "Successfully disconnected from Slack." 
+            : "Successfully connected to Slack!",
         });
         setSlackLoading(false);
       }, 2000);
@@ -125,9 +94,12 @@ const Settings = () => {
     try {
       // Simulate API delay
       setTimeout(() => {
+        setIsTeamsConnected(!isTeamsConnected);
         toast({
-          title: "Microsoft Teams Authorization",
-          description: "You would be redirected to Microsoft's auth page",
+          title: isTeamsConnected ? "Teams Disconnected" : "Teams Connected",
+          description: isTeamsConnected 
+            ? "Successfully disconnected from Microsoft Teams." 
+            : "Successfully connected to Microsoft Teams!",
         });
         setTeamsLoading(false);
       }, 2000);
@@ -147,7 +119,7 @@ const Settings = () => {
       <div className="w-full max-w-4xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-8">Settings</h1>
         
-        {/* Integrations Card - New Section */}
+        {/* Integrations Card */}
         <Card className="bg-app-card mb-6">
           <CardHeader>
             <CardTitle>Integrations</CardTitle>
@@ -163,11 +135,7 @@ const Settings = () => {
                   name={gmailStatus.isConnected ? `Gmail (${gmailStatus.email})` : 'Gmail'}
                   icon={
                     <div className="w-5 h-5 flex items-center justify-center">
-                      <img 
-                        src="/lovable-uploads/742ec6c8-9191-4098-95a0-72ae1d4c4826.png" 
-                        alt="Gmail Logo" 
-                        className="w-5 h-4 object-contain"
-                      />
+                      <Mail className="h-4 w-4" />
                     </div>
                   }
                   isConnected={gmailStatus.isConnected}
@@ -182,14 +150,14 @@ const Settings = () => {
                 <div className="space-y-2">
                   <IntegrationButton
                     name="Slack"
-                    icon={<Slack size={18} className="text-white" />}
+                    icon={<Slack size={18} />}
                     isConnected={isSlackConnected}
                     isLoading={slackLoading}
                     onClick={connectSlack}
                   />
                   <IntegrationButton
                     name="Microsoft Teams"
-                    icon={<MessageSquare size={18} className="text-white" />}
+                    icon={<MessageSquare size={18} />}
                     isConnected={isTeamsConnected}
                     isLoading={teamsLoading}
                     onClick={connectTeams}

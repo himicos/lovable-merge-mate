@@ -16,7 +16,10 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, User, FileText, Lock, Mail } from "lucide-react";
+import { Home, Lock, Mail, Heart } from "lucide-react";
+import { RiGoogleFill } from "@remixicon/react";
+import { SocialLinks } from "@/components/SocialLinks";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Landing = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -26,6 +29,7 @@ const Landing = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   // Redirect if user is already authenticated
   if (user) {
@@ -86,34 +90,30 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#d8f3d0] text-[#0a5a36] flex flex-col">
+    <div className="min-h-screen bg-[#d8f3d0] text-[#0a5a36]">
       {/* Navigation */}
       <nav className="flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2 font-medium">
+          <a href="/" className="flex items-center space-x-2 font-medium">
             <Home className="h-5 w-5" />
             <span>Home</span>
-          </div>
+          </a>
         </div>
-        <div className="h-10 w-32">
-          <img 
-            src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
-            alt="Verby Logo"
-            className="h-full object-contain"
-          />
+        <div className="h-10">
+          <SocialLinks />
         </div>
       </nav>
 
       {/* Main content */}
-      <div className="container mx-auto px-4 py-8 md:py-12 flex-1 flex items-center">
-        <div className="max-w-2xl mx-auto text-center md:text-left">
+      <div className="container mx-auto px-4 py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Left column with text */}
-          <div className="space-y-8">
+          <div className="w-full space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-[#0a5a36]">
-                Less talk,<br />more action
+                Less talk,<br />more verby
               </h1>
-              <p className="text-xl text-[#0a8a36] mb-8">
+              <p className="text-xl text-[#0a8a36]">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
               </p>
             </div>
@@ -124,15 +124,33 @@ const Landing = () => {
                   Get Started
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-white sm:max-w-md">
+              <DialogContent className="bg-white sm:max-w-md rounded-xl border-0 shadow-lg">
                 <DialogHeader>
-                  <DialogTitle>{isSignUp ? "Create an account" : "Sign in"}</DialogTitle>
-                  <DialogDescription>
-                    {isSignUp 
-                      ? "Enter your email and create a password to get started." 
-                      : "Enter your credentials to access your account."}
-                  </DialogDescription>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#d8f3d0]">
+                      <svg
+                        className="stroke-[#0a8a36]"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 32 32"
+                        aria-hidden="true"
+                      >
+                        <circle cx="16" cy="16" r="12" fill="none" strokeWidth="8" />
+                      </svg>
+                    </div>
+                    <DialogTitle className="text-center text-xl font-semibold">
+                      {isSignUp ? "Create an account" : "Welcome back"}
+                    </DialogTitle>
+                    <DialogDescription className="text-center">
+                      {isSignUp 
+                        ? "Sign up to get started with Verby." 
+                        : "Enter your credentials to access your account."}
+                    </DialogDescription>
+                  </div>
                 </DialogHeader>
+                
+                {/* Login Form */}
                 <form onSubmit={handleAuth} className="space-y-4">
                   <div>
                     <Label htmlFor="email">Email</Label>
@@ -144,7 +162,7 @@ const Landing = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email"
-                        className="pl-10"
+                        className="pl-10 rounded-lg"
                         required
                       />
                     </div>
@@ -159,7 +177,7 @@ const Landing = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Password"
-                        className="pl-10"
+                        className="pl-10 rounded-lg"
                         required
                       />
                     </div>
@@ -171,7 +189,7 @@ const Landing = () => {
                     </div>
                   )}
                   <DialogFooter className="flex-col sm:flex-col gap-2">
-                    <Button type="submit" className="w-full bg-[#0a8a36] hover:bg-[#0a5a36]" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-[#0a8a36] hover:bg-[#0a5a36] rounded-lg" disabled={isLoading}>
                       {isLoading ? "Processing..." : isSignUp ? "Sign up" : "Sign in"}
                     </Button>
                     <div className="relative w-full">
@@ -186,26 +204,13 @@ const Landing = () => {
                       type="button" 
                       variant="outline" 
                       onClick={handleGoogleSignIn}
-                      className="w-full"
+                      className="w-full rounded-lg"
                     >
-                      <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" aria-hidden="true">
-                        <path
-                          d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
-                          fill="#EA4335"
-                        />
-                        <path
-                          d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z"
-                          fill="#4285F4"
-                        />
-                        <path
-                          d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z"
-                          fill="#FBBC05"
-                        />
-                        <path
-                          d="M12.0004 24C15.2404 24 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.8704 19.245 6.21537 17.135 5.2654 14.29L1.27539 17.385C3.25539 21.31 7.3104 24 12.0004 24Z"
-                          fill="#34A853"
-                        />
-                      </svg>
+                      <RiGoogleFill
+                        className="mr-2 text-[#DB4437]"
+                        size={16}
+                        aria-hidden="true"
+                      />
                       Google
                     </Button>
                   </DialogFooter>
@@ -222,28 +227,42 @@ const Landing = () => {
               </DialogContent>
             </Dialog>
           </div>
+          
+          {/* Right column with new illustration */}
+          <div className="relative flex justify-center items-center">
+            <img 
+              src="/lovable-uploads/84a95001-ed3f-44b2-b819-beb8a1eb329a.png" 
+              alt="Person working on laptop" 
+              className="w-4/5 md:w-full max-w-md mx-auto"
+              style={{ filter: "drop-shadow(0px 10px 15px rgba(0, 100, 0, 0.2))" }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="bg-[#f8f3d9] py-6 px-4">
-        <div className="container mx-auto flex flex-wrap items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2 text-[#0a5a36]">
-              <Lock className="h-5 w-5" />
-              <span>Privacy</span>
+      <footer className="mt-16 bg-[#f8f3d9] py-6 px-4">
+        <div className="container mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center space-x-6">
+              <a href="/privacy" className="flex items-center space-x-2 text-[#0a5a36]">
+                <Lock className="h-5 w-5" />
+                <span>Privacy</span>
+              </a>
             </div>
-            <div className="flex items-center space-x-2 text-[#0a5a36]">
-              <FileText className="h-5 w-5" />
-              <span>Terms</span>
+            
+            <div className="flex flex-col items-center md:items-end space-y-2">
+              <img 
+                src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+                alt="Verby Logo"
+                className="h-12 w-auto" 
+              />
+              <div className="flex items-center text-sm text-[#0a5a36]">
+                <span>All rights reserved. Verby. Made with </span>
+                <Heart className="h-4 w-4 mx-1 text-red-500 fill-red-500" />
+                <span>Lovable 2025</span>
+              </div>
             </div>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <img 
-              src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
-              alt="Verby Logo"
-              className="h-10 w-auto"
-            />
           </div>
         </div>
       </footer>
