@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, User, FileText, Phone, Lock, Mail, ArrowRight, MessageCircle } from "lucide-react";
+import { Home, User, FileText, Lock, Mail, ArrowRight } from "lucide-react";
 
 const Landing = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -86,7 +86,7 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2FCE2] text-green-950">
+    <div className="min-h-screen bg-[#d8f3d0] text-[#0a5a36]">
       {/* Navigation */}
       <nav className="flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center space-x-6">
@@ -103,9 +103,13 @@ const Landing = () => {
             <span>Pricing</span>
           </a>
         </div>
-        <a href="/contact" className="p-2 rounded-full border border-green-700">
-          <Phone className="h-5 w-5" />
-        </a>
+        <div className="h-8 w-8">
+          <svg className="h-8 w-8 text-[#0a5a36]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor" fillOpacity="0.2" />
+            <path d="M13.5 8C13.5 8.82843 12.8284 9.5 12 9.5C11.1716 9.5 10.5 8.82843 10.5 8C10.5 7.17157 11.1716 6.5 12 6.5C12.8284 6.5 13.5 7.17157 13.5 8Z" fill="currentColor" />
+            <path d="M10.5 12C10.5 11.1716 11.1716 10.5 12 10.5C12.8284 10.5 13.5 11.1716 13.5 12V16C13.5 16.8284 12.8284 17.5 12 17.5C11.1716 17.5 10.5 16.8284 10.5 16V12Z" fill="currentColor" />
+          </svg>
+        </div>
       </nav>
 
       {/* Main content */}
@@ -114,17 +118,17 @@ const Landing = () => {
           {/* Left column with text */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-6xl font-bold text-green-800">
+              <h1 className="text-5xl md:text-6xl font-bold text-[#0a5a36]">
                 Less talk,<br />more action
               </h1>
-              <p className="text-xl text-green-700">
+              <p className="text-xl text-[#0a8a36]">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
               </p>
             </div>
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 rounded-full text-lg">
+                <Button className="bg-[#0a8a36] hover:bg-[#0a5a36] text-white px-8 py-6 rounded-full text-lg">
                   Get Started
                 </Button>
               </DialogTrigger>
@@ -175,7 +179,7 @@ const Landing = () => {
                     </div>
                   )}
                   <DialogFooter className="flex-col sm:flex-col gap-2">
-                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-[#0a8a36] hover:bg-[#0a5a36]" disabled={isLoading}>
                       {isLoading ? "Processing..." : isSignUp ? "Sign up" : "Sign in"}
                     </Button>
                     <div className="relative w-full">
@@ -183,7 +187,7 @@ const Landing = () => {
                         <span className="w-full border-t border-green-100" />
                       </div>
                       <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white px-2 text-green-600">Or continue with</span>
+                        <span className="bg-white px-2 text-[#0a8a36]">Or continue with</span>
                       </div>
                     </div>
                     <Button 
@@ -218,7 +222,7 @@ const Landing = () => {
                   <button
                     type="button"
                     onClick={() => setIsSignUp(!isSignUp)}
-                    className="text-sm text-green-600 hover:underline"
+                    className="text-sm text-[#0a8a36] hover:underline"
                   >
                     {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
                   </button>
@@ -227,7 +231,7 @@ const Landing = () => {
             </Dialog>
 
             <div className="pt-24">
-              <h2 className="text-3xl font-bold text-green-800 mb-4">Ready to unlock your best self?</h2>
+              <h2 className="text-3xl font-bold text-[#0a5a36] mb-4">Ready to unlock your best self?</h2>
             </div>
           </div>
           
@@ -244,39 +248,28 @@ const Landing = () => {
         
         {/* CTA Button */}
         <div className="flex justify-end mt-8">
-          <Button className="bg-[#F8F6D8] hover:bg-[#F0EEC0] text-green-800 font-medium px-8 py-6 rounded-full text-lg">
-            DM for early access
+          <Button className="bg-[#f8f3d9] hover:bg-[#f0eec0] text-[#0a5a36] font-medium px-8 py-6 rounded-full text-lg">
+            DM for early access <ArrowRight className="ml-2" />
           </Button>
         </div>
       </div>
 
-      {/* Floating chat button */}
-      <div className="fixed bottom-8 right-8">
-        <Button className="rounded-full shadow-lg bg-green-600 hover:bg-green-700 h-14 w-14 p-0">
-          <MessageCircle className="h-6 w-6"/>
-        </Button>
-      </div>
-
       {/* Footer */}
-      <footer className="mt-16 bg-[#F8F6D8] py-6 px-4">
+      <footer className="mt-16 bg-[#f8f3d9] py-6 px-4">
         <div className="container mx-auto flex flex-wrap items-center justify-between">
           <div className="flex items-center space-x-6">
-            <a href="/privacy" className="flex items-center space-x-2 text-green-800">
+            <a href="/privacy" className="flex items-center space-x-2 text-[#0a5a36]">
               <Lock className="h-5 w-5" />
               <span>Privacy</span>
             </a>
-            <a href="/terms" className="flex items-center space-x-2 text-green-800">
+            <a href="/terms" className="flex items-center space-x-2 text-[#0a5a36]">
               <FileText className="h-5 w-5" />
               <span>Terms</span>
             </a>
-            <a href="/contact" className="flex items-center space-x-2 text-green-800">
-              <Phone className="h-5 w-5" />
-              <span>Contact</span>
-            </a>
           </div>
           <div className="mt-4 md:mt-0">
-            <div className="bg-[#F8F6D8] p-4 rounded-full">
-              <svg className="h-8 w-8 text-green-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div className="bg-[#f8f3d9] p-4 rounded-full">
+              <svg className="h-8 w-8 text-[#0a5a36]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor" fillOpacity="0.2" />
                 <path d="M13.5 8C13.5 8.82843 12.8284 9.5 12 9.5C11.1716 9.5 10.5 8.82843 10.5 8C10.5 7.17157 11.1716 6.5 12 6.5C12.8284 6.5 13.5 7.17157 13.5 8Z" fill="currentColor" />
                 <path d="M10.5 12C10.5 11.1716 11.1716 10.5 12 10.5C12.8284 10.5 13.5 11.1716 13.5 12V16C13.5 16.8284 12.8284 17.5 12 17.5C11.1716 17.5 10.5 16.8284 10.5 16V12Z" fill="currentColor" />

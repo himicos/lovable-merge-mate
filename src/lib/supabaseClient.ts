@@ -15,8 +15,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     detectSessionInUrl: true,
     storage: localStorage,
     flowType: 'pkce',
-    debug: process.env.NODE_ENV !== 'production',
-    // Set the redirect URL properly
-    redirectTo: `${siteUrl}/auth/callback`
+    debug: process.env.NODE_ENV !== 'production'
   }
 });
