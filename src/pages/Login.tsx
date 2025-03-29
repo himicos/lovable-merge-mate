@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -40,7 +39,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F2FCE2] text-green-950">
+    <div className="min-h-screen flex flex-col bg-[#F2FCE2] text-emerald-950">
       {/* Navigation */}
       <nav className="flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center space-x-6">
@@ -65,18 +64,18 @@ const Login = () => {
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold">
-                <span className="text-green-400">Less talk, more</span>
+                <span className="!text-emerald-400">Less talk, more</span>
                 <br />
-                <span className="text-green-800">verby</span>
+                <span className="!text-emerald-800">verby</span>
               </h1>
-              <p className="text-xl text-green-700">
+              <p className="text-xl text-emerald-700">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
               </p>
             </div>
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 rounded-full text-lg">
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-6 rounded-full text-lg">
                   Get Started
                 </Button>
               </DialogTrigger>
@@ -145,7 +144,7 @@ const Login = () => {
       <footer className="bg-[#F8F6D8] py-6 px-4 mt-auto">
         <div className="container mx-auto flex flex-wrap items-center justify-between">
           <div className="flex items-center space-x-6">
-            <a href="/privacy" className="flex items-center space-x-2 text-green-800">
+            <a href="/privacy" className="flex items-center space-x-2 text-emerald-800">
               <Lock className="h-5 w-5" />
               <span>Privacy</span>
             </a>
