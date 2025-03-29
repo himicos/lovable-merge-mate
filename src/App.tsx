@@ -27,19 +27,47 @@ function AuthCallback() {
     // Handle the OAuth callback
     const handleAuthCallback = async () => {
       try {
+        console.log("Auth callback triggered, current URL:", window.location.href);
+        
         const { hash, searchParams } = new URL(window.location.href);
         const code = searchParams.get('code');
         const access_token = searchParams.get('access_token');
+        const error = searchParams.get('error');
+        const error_description = searchParams.get('error_description');
+        
+        if (error) {
+          console.error("Auth error:", error, error_description);
+          throw new Error(`${error}: ${error_description}`);
+        }
         
         if (code) {
-          await supabase.auth.exchangeCodeForSession(code);
+          console.log("Exchanging code for session");
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (error) {
+            console.error("Session exchange error:", error);
+            throw error;
+          }
+          
+          console.log("Session exchange successful, redirecting to home");
           navigate('/', { replace: true });
         } else if (access_token) {
           // Handle magic link or other token-based auth
+          console.log("Processing access token");
           const { data, error } = await supabase.auth.getUser(access_token);
-          if (!error && data?.user) {
+          
+          if (error) {
+            console.error("Get user error:", error);
+            throw error;
+          }
+          
+          if (data?.user) {
+            console.log("User retrieved successfully, redirecting to home");
             navigate('/', { replace: true });
           }
+        } else {
+          console.error("No code or access token found in callback URL");
+          throw new Error("Invalid authentication callback");
         }
       } catch (error) {
         console.error('Error handling auth callback:', error);

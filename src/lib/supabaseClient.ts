@@ -2,14 +2,21 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://gbhpprzcwearsppfwwon.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiaHBwcnpjd2VhcnNwcGZ3d29uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEwNDQ5ODQsImV4cCI6MjAyNjYyMDk4NH0.IaOJdGxnsTW-8l5WpXVkXL-ZEKpUt7mlqhsjucsAovw';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiaHBwcnpjd2VhcnNwcGZ3d29uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxMzYwMDYsImV4cCI6MjA1ODcxMjAwNn0.3m8NZB91ZPJns48VGLOBU6dTfqeUTi9ok-MX9VUoLfE';
+
+// Get the current site URL
+const siteUrl = window.location.origin;
+console.log("Current site URL for auth redirects:", siteUrl);
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
     storage: localStorage,
     flowType: 'pkce',
-    debug: process.env.NODE_ENV !== 'production'
+    debug: process.env.NODE_ENV !== 'production',
+    // Use the current origin as the site URL to ensure redirects work correctly
+    redirectTo: `${siteUrl}/auth/callback`
   }
 });
