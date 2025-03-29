@@ -107,8 +107,8 @@ const Login = () => {
       {/* Main content */}
       <div className="container mx-auto px-4 py-8 md:py-12 flex-1 flex items-center">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center w-full">
-          {/* Left column with text - now justified to the left */}
-          <div className="space-y-8 text-left">
+          {/* Left column with text */}
+          <div className="space-y-8 text-left w-full">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-green-800">
                 Less talk,<br />more action
@@ -226,7 +226,7 @@ const Login = () => {
           {/* Right column with illustration */}
           <div className="hidden md:flex justify-center items-center">
             <img 
-              src="/public/lovable-uploads/814dd99a-613b-459c-824d-865ff5bd5d5c.png" 
+              src="/lovable-uploads/1af2611d-14cf-4a00-bf40-f73f41dc8d20.png" 
               alt="Happy user working on laptop" 
               className="max-w-full h-auto"
             />
