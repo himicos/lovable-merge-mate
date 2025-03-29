@@ -106,9 +106,9 @@ const Login = () => {
 
       {/* Main content */}
       <div className="container mx-auto px-4 py-8 md:py-12 flex-1 flex items-center">
-        <div className="max-w-2xl mx-auto text-center md:text-left">
-          {/* Left column with text */}
-          <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center w-full">
+          {/* Left column with text - now justified to the left */}
+          <div className="space-y-8 text-left">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-green-800">
                 Less talk,<br />more action
@@ -120,7 +120,7 @@ const Login = () => {
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 rounded-full text-lg">
+                <Button className="bg-green-600 hover:bg-green-700 hover:scale-105 transition-all duration-300 text-white px-8 py-6 rounded-full text-lg">
                   Get Started
                 </Button>
               </DialogTrigger>
@@ -171,7 +171,7 @@ const Login = () => {
                     </div>
                   )}
                   <DialogFooter className="flex-col sm:flex-col gap-2">
-                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 hover:scale-105 transition-all duration-300" disabled={isLoading}>
                       {isLoading ? "Processing..." : isSignUp ? "Sign up" : "Sign in"}
                     </Button>
                     <div className="relative w-full">
@@ -186,7 +186,7 @@ const Login = () => {
                       type="button" 
                       variant="outline" 
                       onClick={handleGoogleSignIn}
-                      className="w-full"
+                      className="w-full hover:scale-105 transition-all duration-300"
                     >
                       <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" aria-hidden="true">
                         <path
@@ -221,6 +221,15 @@ const Login = () => {
                 </div>
               </DialogContent>
             </Dialog>
+          </div>
+          
+          {/* Right column with illustration */}
+          <div className="hidden md:flex justify-center items-center">
+            <img 
+              src="/public/lovable-uploads/814dd99a-613b-459c-824d-865ff5bd5d5c.png" 
+              alt="Happy user working on laptop" 
+              className="max-w-full h-auto"
+            />
           </div>
         </div>
       </div>
