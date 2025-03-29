@@ -1,7 +1,8 @@
+
 import { LucideLayoutGrid, LucideUser, LucideSettings, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useAuth } from "@/context/AuthContext"; // Fixed import path
+import { useAuth } from "@/context/AuthContext"; 
 import { toast } from "@/hooks/use-toast";
 
 const Sidebar = () => {
@@ -48,19 +49,19 @@ const Sidebar = () => {
       <nav className="flex-1">
         <ul className="space-y-2">
           <li>
-            <Link to="/" className={`nav-item ${currentPath === "/" ? "active" : ""}`}>
+            <Link to="/" className={`nav-item ${currentPath === "/" ? "active rounded-lg" : ""}`}>
               <LucideLayoutGrid size={18} />
               <span>Dashboard</span>
             </Link>
           </li>
           <li>
-            <Link to="/settings" className={`nav-item ${currentPath === "/settings" ? "active" : ""}`}>
+            <Link to="/settings" className={`nav-item ${currentPath === "/settings" ? "active rounded-lg" : ""}`}>
               <LucideSettings size={18} />
               <span>Settings</span>
             </Link>
           </li>
           <li>
-            <Link to="/profile" className={`nav-item ${currentPath === "/profile" ? "active" : ""}`}>
+            <Link to="/profile" className={`nav-item ${currentPath === "/profile" ? "active rounded-lg" : ""}`}>
               <LucideUser size={18} />
               <span>Profile</span>
             </Link>
