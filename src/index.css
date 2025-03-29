@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -150,4 +151,18 @@
   .nav-item.active {
     @apply bg-primary text-primary-foreground;
   }
+  
+  /* Settings section styles */
+  .settings-section {
+    @apply bg-app-card rounded-xl p-6 shadow-sm border border-primary/10;
+  }
+  
+  .settings-section-header {
+    @apply border-b border-primary/10 pb-4 mb-4;
+  }
+  
+  .settings-section-divider {
+    @apply border-t border-primary/10 my-4;
+  }
 }
+

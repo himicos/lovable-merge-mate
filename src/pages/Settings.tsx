@@ -116,18 +116,18 @@ const Settings = () => {
   
   return (
     <Layout>
-      <div className="w-full max-w-4xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Settings</h1>
+      <div className="w-full max-w-4xl mx-auto p-8 space-y-6">
+        <h1 className="text-3xl font-bold mb-6">Settings</h1>
         
-        {/* Appearance Card - Moved to top for better visibility */}
-        <Card className="bg-app-card mb-6">
-          <CardHeader>
+        {/* Appearance Card - Top section */}
+        <Card className="bg-app-card rounded-xl shadow-sm border border-primary/10 overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b border-primary/10">
             <CardTitle>Appearance</CardTitle>
             <CardDescription>
               Manage how the dashboard looks and feels
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5 flex items-center gap-2">
                 {theme === 'dark' ? (
@@ -154,17 +154,17 @@ const Settings = () => {
         </Card>
         
         {/* Integrations Card */}
-        <Card className="bg-app-card mb-6">
-          <CardHeader>
+        <Card className="bg-app-card rounded-xl shadow-sm border border-primary/10 overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b border-primary/10">
             <CardTitle>Integrations</CardTitle>
             <CardDescription>
               Connect your accounts to enable app integrations
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex flex-col gap-2">
-                <Label>Email Integrations</Label>
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              <div className="flex flex-col gap-3">
+                <Label className="text-lg font-medium">Email Integrations</Label>
                 <IntegrationButton
                   name={gmailStatus.isConnected ? `Gmail (${gmailStatus.email})` : 'Gmail'}
                   icon={
@@ -179,9 +179,9 @@ const Settings = () => {
                 />
               </div>
               
-              <div className="flex flex-col gap-2">
-                <Label>Messaging Integrations</Label>
-                <div className="space-y-2">
+              <div className="flex flex-col gap-3 pt-4 border-t border-primary/10">
+                <Label className="text-lg font-medium">Messaging Integrations</Label>
+                <div className="space-y-3">
                   <IntegrationButton
                     name="Slack"
                     icon={<Slack size={18} />}
@@ -202,42 +202,19 @@ const Settings = () => {
           </CardContent>
         </Card>
         
-        <Card className="bg-app-card mb-6">
-          <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>
-              Manage how the dashboard looks and feels
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="theme-toggle">Dark Theme</Label>
-                <p className="text-sm text-muted-foreground">
-                  Switch between light and dark themes
-                </p>
-              </div>
-              <Switch 
-                id="theme-toggle" 
-                checked={theme === 'dark'}
-                onCheckedChange={toggleTheme}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-app-card mb-6">
-          <CardHeader>
+        {/* Notifications Card */}
+        <Card className="bg-app-card rounded-xl shadow-sm border border-primary/10 overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b border-primary/10">
             <CardTitle>Notifications</CardTitle>
             <CardDescription>
               Configure how you receive notifications
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="p-6">
+            <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="email-notifs">Email Notifications</Label>
+                  <Label htmlFor="email-notifs" className="font-medium">Email Notifications</Label>
                   <p className="text-sm text-muted-foreground">
                     Receive notifications about new emails
                   </p>
@@ -245,9 +222,9 @@ const Settings = () => {
                 <Switch id="email-notifs" defaultChecked />
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-4 border-t border-primary/10">
                 <div className="space-y-0.5">
-                  <Label htmlFor="task-notifs">Task Reminders</Label>
+                  <Label htmlFor="task-notifs" className="font-medium">Task Reminders</Label>
                   <p className="text-sm text-muted-foreground">
                     Get reminded about upcoming deadlines
                   </p>
@@ -258,18 +235,19 @@ const Settings = () => {
           </CardContent>
         </Card>
         
-        <Card className="bg-app-card">
-          <CardHeader>
+        {/* AI Assistant Settings Card */}
+        <Card className="bg-app-card rounded-xl shadow-sm border border-primary/10 overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b border-primary/10">
             <CardTitle>AI Assistant Settings</CardTitle>
             <CardDescription>
               Configure how the AI assistant works
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="p-6">
+            <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="ai-enabled">Enable AI Assistant</Label>
+                  <Label htmlFor="ai-enabled" className="font-medium">Enable AI Assistant</Label>
                   <p className="text-sm text-muted-foreground">
                     Show the AI assistant button on all pages
                   </p>
@@ -277,9 +255,9 @@ const Settings = () => {
                 <Switch id="ai-enabled" defaultChecked />
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-4 border-t border-primary/10">
                 <div className="space-y-0.5">
-                  <Label htmlFor="voice-capture">Voice Capture</Label>
+                  <Label htmlFor="voice-capture" className="font-medium">Voice Capture</Label>
                   <p className="text-sm text-muted-foreground">
                     Allow the assistant to listen to voice commands
                   </p>
@@ -287,9 +265,9 @@ const Settings = () => {
                 <Switch id="voice-capture" defaultChecked />
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-4 border-t border-primary/10">
                 <div className="space-y-0.5">
-                  <Label htmlFor="auto-suggestions">Auto Suggestions</Label>
+                  <Label htmlFor="auto-suggestions" className="font-medium">Auto Suggestions</Label>
                   <p className="text-sm text-muted-foreground">
                     Let the assistant proactively suggest actions
                   </p>
