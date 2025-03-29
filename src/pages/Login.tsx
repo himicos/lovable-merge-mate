@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -114,6 +115,10 @@ const Login = () => {
                   Get Started
                 </Button>
               </DialogTrigger>
+              
+              {/* Added "Hello World" text after the button */}
+              <p className="mt-3 text-emerald-700">Hello World</p>
+              
               <DialogContent className="bg-white sm:max-w-md rounded-[28px] border-0 shadow-lg">
                 <DialogHeader className="text-center">
                   <div className="flex flex-col items-center gap-2">
