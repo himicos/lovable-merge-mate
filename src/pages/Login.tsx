@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, User, FileText, Lock, Mail } from "lucide-react";
+import { Home, Lock, Mail } from "lucide-react";
 
 const Login = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -93,14 +93,6 @@ const Login = () => {
           <a href="/" className="flex items-center space-x-2 font-medium">
             <Home className="h-5 w-5" />
             <span>Home</span>
-          </a>
-          <a href="/about" className="flex items-center space-x-2 font-medium">
-            <User className="h-5 w-5" />
-            <span>About</span>
-          </a>
-          <a href="/pricing" className="flex items-center space-x-2 font-medium">
-            <FileText className="h-5 w-5" />
-            <span>Pricing</span>
           </a>
         </div>
         <div className="h-10 w-32">
@@ -249,10 +241,6 @@ const Login = () => {
             <a href="/privacy" className="flex items-center space-x-2 text-green-800">
               <Lock className="h-5 w-5" />
               <span>Privacy</span>
-            </a>
-            <a href="/terms" className="flex items-center space-x-2 text-green-800">
-              <FileText className="h-5 w-5" />
-              <span>Terms</span>
             </a>
           </div>
           <div className="mt-4 md:mt-0">

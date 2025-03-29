@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Home, User, FileText, Lock, Mail } from "lucide-react";
+import { Home, Lock, Mail } from "lucide-react";
 
 const Landing = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -94,18 +94,10 @@ const Landing = () => {
             <Home className="h-5 w-5" />
             <span>Home</span>
           </a>
-          <a href="/about" className="flex items-center space-x-2 font-medium">
-            <User className="h-5 w-5" />
-            <span>About</span>
-          </a>
-          <a href="/pricing" className="flex items-center space-x-2 font-medium">
-            <FileText className="h-5 w-5" />
-            <span>Pricing</span>
-          </a>
         </div>
         <div className="h-10 w-32">
           <img 
-            src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+            src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
             alt="Verby Logo"
             className="h-full object-contain"
           />
@@ -251,14 +243,10 @@ const Landing = () => {
               <Lock className="h-5 w-5" />
               <span>Privacy</span>
             </a>
-            <a href="/terms" className="flex items-center space-x-2 text-[#0a5a36]">
-              <FileText className="h-5 w-5" />
-              <span>Terms</span>
-            </a>
           </div>
           <div className="mt-4 md:mt-0">
             <img 
-              src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+              src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
               alt="Verby Logo"
               className="h-10 w-auto"
             />
