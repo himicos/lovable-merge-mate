@@ -4,17 +4,17 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import { ThemeProvider } from "emailgenius-desktop-main/src/context/ThemeContext";
-import { AuthProvider } from "emailgenius-desktop-main/src/context/AuthContext";
-import ProtectedRoute from "emailgenius-desktop-main/src/components/ProtectedRoute";
-import Index from "emailgenius-desktop-main/src/pages/Index";
-import NotFound from "emailgenius-desktop-main/src/pages/NotFound";
-import Profile from "emailgenius-desktop-main/src/pages/Profile";
-import Settings from "emailgenius-desktop-main/src/pages/Settings";
-import Login from "emailgenius-desktop-main/src/pages/Login";
-import Landing from "emailgenius-desktop-main/src/pages/Landing";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { AuthProvider } from "@/context/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Index from "@/pages/Index";
+import NotFound from "@/pages/NotFound";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
+import Login from "@/pages/Login";
+import Landing from "@/pages/Landing";
 import { useEffect } from "react";
-import { useAuth } from "emailgenius-desktop-main/src/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 // Create a client outside of the component
 const queryClient = new QueryClient();
