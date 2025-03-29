@@ -4,19 +4,21 @@
 @tailwind utilities;
 
 :root {
-  --app-background: #E9F7EC;
-  --app-card: #F9FFF7;
-  --app-accent: #A8D5BA;
-  --app-highlight: #3E5C4E;
-  --app-text-primary: #0A5A36;
-  --app-text-secondary: #3E5C4E;
+  --app-background: #FFFFFF;
+  --app-card: #FFFFFF;
+  --app-accent: #333333;
+  --app-highlight: #555555;
+  --app-text-primary: #333333;
+  --app-text-secondary: #555555;
 }
 
 :root.dark {
-  --app-background: #1D1F20;  /* Dark background */
-  --app-card: #4a5a29;        /* Slightly lighter for cards */
-  --app-accent: #8fb339;      /* Brighter olive for accents */
-  --app-highlight: #a2c149;   /* Highlight color */
+  --app-background: #121212;  /* Dark background */
+  --app-card: #1E1E1E;        /* Slightly lighter for cards */
+  --app-accent: #444444;      /* Accent color */
+  --app-highlight: #666666;   /* Highlight color */
+  --app-text-primary: #EEEEEE;
+  --app-text-secondary: #AAAAAA;
 }
 
 @layer base {
@@ -34,47 +36,67 @@
   }
   
   .dark {
-    --background: 83 45% 21%;
-    --foreground: 60 9% 98%;
-    --card: 83 34% 26%;
-    --card-foreground: 60 9% 98%;
-    --popover: 83 34% 26%;
-    --popover-foreground: 60 9% 98%;
-    --primary: 74 45% 46%;
-    --primary-foreground: 60 9% 98%;
-    --secondary: 78 42% 22%;
-    --secondary-foreground: 60 9% 98%;
-    --muted: 78 42% 22%;
-    --muted-foreground: 60 9% 70%;
-    --accent: 74 45% 46%;
-    --accent-foreground: 60 9% 98%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 12%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 60 9% 98%;
-    --border: 78 42% 22%;
-    --input: 78 42% 22%;
-    --ring: 74 45% 46%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 83.9%;
+    
+    /* Sidebar colors - maintain original */
+    --sidebar: 0 0% 12%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 12%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 0 0% 83.9%;
   }
   
   .light {
-    --background: 80 40% 96%;
-    --foreground: 83 45% 15%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 20%;
     --card: 0 0% 100%;
-    --card-foreground: 83 45% 15%;
+    --card-foreground: 0 0% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 83 45% 15%;
-    --primary: 82 58% 35%;
-    --primary-foreground: 60 9% 98%;
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 83 45% 15%;
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 83 3.8% 46.1%;
-    --accent: 82 58% 35%;
-    --accent-foreground: 60 9% 98%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 0 0% 20%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 46%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 20%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 60 9% 98%;
-    --border: 83 45% 90%;
-    --input: 83 45% 90%;
-    --ring: 82 58% 35%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 20%;
+    
+    /* Sidebar colors - maintain original */
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 0 0% 20%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 20%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 0% 20%;
   }
 }
 
@@ -95,7 +117,7 @@
     background-color: var(--app-highlight);
   }
   
-  /* AI Assistant Button Styles */
+  /* AI Assistant Button Styles - PRESERVED FROM ORIGINAL */
   .ai-button {
     @apply fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-50;
     box-shadow: 0 4px 12px rgba(10, 90, 54, 0.2);
@@ -206,7 +228,7 @@
 
   /* Card styles */
   .dashboard-card {
-    @apply bg-app-card rounded-xl p-5 shadow-sm border border-green-100;
+    @apply bg-app-card rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-800;
   }
   
   /* Message list item */
@@ -215,10 +237,10 @@
   }
   
   .message-item:hover {
-    @apply bg-green-50;
+    @apply bg-gray-100 dark:bg-gray-800;
   }
   
   .message-item.selected {
-    @apply bg-green-100;
+    @apply bg-gray-200 dark:bg-gray-700;
   }
 }

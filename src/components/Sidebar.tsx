@@ -4,11 +4,13 @@ import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext"; 
 import { toast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme";
 
 const Sidebar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const { user, signOut } = useAuth();
+  const { theme } = useTheme();
 
   // Get display name from user metadata or email
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
@@ -35,8 +37,15 @@ const Sidebar = () => {
     }
   };
 
+  // Determine colors based on theme
+  const bgColor = theme === 'light' ? 'bg-white border-r border-gray-200' : 'bg-[#1E1E1E] border-r border-gray-800';
+  const textColor = theme === 'light' ? 'text-gray-800' : 'text-gray-200';
+  const activeItemBg = theme === 'light' ? 'bg-gray-100' : 'bg-gray-800';
+  const hoverBg = theme === 'light' ? 'hover:bg-gray-50' : 'hover:bg-gray-700';
+  const borderColor = theme === 'light' ? 'border-gray-200' : 'border-gray-700';
+
   return (
-    <div className="w-[300px] h-screen bg-[#3E5C4E] border-r border-[#4a6d5a] p-6 flex flex-col">
+    <div className={`w-[300px] h-screen ${bgColor} p-6 flex flex-col`}>
       {/* Logo */}
       <div className="flex items-center gap-3 mb-12">
         <img 
@@ -52,8 +61,8 @@ const Sidebar = () => {
           <li>
             <Link 
               to="/" 
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white ${
-                currentPath === "/" ? "bg-[#517c69] font-medium" : "hover:bg-[#4a6d5a] transition-colors"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg ${textColor} ${
+                currentPath === "/" ? activeItemBg + " font-medium" : hoverBg + " transition-colors"
               }`}
             >
               <LucideLayoutGrid size={18} />
@@ -63,8 +72,8 @@ const Sidebar = () => {
           <li>
             <Link 
               to="/settings" 
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white ${
-                currentPath === "/settings" ? "bg-[#517c69] font-medium" : "hover:bg-[#4a6d5a] transition-colors"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg ${textColor} ${
+                currentPath === "/settings" ? activeItemBg + " font-medium" : hoverBg + " transition-colors"
               }`}
             >
               <LucideSettings size={18} />
@@ -74,8 +83,8 @@ const Sidebar = () => {
           <li>
             <Link 
               to="/profile" 
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white ${
-                currentPath === "/profile" ? "bg-[#517c69] font-medium" : "hover:bg-[#4a6d5a] transition-colors"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg ${textColor} ${
+                currentPath === "/profile" ? activeItemBg + " font-medium" : hoverBg + " transition-colors"
               }`}
             >
               <LucideUser size={18} />
@@ -85,7 +94,7 @@ const Sidebar = () => {
           <li>
             <button 
               onClick={handleSignOut} 
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#4a6d5a] transition-colors text-left"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${textColor} ${hoverBg} transition-colors text-left`}
             >
               <LogOut size={18} />
               <span>Logout</span>
@@ -95,11 +104,11 @@ const Sidebar = () => {
       </nav>
       
       {/* User Profile */}
-      <div className="flex items-center gap-3 pt-4 border-t border-[#4a6d5a]">
-        <Avatar className="w-10 h-10 bg-[#517c69] text-white">
+      <div className={`flex items-center gap-3 pt-4 border-t ${borderColor}`}>
+        <Avatar className={`w-10 h-10 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'} ${textColor}`}>
           <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
         </Avatar>
-        <span className="font-medium text-white">{displayName}</span>
+        <span className={`font-medium ${textColor}`}>{displayName}</span>
       </div>
     </div>
   );
