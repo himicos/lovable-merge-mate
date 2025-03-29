@@ -108,7 +108,7 @@ const Landing = () => {
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Left column with text */}
-          <div className="space-y-8">
+          <div className="w-full space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-[#0a5a36]">
                 Less talk,<br />more action
@@ -223,12 +223,12 @@ const Landing = () => {
             </Dialog>
           </div>
           
-          {/* Right column with green speech bubble */}
+          {/* Right column with new illustration */}
           <div className="relative flex justify-center items-center">
             <img 
-              src="/lovable-uploads/bed4f515-0c15-4bde-adb5-9b97df261f0a.png" 
-              alt="Green speech bubble" 
-              className="w-4/5 md:w-full max-w-md mx-auto animate-pulse duration-3000"
+              src="/lovable-uploads/84a95001-ed3f-44b2-b819-beb8a1eb329a.png" 
+              alt="Person working on laptop" 
+              className="w-4/5 md:w-full max-w-md mx-auto"
               style={{ filter: "drop-shadow(0px 10px 15px rgba(0, 100, 0, 0.2))" }}
             />
           </div>
