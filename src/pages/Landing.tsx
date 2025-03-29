@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Home, Lock, Mail } from "lucide-react";
+import { SocialLinks } from "@/components/SocialLinks";
 
 const Landing = () => {
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -95,12 +95,8 @@ const Landing = () => {
             <span>Home</span>
           </a>
         </div>
-        <div className="h-10 w-32">
-          <img 
-            src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
-            alt="Verby Logo"
-            className="h-full object-contain"
-          />
+        <div className="h-10">
+          <SocialLinks />
         </div>
       </nav>
 
