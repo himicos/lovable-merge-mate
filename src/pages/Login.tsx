@@ -64,8 +64,9 @@ const Login = () => {
           {/* Left column with text */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-6xl font-bold text-green-800">
-                Less talk,<br />more action
+              <h1 className="text-5xl md:text-6xl font-bold">
+                <span className="text-green-600">Less talk,<br />more</span>
+                <span className="text-green-800"> action</span>
               </h1>
               <p className="text-xl text-green-700">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
