@@ -39,6 +39,143 @@ export type Database = {
         }
         Relationships: []
       }
+      message_queue: {
+        Row: {
+          created_at: string | null
+          error: string | null
+          id: string
+          max_retries: number
+          message_id: string
+          payload: Json
+          priority: number
+          retry_count: number
+          source: string
+          status: string
+          updated_at: string | null
+          user_id: string
+          visible_after: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          max_retries?: number
+          message_id: string
+          payload: Json
+          priority?: number
+          retry_count?: number
+          source: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          visible_after?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          max_retries?: number
+          message_id?: string
+          payload?: Json
+          priority?: number
+          retry_count?: number
+          source?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          visible_after?: string | null
+        }
+        Relationships: []
+      }
+      message_responses: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string | null
+          response_text: string
+          response_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          response_text: string
+          response_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          response_text?: string
+          response_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_responses_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "processed_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processed_messages: {
+        Row: {
+          action: Database["public"]["Enums"]["message_action"]
+          category: Database["public"]["Enums"]["message_category"]
+          content: string
+          created_at: string | null
+          id: string
+          original_message_id: string
+          processed_at: string | null
+          prompt: string | null
+          raw_data: Json | null
+          requires_voice_response: boolean | null
+          sender: string
+          source: Database["public"]["Enums"]["message_source"]
+          subject: string | null
+          summary: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["message_action"]
+          category: Database["public"]["Enums"]["message_category"]
+          content: string
+          created_at?: string | null
+          id?: string
+          original_message_id: string
+          processed_at?: string | null
+          prompt?: string | null
+          raw_data?: Json | null
+          requires_voice_response?: boolean | null
+          sender: string
+          source: Database["public"]["Enums"]["message_source"]
+          subject?: string | null
+          summary?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["message_action"]
+          category?: Database["public"]["Enums"]["message_category"]
+          content?: string
+          created_at?: string | null
+          id?: string
+          original_message_id?: string
+          processed_at?: string | null
+          prompt?: string | null
+          raw_data?: Json | null
+          requires_voice_response?: boolean | null
+          sender?: string
+          source?: Database["public"]["Enums"]["message_source"]
+          subject?: string | null
+          summary?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       secrets: {
         Row: {
           claude_api_key: string | null
@@ -78,6 +215,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          auto_process_enabled: boolean
+          created_at: string | null
+          id: string
+          marketing_email_policy: string
+          system_alert_policy: string
+          updated_at: string | null
+          user_id: string | null
+          voice_enabled: boolean
+        }
+        Insert: {
+          auto_process_enabled?: boolean
+          created_at?: string | null
+          id?: string
+          marketing_email_policy?: string
+          system_alert_policy?: string
+          updated_at?: string | null
+          user_id?: string | null
+          voice_enabled?: boolean
+        }
+        Update: {
+          auto_process_enabled?: boolean
+          created_at?: string | null
+          id?: string
+          marketing_email_policy?: string
+          system_alert_policy?: string
+          updated_at?: string | null
+          user_id?: string | null
+          voice_enabled?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -86,7 +256,17 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      message_action:
+        | "generate_prompt"
+        | "create_summary"
+        | "mark_read"
+        | "move"
+      message_category:
+        | "important"
+        | "indirectly_relevant"
+        | "marketing"
+        | "system_alert"
+      message_source: "email" | "slack" | "teams"
     }
     CompositeTypes: {
       [_ in never]: never

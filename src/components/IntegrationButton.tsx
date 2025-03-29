@@ -1,13 +1,13 @@
 
 import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface IntegrationButtonProps {
   name: string;
   icon: ReactNode;
   isConnected: boolean;
-  isLoading?: boolean;
+  isLoading: boolean;
   onClick: () => void;
   buttonText?: string;
 }
@@ -16,32 +16,32 @@ const IntegrationButton = ({
   name,
   icon,
   isConnected,
-  isLoading = false,
+  isLoading,
   onClick,
   buttonText
 }: IntegrationButtonProps) => {
   return (
-    <div className="flex items-center justify-between p-3 bg-app-card-secondary rounded-lg">
-      <div className="flex items-center">
-        <div className="w-8 h-8 flex items-center justify-center bg-app-accent/20 rounded-md mr-3">
-          {icon}
-        </div>
+    <Button
+      variant={isConnected ? "secondary" : "default"}
+      className={`w-full justify-between ${
+        isConnected ? "bg-gray-600 hover:bg-gray-700" : "bg-accent hover:bg-accent/90"
+      }`}
+      onClick={onClick}
+      disabled={isLoading}
+    >
+      <div className="flex items-center gap-2">
+        {icon}
         <span>{name}</span>
       </div>
-      <Button
-        size="sm"
-        variant={isConnected ? "destructive" : "default"}
-        onClick={onClick}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : buttonText ? buttonText : (isConnected ? "Disconnect" : "Connect")}
-      </Button>
-    </div>
+      
+      {isLoading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <span className="text-xs">
+          {buttonText || (isConnected ? "Connected" : "Connect")}
+        </span>
+      )}
+    </Button>
   );
 };
 
