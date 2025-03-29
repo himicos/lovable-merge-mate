@@ -1,0 +1,4 @@
+The front-end is being done in another program by another engineer, so don't impact any UI code.
+You are going to be working on the Server back-end and server front-end to make the services and integrations available.
+The env variables are stored on SupaBase for the frontend, and the backend env variables are stored in the .env file
+The back-end service must be hosted SupaBase so that the frontend can connect to it.
