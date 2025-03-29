@@ -110,9 +110,14 @@ const Landing = () => {
           {/* Left column with text */}
           <div className="w-full space-y-8">
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-6xl font-bold text-[#0a5a36]">
-                Less talk,<br />more verby
-              </h1>
+              <div className="space-y-1">
+                <h1 className="text-5xl md:text-6xl font-bold text-verby-light">
+                  Less talk,
+                </h1>
+                <h1 className="text-5xl md:text-6xl font-bold text-verby-dark">
+                  more verby
+                </h1>
+              </div>
               <p className="text-xl text-[#0a8a36]">
                 Free yourself from the noise of endless chats, emails, and follow-ups.
               </p>
