@@ -1,5 +1,4 @@
-
-import { LucideLayoutGrid, LucideUser, LucideSettings, LogOut, Info } from "lucide-react";
+import { LucideLayoutGrid, LucideUser, LucideSettings, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext"; // Fixed import path
@@ -52,12 +51,6 @@ const Sidebar = () => {
             <Link to="/" className={`nav-item ${currentPath === "/" ? "active" : ""}`}>
               <LucideLayoutGrid size={18} />
               <span>Dashboard</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/about" className={`nav-item ${currentPath === "/about" ? "active" : ""}`}>
-              <Info size={18} />
-              <span>About</span>
             </Link>
           </li>
           <li>
