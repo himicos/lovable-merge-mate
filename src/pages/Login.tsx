@@ -97,7 +97,7 @@ const Login = () => {
         </div>
         <div className="h-10 w-32">
           <img 
-            src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+            src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
             alt="Verby Logo"
             className="h-full object-contain"
           />
@@ -107,8 +107,8 @@ const Login = () => {
       {/* Main content */}
       <div className="container mx-auto px-4 py-8 md:py-12 flex-1 flex items-center">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center w-full">
-          {/* Left column with text */}
-          <div className="space-y-8 text-left w-full">
+          {/* Left column with text - Updated to ensure left alignment */}
+          <div className="w-full space-y-8 text-left">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-green-800">
                 Less talk,<br />more action
@@ -223,7 +223,7 @@ const Login = () => {
             </Dialog>
           </div>
           
-          {/* Right column with illustration */}
+          {/* Right column with illustration - Fixed image paths */}
           <div className="hidden md:flex justify-center items-center">
             <div className="relative flex flex-col">
               <img 
@@ -232,7 +232,7 @@ const Login = () => {
                 className="max-w-full h-auto mb-8"
               />
               <img
-                src="/public/lovable-uploads/9a0057c8-f61a-47a6-a04e-9c96294a37cd.png"
+                src="/lovable-uploads/9a0057c8-f61a-47a6-a04e-9c96294a37cd.png"
                 alt="Man working on laptop with plant and clock"
                 className="max-w-full h-auto"
               />
@@ -256,7 +256,7 @@ const Login = () => {
           </div>
           <div className="mt-4 md:mt-0">
             <img 
-              src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+              src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
               alt="Verby Logo"
               className="h-10 w-auto"
             />
