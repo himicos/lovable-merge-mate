@@ -97,7 +97,7 @@ const Login = () => {
         </div>
         <div className="h-10 w-32">
           <img 
-            src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+            src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
             alt="Verby Logo"
             className="h-full object-contain"
           />
@@ -106,9 +106,9 @@ const Login = () => {
 
       {/* Main content */}
       <div className="container mx-auto px-4 py-8 md:py-12 flex-1 flex items-center">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-center w-full">
-          {/* Left column with text - shifted to the left */}
-          <div className="md:col-span-2 space-y-8 pr-4 md:pl-0">
+        <div className="max-w-2xl mx-auto text-center md:text-left">
+          {/* Left column with text */}
+          <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-green-800">
                 Less talk,<br />more action
@@ -120,7 +120,7 @@ const Login = () => {
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-500 text-white px-8 py-6 rounded-full text-lg transition-all duration-300 hover:scale-105">
+                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 rounded-full text-lg">
                   Get Started
                 </Button>
               </DialogTrigger>
@@ -171,11 +171,7 @@ const Login = () => {
                     </div>
                   )}
                   <DialogFooter className="flex-col sm:flex-col gap-2">
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-green-600 hover:bg-green-500 transition-all duration-300 hover:scale-105" 
-                      disabled={isLoading}
-                    >
+                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
                       {isLoading ? "Processing..." : isSignUp ? "Sign up" : "Sign in"}
                     </Button>
                     <div className="relative w-full">
@@ -190,7 +186,7 @@ const Login = () => {
                       type="button" 
                       variant="outline" 
                       onClick={handleGoogleSignIn}
-                      className="w-full transition-all duration-300 hover:scale-105"
+                      className="w-full"
                     >
                       <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" aria-hidden="true">
                         <path
@@ -218,22 +214,13 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setIsSignUp(!isSignUp)}
-                    className="text-sm text-green-600 hover:underline transition-colors duration-300"
+                    className="text-sm text-green-600 hover:underline"
                   >
                     {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
                   </button>
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
-          
-          {/* Right column with new illustration - added the new PNG */}
-          <div className="md:col-span-3 flex justify-center md:justify-end">
-            <img 
-              src="/lovable-uploads/f087e2ac-e8a7-4cca-988a-9cc23a651e9a.png" 
-              alt="Person working on laptop" 
-              className="w-full max-w-lg h-auto"
-            />
           </div>
         </div>
       </div>
@@ -253,7 +240,7 @@ const Login = () => {
           </div>
           <div className="mt-4 md:mt-0">
             <img 
-              src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
+              src="/public/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png"
               alt="Verby Logo"
               className="h-10 w-auto"
             />
