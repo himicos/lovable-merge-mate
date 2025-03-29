@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ const Login = () => {
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="space-y-1">
-              <h1 className="text-5xl md:text-6xl font-bold text-verby-light">
+                <h1 className="text-5xl md:text-6xl font-bold text-verby-light">
                   Less talk, more
                 </h1>
                 <h1 className="text-5xl md:text-6xl font-bold text-verby-dark">
