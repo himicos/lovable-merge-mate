@@ -1,7 +1,7 @@
 export const GOOGLE_CONFIG = {
-  clientId: process.env.VITE_GOOGLE_CLIENT_ID || '',
-  clientSecret: process.env.VITE_GOOGLE_CLIENT_SECRET || '',
-  redirectUri: process.env.VITE_APP_URL ? `${process.env.VITE_APP_URL}/auth/google/callback` : 'https://localhost:8080/auth/google/callback',
+  clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+  clientSecret: import.meta.env.VITE_GOOGLE_CLIENT_SECRET || '',
+  redirectUri: 'https://localhost:8080/auth/google/callback', // Hard-code for now since we're in development
   scopes: [
     'https://www.googleapis.com/auth/gmail.readonly',
     'https://www.googleapis.com/auth/gmail.send',

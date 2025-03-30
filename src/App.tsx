@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +14,7 @@ import Login from "@/pages/Login";
 import Landing from "@/pages/Landing";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import GoogleCallback from "@/pages/auth/google/callback";
 
 // Create a client outside of the component
 const queryClient = new QueryClient();
@@ -94,6 +94,7 @@ function App() {
               <Routes>
                 <Route path="/login" element={<Landing />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/auth/google/callback" element={<GoogleCallback />} />
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Index />
