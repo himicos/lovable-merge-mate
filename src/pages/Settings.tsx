@@ -1,3 +1,4 @@
+
 import Layout from "@/components/Layout";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -177,7 +178,7 @@ const Settings = () => {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-6">
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 integration-section">
                 <Label className="text-lg font-medium">Email Integrations</Label>
                 <IntegrationButton
                   name={gmailStatus.isConnected ? `Gmail (${gmailStatus.email})` : 'Gmail'}
@@ -193,7 +194,7 @@ const Settings = () => {
                 />
               </div>
               
-              <div className="flex flex-col gap-3 pt-4 border-t border-primary/10">
+              <div className="flex flex-col gap-3 pt-4 border-t border-primary/10 integration-section">
                 <Label className="text-lg font-medium">Messaging Integrations</Label>
                 <div className="space-y-3">
                   <IntegrationButton
