@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { GmailService } from '@/services/gmail.service';
@@ -8,6 +8,8 @@ const GoogleCallback = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [attempts, setAttempts] = useState(0);
+  const maxAttempts = 10;
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -15,7 +17,7 @@ const GoogleCallback = () => {
       const code = urlParams.get('code');
       const error = urlParams.get('error');
       
-      console.log('Callback received:', { code, error, user });
+      console.log('Callback received:', { code, error, user, attempts });
       
       if (error) {
         console.error('Google OAuth error:', error);
@@ -28,8 +30,26 @@ const GoogleCallback = () => {
         return;
       }
 
-      if (!code || !user?.id) {
-        console.error('Missing code or user:', { code, userId: user?.id });
+      // If no user yet and we haven't exceeded max attempts, wait and try again
+      if (!user?.id) {
+        if (attempts < maxAttempts) {
+          console.log('User session not ready, waiting... (attempt ${attempts + 1}/${maxAttempts})');
+          setTimeout(() => setAttempts(prev => prev + 1), 1000);
+          return;
+        } else {
+          console.error('Max attempts reached waiting for user session');
+          toast({
+            title: "Error",
+            description: "Failed to get user session. Please try again.",
+            variant: "destructive"
+          });
+          navigate('/settings');
+          return;
+        }
+      }
+
+      if (!code) {
+        console.error('Missing authorization code');
         toast({
           title: "Error",
           description: "Failed to connect Gmail. Please try again.",
@@ -61,13 +81,18 @@ const GoogleCallback = () => {
     };
 
     handleCallback();
-  }, [navigate, user, toast]);
+  }, [navigate, user, toast, attempts]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <h2 className="text-2xl font-semibold mb-2">Connecting Gmail...</h2>
-        <p className="text-muted-foreground">Please wait while we set up your Gmail integration.</p>
+        <p className="text-muted-foreground">
+          {!user?.id && attempts < maxAttempts 
+            ? "Waiting for session..."
+            : "Please wait while we set up your Gmail integration."
+          }
+        </p>
       </div>
     </div>
   );

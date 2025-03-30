@@ -40,10 +40,21 @@ export class GmailService {
       // Get the current session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        console.error('No active session found during callback');
         throw new Error('No active session');
       }
+      console.log('Session found:', { userId: session.user.id });
+
+      // Set the session explicitly
+      const { error: sessionError } = await supabase.auth.setSession(session);
+      if (sessionError) {
+        console.error('Failed to set session:', sessionError);
+        throw new Error('Session error: ' + sessionError.message);
+      }
+      console.log('Session set successfully');
 
       // Exchange code for tokens
+      console.log('Exchanging code for tokens...');
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
@@ -59,19 +70,17 @@ export class GmailService {
       });
 
       const tokens = await tokenResponse.json();
+      console.log('Token response status:', tokenResponse.status);
 
       if (!tokenResponse.ok) {
+        console.error('Failed to exchange code for tokens:', tokens);
         throw new Error(tokens.error_description || 'Failed to exchange code for tokens');
       }
 
-      console.log('Received tokens:', tokens);
+      console.log('Received tokens successfully');
 
-      // Store tokens in Supabase with explicit session
-      const { error } = await supabase.auth.setSession(session);
-      if (error) {
-        throw new Error('Failed to set session');
-      }
-
+      // Store tokens in Supabase
+      console.log('Storing tokens in Supabase...');
       const { error: upsertError } = await supabase
         .from('user_integrations')
         .upsert({
@@ -84,9 +93,14 @@ export class GmailService {
           updated_at: new Date().toISOString()
         });
 
-      if (upsertError) throw upsertError;
+      if (upsertError) {
+        console.error('Failed to store tokens:', upsertError);
+        throw new Error('Database error: ' + upsertError.message);
+      }
+
+      console.log('Successfully stored tokens');
     } catch (error) {
-      console.error('Error handling Gmail callback:', error);
+      console.error('Error in handleCallback:', error);
       throw error;
     }
   }
