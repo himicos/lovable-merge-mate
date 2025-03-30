@@ -1,14 +1,14 @@
-
 import Layout from "@/components/Layout";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Slack, MessageSquare, Moon, Sun } from "lucide-react";
 import IntegrationButton from "@/components/IntegrationButton";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/components/ui/theme-provider";
+import { initiateGmailAuth, checkGmailConnection, disconnectGmail } from "@/lib/gmail";
 
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
@@ -25,37 +25,51 @@ const Settings = () => {
   const [isSlackConnected, setIsSlackConnected] = useState(false);
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [isTeamsConnected, setIsTeamsConnected] = useState(false);
+
+  // Check Gmail connection status on mount
+  useEffect(() => {
+    const checkGmail = async () => {
+      if (user?.id) {
+        const status = await checkGmailConnection(user.id);
+        setGmailStatus(status);
+      }
+    };
+    checkGmail();
+  }, [user]);
   
   // Handle Gmail connection/disconnection
   const handleGmailAction = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to connect Gmail.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setGmailLoading(true);
     
     try {
-      setTimeout(() => {
-        if (gmailStatus.isConnected) {
-          setGmailStatus({ isConnected: false, email: null });
-          toast({
-            title: "Gmail Disconnected",
-            description: "Successfully disconnected your Gmail account.",
-          });
-        } else {
-          setGmailStatus({ isConnected: true, email: user?.email });
-          toast({
-            title: "Gmail Connected",
-            description: "Successfully connected your Gmail account!",
-          });
-        }
-        setGmailLoading(false);
-      }, 1500);
+      if (gmailStatus.isConnected) {
+        await disconnectGmail(user.id);
+        setGmailStatus({ isConnected: false, email: null });
+        toast({
+          title: "Gmail Disconnected",
+          description: "Successfully disconnected your Gmail account.",
+        });
+      } else {
+        await initiateGmailAuth();
+        // The page will redirect to Google OAuth, so we don't need to handle the success case here
+      }
     } catch (error) {
       console.error('Gmail action error:', error);
       toast({
-        title: "Action Failed",
-        description: gmailStatus.isConnected
-          ? "Failed to disconnect Gmail. Please try again."
-          : "Failed to connect Gmail. Please try again.",
-        variant: "destructive",
+        title: "Error",
+        description: "Failed to connect/disconnect Gmail. Please try again.",
+        variant: "destructive"
       });
+    } finally {
       setGmailLoading(false);
     }
   };
