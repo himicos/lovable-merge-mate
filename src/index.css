@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,7 +7,7 @@
   --app-background: #FFFFFF;
   --app-card: #FFFFFF;
   --app-accent: #333333;
-  --app-highlight: #555555;
+  --app-highlight: #F1F1F1;  /* Updated to light gray */
   --app-text-primary: #333333;
   --app-text-secondary: #555555;
 }
