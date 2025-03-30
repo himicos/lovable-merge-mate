@@ -43,6 +43,7 @@ const Sidebar = () => {
   const activeItemBg = theme === 'light' ? 'bg-gray-100' : 'bg-gray-800';
   const hoverBg = theme === 'light' ? 'hover:bg-gray-50' : 'hover:bg-gray-700';
   const borderColor = theme === 'light' ? 'border-gray-200' : 'border-gray-700';
+  const avatarBgColor = theme === 'light' ? 'bg-gray-200' : 'bg-gray-700';
 
   return (
     <div className={`w-[300px] h-screen ${bgColor} p-6 flex flex-col`}>
@@ -105,7 +106,7 @@ const Sidebar = () => {
       
       {/* User Profile */}
       <div className={`flex items-center gap-3 pt-4 border-t ${borderColor}`}>
-        <Avatar className={`w-10 h-10 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'} ${textColor}`}>
+        <Avatar className={`w-10 h-10 ${avatarBgColor} ${textColor}`}>
           <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
         </Avatar>
         <span className={`font-medium ${textColor}`}>{displayName}</span>
