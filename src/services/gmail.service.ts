@@ -50,22 +50,35 @@ export class GmailService {
         throw new Error('User ID mismatch');
       }
 
-      // Exchange code for tokens using the backend
+      // Exchange code for tokens directly with Google
       console.log('Exchanging code for tokens...');
-      const tokenResponse = await fetch(`${GOOGLE_CONFIG.backendUrl}/api/auth/google/callback`, {
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({
-          code,
-          userId,
-          redirectUri: GOOGLE_CONFIG.redirectUri
+        body: new URLSearchParams({
+          client_id: GOOGLE_CONFIG.clientId,
+          client_secret: GOOGLE_CONFIG.clientSecret,
+          redirect_uri: GOOGLE_CONFIG.redirectUri,
+          grant_type: 'authorization_code',
+          code
         })
       });
 
-      const tokens = await tokenResponse.json();
+      // Try to get the response text first
+      const responseText = await tokenResponse.text();
+      console.log('Raw token response:', responseText);
+
+      // Try to parse as JSON
+      let tokens;
+      try {
+        tokens = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse token response as JSON:', e);
+        throw new Error(`Token exchange error: ${responseText.substring(0, 100)}`);
+      }
+
       console.log('Token exchange:', {
         ok: tokenResponse.ok,
         status: tokenResponse.status,
@@ -76,8 +89,25 @@ export class GmailService {
       });
 
       if (!tokenResponse.ok) {
-        throw new Error(tokens.error_description || 'Failed to exchange code for tokens');
+        throw new Error(tokens.error_description || tokens.error || 'Failed to exchange code for tokens');
       }
+
+      // Verify the token works by getting user profile
+      const profileResponse = await fetch(`${GOOGLE_CONFIG.apiEndpoint}/users/me/profile`, {
+        headers: {
+          'Authorization': `Bearer ${tokens.access_token}`
+        }
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error('Failed to verify Gmail access token');
+      }
+
+      const profile = await profileResponse.json();
+      console.log('Gmail profile:', {
+        emailAddress: profile.emailAddress,
+        messagesTotal: profile.messagesTotal
+      });
 
       // Store tokens in Supabase
       console.log('Checking for existing integration...');
@@ -101,13 +131,17 @@ export class GmailService {
         refresh_token: tokens.refresh_token,
         expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString(),
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        metadata: {
+          email: profile.emailAddress
+        }
       };
 
       console.log('Attempting to store integration...', {
         isUpdate: !!existingData,
         userId,
-        hasTokens: !!tokens.access_token && !!tokens.refresh_token
+        hasTokens: !!tokens.access_token && !!tokens.refresh_token,
+        email: profile.emailAddress
       });
 
       const { error: upsertError } = await supabase
