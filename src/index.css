@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -126,25 +125,32 @@
   }
   
   .ai-button {
-    @apply fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-50;
+    @apply fixed bottom-8 right-8 w-21 h-21 rounded-full flex items-center justify-center shadow-lg z-50;
     box-shadow: 0 4px 12px rgba(10, 90, 54, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background-color: #A8D5BA; /* Light green color */
     border-radius: 50%;
-    animation: breathe 3s ease-in-out infinite;
+    animation: breathe-color 3s ease-in-out infinite;
+    width: 5.25rem;
+    height: 5.25rem;
   }
 
-  @keyframes breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
+  @keyframes breathe-color {
+    0%, 100% {
+      background-color: #A8D5BA;
+      transform: scale(1);
+    }
+    50% {
+      background-color: #A8D5E0;
+      transform: scale(1.08);
+    }
   }
 
   .ai-button.dark-mode {
-    background-color: #A8D5BA; /* Keep same color in dark mode */
+    animation: breathe-color 3s ease-in-out infinite;
   }
 
   .ai-button.light-mode {
-    background-color: #A8D5BA; /* Keep same color in light mode */
+    animation: breathe-color 3s ease-in-out infinite;
   }
 
   .ai-button.expanded {
@@ -152,6 +158,7 @@
     height: 500px;
     max-height: 500px;
     animation: none;
+    background-color: #F0FFF5;
   }
   
   .ai-button.expanded.dark-mode {
