@@ -125,7 +125,7 @@
   }
   
   .ai-button {
-    @apply fixed bottom-8 right-8 w-21 h-21 rounded-full flex items-center justify-center shadow-lg z-50;
+    @apply fixed bottom-8 right-8 rounded-full flex items-center justify-center shadow-lg z-50;
     box-shadow: 0 4px 12px rgba(10, 90, 54, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 50%;

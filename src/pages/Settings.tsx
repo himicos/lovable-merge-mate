@@ -28,10 +28,18 @@ const Settings = () => {
 
   // Check Gmail connection status on mount and when user changes
   const checkGmail = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID available for Gmail check');
+      return;
+    }
+    console.log('Checking Gmail connection for user:', user.id);
+    
     try {
       const status = await checkGmailConnection(user.id);
+      console.log('Gmail connection status:', { status, userId: user.id });
+      
       if (status.isConnected !== gmailStatus.isConnected || status.email !== gmailStatus.email) {
+        console.log('Updating Gmail status:', status);
         setGmailStatus(status);
       }
     } catch (error) {
@@ -43,6 +51,7 @@ const Settings = () => {
   }, [user?.id, gmailStatus]);
 
   useEffect(() => {
+    console.log('Settings mounted, checking Gmail...', { userId: user?.id });
     checkGmail();
     // Set up periodic check every 30 seconds
     const interval = setInterval(checkGmail, 30000);
@@ -52,6 +61,7 @@ const Settings = () => {
   // Handle Gmail connection/disconnection
   const handleGmailAction = async () => {
     if (!user?.id) {
+      console.error('No user ID available for Gmail action');
       toast({
         title: "Error",
         description: "You must be logged in to connect Gmail.",
@@ -62,6 +72,11 @@ const Settings = () => {
 
     setGmailLoading(true);
     try {
+      console.log('Handling Gmail action:', { 
+        userId: user.id, 
+        isConnected: gmailStatus.isConnected 
+      });
+
       if (gmailStatus.isConnected) {
         await disconnectGmail(user.id);
         setGmailStatus({ isConnected: false, email: null });
@@ -70,9 +85,11 @@ const Settings = () => {
           description: "Successfully disconnected Gmail."
         });
       } else {
+        console.log('Initiating Gmail auth for user:', user.id);
         await initiateGmailAuth();
       }
     } catch (error) {
+      console.error('Gmail action error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to manage Gmail connection",
