@@ -46,12 +46,12 @@ const Sidebar = () => {
 
   return (
     <div className={`w-[300px] h-screen ${bgColor} p-6 flex flex-col`}>
-      {/* Logo */}
-      <div className="flex items-center gap-3 mb-12">
+      {/* Logo - increased size by 5x */}
+      <div className="flex items-center justify-center mb-12">
         <img 
           src="/lovable-uploads/f8a6b778-8fc7-4cbd-82c8-3cd01d5899e6.png" 
           alt="Verby Logo" 
-          className="w-16 h-16 object-contain" 
+          className="w-80 h-80 object-contain" 
         />
       </div>
       
