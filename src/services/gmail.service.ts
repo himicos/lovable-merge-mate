@@ -129,19 +129,18 @@ export class GmailService {
         provider: 'gmail',
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
-        expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString(),
+        expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in, // Convert to Unix timestamp
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        metadata: {
-          email: profile.emailAddress
-        }
+        metadata: profile?.emailAddress ? { email: profile.emailAddress } : {}
       };
 
       console.log('Attempting to store integration...', {
         isUpdate: !!existingData,
         userId,
         hasTokens: !!tokens.access_token && !!tokens.refresh_token,
-        email: profile.emailAddress
+        email: profile?.emailAddress,
+        expiresAt: new Date((integrationData.expires_at as number) * 1000).toISOString()
       });
 
       const { error: upsertError } = await supabase
@@ -210,7 +209,7 @@ export class GmailService {
       }
 
       // Check if token is expired and needs refresh
-      if (data.expires_at < Date.now()) {
+      if ((data.expires_at as number) < Date.now() / 1000) {
         if (!data.refresh_token) {
           return { isConnected: false };
         }
@@ -250,7 +249,7 @@ export class GmailService {
           .from('user_integrations')
           .update({
             access_token: tokens.access_token,
-            expires_at: Date.now() + (tokens.expires_in * 1000),
+            expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', userId)
