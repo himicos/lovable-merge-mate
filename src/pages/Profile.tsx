@@ -6,17 +6,23 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
 
 const Profile = () => {
   const { toast } = useToast();
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [userMetadata, setUserMetadata] = useState({
     name: "",
     email: "",
     avatarUrl: "",
     memberSince: "",
   });
+
+  const isDarkMode = theme === 'dark';
+  const textColorClass = isDarkMode ? "text-white" : "text-gray-800";
+  const secondaryTextColorClass = isDarkMode ? "text-gray-400" : "text-gray-500";
 
   useEffect(() => {
     if (user) {
@@ -101,30 +107,30 @@ const Profile = () => {
               {userMetadata.avatarUrl ? (
                 <AvatarImage src={userMetadata.avatarUrl} alt={userMetadata.name} />
               ) : (
-                <AvatarFallback className="bg-gray-700 text-white text-xl">
+                <AvatarFallback className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} ${textColorClass} text-xl`}>
                   {userMetadata.name.split(" ").map(n => n[0]).join("").toUpperCase()}
                 </AvatarFallback>
               )}
             </Avatar>
             <div>
-              <h2 className="text-2xl font-bold">{userMetadata.name}</h2>
-              <p className="text-gray-400">{userMetadata.email}</p>
+              <h2 className={`text-2xl font-bold ${textColorClass}`}>{userMetadata.name}</h2>
+              <p className={secondaryTextColorClass}>{userMetadata.email}</p>
             </div>
           </div>
           
           <div className="space-y-6">
             <div>
-              <h3 className="text-sm uppercase text-gray-400 mb-2">Email</h3>
-              <p className="text-white">{userMetadata.email}</p>
+              <h3 className={`text-sm uppercase ${secondaryTextColorClass} mb-2`}>Email</h3>
+              <p className={textColorClass}>{userMetadata.email}</p>
             </div>
             
             <div>
-              <h3 className="text-sm uppercase text-gray-400 mb-2">Member Since</h3>
-              <p className="text-white">{userMetadata.memberSince}</p>
+              <h3 className={`text-sm uppercase ${secondaryTextColorClass} mb-2`}>Member Since</h3>
+              <p className={textColorClass}>{userMetadata.memberSince}</p>
             </div>
 
             <div className="pt-4">
-              <p className="text-sm text-gray-400">
+              <p className={`text-sm ${secondaryTextColorClass}`}>
                 Session ID: {user.id}<br />
                 Last Updated: {new Date(user.updated_at).toLocaleString()}
               </p>
