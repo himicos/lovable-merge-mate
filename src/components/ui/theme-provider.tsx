@@ -54,7 +54,7 @@ export function ThemeProvider({
       document.documentElement.style.setProperty('--app-background', '#f5f8f0');
       document.documentElement.style.setProperty('--app-card', '#ffffff');
       document.documentElement.style.setProperty('--app-accent', '#6b8e23');
-      document.documentElement.style.setProperty('--app-highlight', '#7da029');
+      document.documentElement.style.setProperty('--app-highlight', '#F1F1F1'); // Updated to light gray
     }
   }, [theme]);
 

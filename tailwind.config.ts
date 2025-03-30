@@ -69,6 +69,7 @@ export default {
 					background: '#E9F7EC', // Pastel green background
 					card: '#F9FFF7',    // Very light green for cards
 					accent: '#A8D5BA',  // Accent light green
+					highlight: '#F1F1F1', // Light gray highlight for light mode
 				}
 			},
 			borderRadius: {
