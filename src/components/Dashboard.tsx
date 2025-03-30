@@ -82,18 +82,18 @@ const Dashboard = () => {
   }, [user]);
 
   return (
-    <div className="p-6 bg-app-background">
+    <div className="p-6 bg-background">
       {/* Header Section */}
-      <h1 className="text-3xl font-bold text-app-primary mb-6">{greeting}</h1>
+      <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">{greeting}</h1>
       
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Welcome Card - Takes up 2/3 of the grid on large screens */}
         <div className="lg:col-span-2">
-          <div className="bg-app-card rounded-xl p-5 shadow-sm flex justify-between items-center border border-gray-200 dark:border-[#333333]">
+          <div className="bg-app-card rounded-xl p-5 shadow-sm flex justify-between items-center border border-primary/10">
             <div>
-              <h2 className="font-bold text-xl text-app-primary">Welcome to Verby</h2>
-              <p className="text-app-secondary text-sm mt-1">
+              <h2 className="font-bold text-xl text-gray-800 dark:text-gray-100">Welcome to Verby</h2>
+              <p className="text-muted-foreground mt-1">
                 Connect your email, Slack, and Teams accounts to get started with AI-powered message management.
               </p>
             </div>
@@ -108,33 +108,33 @@ const Dashboard = () => {
         {/* Onboarding Card - Takes up 1/3 of the grid on large screens */}
         {showOnboarding && (
           <div className="relative">
-            <div className="bg-app-card rounded-xl p-4 shadow-md h-full border border-gray-200 dark:border-[#333333]">
+            <div className="bg-app-card rounded-xl p-4 shadow-md h-full border border-primary/10">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-app-primary">Onboarding</h3>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100">Onboarding</h3>
                 <button 
                   onClick={() => setShowOnboarding(false)}
-                  className="text-app-secondary hover:text-app-primary text-lg"
+                  className="text-muted-foreground hover:text-gray-800 dark:hover:text-gray-100 text-lg"
                   aria-label="Close onboarding"
                 >
                   ×
                 </button>
               </div>
-              <ul className="text-sm text-app-primary space-y-2">
+              <ul className="text-sm text-gray-800 dark:text-gray-100 space-y-2">
                 <li className="flex items-center gap-2">
-                  <span className="bg-app-accent p-1 rounded-full">
-                    <Check size={14} className="text-app-card" />
+                  <span className="bg-primary p-1 rounded-full">
+                    <Check size={14} className="text-primary-foreground" />
                   </span>
                   <span>Connect your email</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="bg-app-accent p-1 rounded-full">
-                    <Check size={14} className="text-app-card" />
+                  <span className="bg-primary p-1 rounded-full">
+                    <Check size={14} className="text-primary-foreground" />
                   </span>
                   <span>Complete your profile</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="bg-app-highlight p-1 rounded-full">
-                    <span className="block w-2 h-2 bg-app-card rounded-full"></span>
+                  <span className="bg-muted p-1 rounded-full">
+                    <span className="block w-2 h-2 bg-primary rounded-full"></span>
                   </span>
                   <span>Set your AI preferences</span>
                 </li>
@@ -145,10 +145,10 @@ const Dashboard = () => {
       </div>
       
       {/* Recent Messages List */}
-      <div className="bg-app-card rounded-xl p-4 shadow-sm mb-6 border border-gray-200 dark:border-[#333333]">
+      <div className="bg-app-card rounded-xl p-4 shadow-sm mb-6 border border-primary/10">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="font-semibold text-app-primary">Recent messages</h3>
-          <button className="text-app-secondary text-sm">Sort <span>⇅</span></button>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-100">Recent messages</h3>
+          <button className="text-muted-foreground text-sm">Sort <span>⇅</span></button>
         </div>
         
         {messages.length > 0 ? (
@@ -159,32 +159,32 @@ const Dashboard = () => {
                 onClick={() => handleMessageSelect(msg.id)}
                 className={`flex justify-between items-center p-3 rounded-lg cursor-pointer ${
                   msg.isSelected 
-                    ? 'bg-gray-100 dark:bg-[#444444]' 
-                    : 'hover:bg-gray-50 dark:hover:bg-[#333333]'
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100' 
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-100'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <IconForType type={msg.type} />
                   <div>
-                    <p className="font-medium text-app-primary">{msg.subject}</p>
-                    <p className="text-app-secondary text-sm">{msg.sender}</p>
+                    <p className="font-medium text-gray-800 dark:text-gray-100">{msg.subject}</p>
+                    <p className="text-muted-foreground text-sm">{msg.sender}</p>
                   </div>
                 </div>
-                <span className="text-xs text-app-secondary">{msg.time}</span>
+                <span className="text-xs text-muted-foreground">{msg.time}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-center py-6 text-app-secondary">No messages to display</p>
+          <p className="text-center py-6 text-muted-foreground">No messages to display</p>
         )}
       </div>
       
       {/* Service Status & Summary Button */}
-      <div className="flex justify-between items-center mt-4 bg-app-card rounded-xl p-3 shadow-sm border border-gray-200 dark:border-[#333333]">
-        <span className="text-app-primary text-sm">
-          Services Running <span className="text-app-secondary">(email scanning)</span>
+      <div className="flex justify-between items-center mt-4 bg-app-card rounded-xl p-3 shadow-sm border border-primary/10">
+        <span className="text-gray-800 dark:text-gray-100 text-sm">
+          Services Running <span className="text-muted-foreground">(email scanning)</span>
         </span>
-        <button className="bg-app-accent hover:bg-app-highlight text-app-card text-sm px-4 py-2 rounded-lg flex items-center gap-2">
+        <button className="bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 text-sm px-4 py-2 rounded-lg flex items-center gap-2">
           ✨ Summarize
         </button>
       </div>

@@ -25,8 +25,8 @@ const IntegrationButton = ({
       variant={isConnected ? "secondary" : "default"}
       className={`w-full justify-between ${
         isConnected 
-          ? "bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-800" 
-          : "bg-accent hover:bg-accent/90 dark:bg-white dark:text-black dark:hover:bg-gray-100"
+          ? "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 dark:text-white" 
+          : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-accent dark:text-white dark:hover:bg-accent/90"
       }`}
       onClick={onClick}
       disabled={isLoading}
