@@ -14,9 +14,6 @@ export class GmailService {
   }
 
   public getAuthUrl(): string {
-    console.log('Client ID:', GOOGLE_CONFIG.clientId);
-    console.log('Redirect URI:', GOOGLE_CONFIG.redirectUri);
-    
     if (!GOOGLE_CONFIG.clientId) {
       throw new Error('Google Client ID is not configured');
     }
@@ -30,9 +27,7 @@ export class GmailService {
       scope: GOOGLE_CONFIG.scopes.join(' ')
     });
 
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-    console.log('Generated Auth URL:', authUrl);
-    return authUrl;
+    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   }
 
   public async handleCallback(code: string, userId: string): Promise<void> {
@@ -40,21 +35,17 @@ export class GmailService {
       // Get the current session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        console.error('No active session found during callback');
         throw new Error('No active session');
       }
-      console.log('Session found:', { userId: session.user.id });
+      console.log('Handling callback for user:', { userId, sessionUserId: session.user.id });
 
       // Set the session explicitly
       const { error: sessionError } = await supabase.auth.setSession(session);
       if (sessionError) {
-        console.error('Failed to set session:', sessionError);
         throw new Error('Session error: ' + sessionError.message);
       }
-      console.log('Session set successfully');
 
       // Exchange code for tokens
-      console.log('Exchanging code for tokens...');
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
@@ -70,17 +61,28 @@ export class GmailService {
       });
 
       const tokens = await tokenResponse.json();
-      console.log('Token response status:', tokenResponse.status);
+      console.log('Token exchange response:', {
+        ok: tokenResponse.ok,
+        status: tokenResponse.status,
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token
+      });
 
       if (!tokenResponse.ok) {
-        console.error('Failed to exchange code for tokens:', tokens);
         throw new Error(tokens.error_description || 'Failed to exchange code for tokens');
       }
 
-      console.log('Received tokens successfully');
-
       // Store tokens in Supabase
-      console.log('Storing tokens in Supabase...');
+      console.log('Attempting to store tokens for user:', userId);
+      const { data: existingData, error: checkError } = await supabase
+        .from('user_integrations')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('provider', 'gmail')
+        .maybeSingle();
+
+      console.log('Existing integration check:', { exists: !!existingData, error: checkError });
+
       const { error: upsertError } = await supabase
         .from('user_integrations')
         .upsert({
@@ -91,6 +93,8 @@ export class GmailService {
           expires_at: Date.now() + (tokens.expires_in * 1000),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,provider'
         });
 
       if (upsertError) {
@@ -98,7 +102,7 @@ export class GmailService {
         throw new Error('Database error: ' + upsertError.message);
       }
 
-      console.log('Successfully stored tokens');
+      console.log('Successfully stored tokens for user:', userId);
     } catch (error) {
       console.error('Error in handleCallback:', error);
       throw error;
@@ -110,14 +114,12 @@ export class GmailService {
       // Get the current session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        console.error('No active session found');
         return { isConnected: false };
       }
 
       // Set the session explicitly
       const { error: sessionError } = await supabase.auth.setSession(session);
       if (sessionError) {
-        console.error('Failed to set session:', sessionError);
         return { isConnected: false };
       }
 
@@ -128,19 +130,13 @@ export class GmailService {
         .eq('provider', 'gmail')
         .maybeSingle();
 
-      // If no data found, it means no integration exists yet
-      if (!data) {
-        console.log('No Gmail integration found for user');
-        return { isConnected: false };
-      }
-
-      // If there was an error other than "no rows found"
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching integration:', error);
-        return { isConnected: false };
+        throw new Error('Failed to fetch integration data');
       }
 
-      console.log('Stored tokens:', data);
+      if (!data) {
+        throw new Error('No Gmail integration found');
+      }
 
       // Check if token is expired and needs refresh
       if (data.expires_at < Date.now()) {
@@ -165,13 +161,10 @@ export class GmailService {
         const tokens = await refreshResponse.json();
 
         if (!refreshResponse.ok) {
-          console.error('Failed to refresh token:', tokens);
-          return { isConnected: false };
+          throw new Error('Failed to refresh token');
         }
 
-        console.log('Refreshed tokens:', tokens);
-
-        // Update stored token with explicit session
+        // Update stored token
         const { error: updateError } = await supabase
           .from('user_integrations')
           .update({
@@ -183,8 +176,7 @@ export class GmailService {
           .eq('provider', 'gmail');
 
         if (updateError) {
-          console.error('Failed to update token:', updateError);
-          return { isConnected: false };
+          throw new Error('Failed to update token');
         }
 
         data.access_token = tokens.access_token;
@@ -202,14 +194,15 @@ export class GmailService {
       }
 
       const profile = await profileResponse.json();
-      console.log('User profile:', profile);
       return {
         isConnected: true,
         email: profile.emailAddress
       };
     } catch (error) {
-      console.error('Error checking Gmail connection:', error);
-      return { isConnected: false };
+      if (error instanceof Error && error.message === 'No Gmail integration found') {
+        return { isConnected: false };
+      }
+      throw error;
     }
   }
 
