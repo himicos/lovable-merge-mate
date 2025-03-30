@@ -44,10 +44,12 @@ export function ThemeProvider({
     
     // Update custom properties
     if (theme === 'dark') {
-      document.documentElement.style.setProperty('--app-background', '#3c4a1e');
-      document.documentElement.style.setProperty('--app-card', '#4a5a29');
-      document.documentElement.style.setProperty('--app-accent', '#8fb339');
-      document.documentElement.style.setProperty('--app-highlight', '#a2c149');
+      document.documentElement.style.setProperty('--app-background', '#121212');
+      document.documentElement.style.setProperty('--app-card', '#1E1E1E');
+      document.documentElement.style.setProperty('--app-accent', '#444444');
+      document.documentElement.style.setProperty('--app-highlight', '#666666');
+      document.documentElement.style.setProperty('--app-text-primary', '#EEEEEE');
+      document.documentElement.style.setProperty('--app-text-secondary', '#AAAAAA');
     } else {
       document.documentElement.style.setProperty('--app-background', '#f5f8f0');
       document.documentElement.style.setProperty('--app-card', '#ffffff');
