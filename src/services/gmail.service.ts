@@ -1,5 +1,7 @@
-import { GOOGLE_CONFIG } from '@/config/google';
 import { supabase } from '@/lib/supabaseClient';
+import { MessageQueue } from '@/services/queue/queue';
+import { GOOGLE_CONFIG } from '@/config/google';
+import { MessageSource, MessageContent } from '@/services/message-processor/types';
 
 export class GmailService {
   private static instance: GmailService;
@@ -110,56 +112,59 @@ export class GmailService {
       });
 
       // Store tokens in Supabase
-      console.log('Checking for existing integration...');
-      const { data: existingData, error: checkError } = await supabase
-        .from('user_integrations')
-        .select('id, user_id, provider')
-        .eq('user_id', userId)
-        .eq('provider', 'gmail')
-        .maybeSingle();
-
-      console.log('Existing integration check:', { 
-        exists: !!existingData, 
-        error: checkError,
-        data: existingData 
-      });
-
-      const integrationData = {
+      console.log('Storing Gmail connection...');
+      const gmailData = {
         user_id: userId,
-        provider: 'gmail',
+        email: profile.emailAddress,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
-        expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in, // Convert to Unix timestamp
+        expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString(),
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        metadata: profile?.emailAddress ? { email: profile.emailAddress } : {}
+        updated_at: new Date().toISOString()
       };
 
-      console.log('Attempting to store integration...', {
-        isUpdate: !!existingData,
+      console.log('Attempting to store Gmail connection...', {
         userId,
+        email: profile.emailAddress,
         hasTokens: !!tokens.access_token && !!tokens.refresh_token,
-        email: profile?.emailAddress,
-        expiresAt: new Date((integrationData.expires_at as number) * 1000).toISOString()
+        expiresAt: gmailData.expires_at
       });
 
-      const { error: upsertError } = await supabase
-        .from('user_integrations')
-        .upsert(integrationData, {
-          onConflict: 'user_id,provider'
+      const { error: gmailError } = await supabase
+        .from('gmail_connections')
+        .upsert(gmailData, {
+          onConflict: 'user_id'
         });
 
-      if (upsertError) {
-        console.error('Failed to store integration:', {
-          error: upsertError,
-          errorMessage: upsertError.message,
-          details: upsertError.details,
-          hint: upsertError.hint
+      if (gmailError) {
+        console.error('Failed to store Gmail connection:', {
+          error: gmailError,
+          errorMessage: gmailError.message,
+          details: gmailError.details,
+          hint: gmailError.hint
         });
-        throw new Error('Database error: ' + upsertError.message);
+        throw new Error('Database error: ' + gmailError.message);
       }
 
-      console.log('Successfully stored integration for user:', userId);
+      // Verify the Gmail connection was stored
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('gmail_connections')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      console.log('Verification of stored Gmail connection:', {
+        success: !!verifyData,
+        error: verifyError,
+        userId,
+        hasData: !!verifyData,
+        storedEmail: verifyData?.email
+      });
+
+      console.log('Successfully stored Gmail connection for user:', userId);
+
+      // Start watching for new messages
+      await this.startMessageWatcher();
     } catch (error) {
       console.error('Error in handleCallback:', error);
       throw error;
@@ -194,18 +199,17 @@ export class GmailService {
       }
 
       const { data, error } = await supabase
-        .from('user_integrations')
+        .from('gmail_connections')
         .select('access_token, refresh_token, expires_at')
         .eq('user_id', userId)
-        .eq('provider', 'gmail')
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
-        throw new Error('Failed to fetch integration data');
+        throw new Error('Failed to fetch Gmail connection data');
       }
 
       if (!data) {
-        throw new Error('No Gmail integration found');
+        throw new Error('No Gmail connection found');
       }
 
       // Check if token is expired and needs refresh
@@ -246,14 +250,13 @@ export class GmailService {
         // Update stored token
         console.log('Updating stored token...');
         const { error: updateError } = await supabase
-          .from('user_integrations')
+          .from('gmail_connections')
           .update({
             access_token: tokens.access_token,
             expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
             updated_at: new Date().toISOString()
           })
-          .eq('user_id', userId)
-          .eq('provider', 'gmail');
+          .eq('user_id', userId);
 
         if (updateError) {
           throw new Error('Failed to update token');
@@ -280,7 +283,7 @@ export class GmailService {
         email: profile.emailAddress
       };
     } catch (error) {
-      if (error instanceof Error && error.message === 'No Gmail integration found') {
+      if (error instanceof Error && error.message === 'No Gmail connection found') {
         return { isConnected: false };
       }
       throw error;
@@ -316,10 +319,9 @@ export class GmailService {
       }
 
       const { data } = await supabase
-        .from('user_integrations')
+        .from('gmail_connections')
         .select('access_token')
         .eq('user_id', userId)
-        .eq('provider', 'gmail')
         .single();
 
       if (data?.access_token) {
@@ -333,12 +335,11 @@ export class GmailService {
       console.log('Revoked token:', data?.access_token);
 
       // Remove from database
-      console.log('Removing integration from database...');
+      console.log('Removing Gmail connection from database...');
       const { error } = await supabase
-        .from('user_integrations')
+        .from('gmail_connections')
         .delete()
-        .eq('user_id', userId)
-        .eq('provider', 'gmail');
+        .eq('user_id', userId);
 
       if (error) throw error;
     } catch (error) {
@@ -370,9 +371,9 @@ export class GmailService {
       }
 
       const { data, error } = await supabase
-        .from('user_integrations')
+        .from('gmail_connections')
         .select('access_token')
-        .eq('provider', 'gmail')
+        .eq('user_id', session.user.id)
         .single();
 
       if (error || !data) {
@@ -419,9 +420,9 @@ export class GmailService {
       }
 
       const { data, error } = await supabase
-        .from('user_integrations')
+        .from('gmail_connections')
         .select('access_token')
-        .eq('provider', 'gmail')
+        .eq('user_id', session.user.id)
         .single();
 
       if (error || !data) {
@@ -468,9 +469,9 @@ export class GmailService {
       }
 
       const { data, error } = await supabase
-        .from('user_integrations')
+        .from('gmail_connections')
         .select('access_token')
-        .eq('provider', 'gmail')
+        .eq('user_id', session.user.id)
         .single();
 
       if (error || !data) {
@@ -533,9 +534,9 @@ export class GmailService {
       }
 
       const { data, error } = await supabase
-        .from('user_integrations')
+        .from('gmail_connections')
         .select('access_token')
-        .eq('provider', 'gmail')
+        .eq('user_id', session.user.id)
         .single();
 
       if (error || !data) {
@@ -565,5 +566,70 @@ export class GmailService {
       console.error('Error setting up inbox watch:', error);
       throw error;
     }
+  }
+
+  private async startMessageWatcher(): Promise<void> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const messageQueue = MessageQueue.getInstance();
+      const { data, error } = await supabase
+        .from('gmail_connections')
+        .select('access_token')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (error || !data) {
+        console.error('No Gmail connection found');
+        return;
+      }
+
+      // Set up Gmail push notifications
+      await this.watchInbox();
+
+      // Poll for new messages every minute as backup
+      setInterval(async () => {
+        try {
+          const messages = await this.listMessages('newer_than:1m');
+          for (const message of messages) {
+            const fullMessage = await this.getMessage(message.id);
+            await messageQueue.enqueue(
+              {
+                id: fullMessage.id,
+                source: MessageSource.EMAIL,
+                sender: fullMessage.payload.headers.find((h: any) => h.name === 'From')?.value,
+                subject: fullMessage.payload.headers.find((h: any) => h.name === 'Subject')?.value,
+                content: this.getMessageContent(fullMessage),
+                raw: fullMessage,
+                timestamp: new Date().toISOString()
+              },
+              session.user.id,
+              { priority: 1 }
+            );
+          }
+        } catch (error) {
+          console.error('Error polling Gmail:', error);
+        }
+      }, 60000); // Poll every minute
+    } catch (error) {
+      console.error('Error starting Gmail watcher:', error);
+    }
+  }
+
+  private getMessageContent(message: any): string {
+    let content = '';
+    
+    if (message.payload.parts) {
+      for (const part of message.payload.parts) {
+        if (part.mimeType === 'text/plain') {
+          content += Buffer.from(part.body.data, 'base64').toString('utf8');
+        }
+      }
+    } else if (message.payload.body.data) {
+      content = Buffer.from(message.payload.body.data, 'base64').toString('utf8');
+    }
+    
+    return content;
   }
 }

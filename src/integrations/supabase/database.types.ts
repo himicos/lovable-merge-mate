@@ -9,6 +9,35 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      user_auth_providers: {
+        Row: {
+          id: string
+          user_id: string
+          provider: string
+          provider_id: string
+          email: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          provider: string
+          provider_id: string
+          email: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          provider?: string
+          provider_id?: string
+          email?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
       gmail_connections: {
         Row: {
           id: string
