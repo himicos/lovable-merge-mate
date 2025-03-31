@@ -74,7 +74,7 @@ export class TeamsAdapter implements MessageSourceInterface {
                     };
 
                     if (filter?.since) {
-                        params.$filter = `createdDateTime gt ${filter.since.toISOString()}`;
+                        params.$filter = `createdDateTime gt ${filter.since}`;
                     }
 
                     const response = await this.client.api(`/me/chats/${chat.id}/messages`)
