@@ -1,112 +1,123 @@
-import { ElevenLabsClient } from './client';
-import type { TextToSpeechRequest, SpeechToTextRequest, Voice } from './types';
+import { supabase } from '../supabase/client';
+import axios from 'axios';
+
+interface VoiceResponse {
+    audioUrl: string;
+    duration: number;
+}
+
+interface VoiceRequest {
+    text: string;
+    messageId: string;
+}
+
+interface ResponseData {
+    messageId: string;
+    audioUrl: string;
+    duration: number;
+}
+
+interface SecretsResponse {
+    elevenlabs_api_key: string;
+}
 
 export class VoiceAPI {
-    private static instance: VoiceAPI;
-    private client: ElevenLabsClient;
-    private audioContext: AudioContext;
+    private apiKey: string | null = null;
+    private userId: string;
+    private baseUrl = 'https://api.elevenlabs.io/v1';
 
-    private constructor() {
-        this.client = ElevenLabsClient.getInstance();
-        this.audioContext = new AudioContext();
+    private constructor(userId: string) {
+        this.userId = userId;
     }
 
-    public static getInstance(): VoiceAPI {
-        if (!VoiceAPI.instance) {
-            VoiceAPI.instance = new VoiceAPI();
-        }
-        return VoiceAPI.instance;
+    public static async create(userId: string): Promise<VoiceAPI> {
+        const api = new VoiceAPI(userId);
+        await api.initialize();
+        return api;
     }
 
-    async speakText(text: string, voiceId?: string): Promise<void> {
-        try {
-            const request: TextToSpeechRequest = {
-                text,
-                voice_id: voiceId || '21m00Tcm4TlvDq8ikWAM', // Default voice
-            };
+    private async initialize(): Promise<void> {
+        const secrets = await this.getSecrets(this.userId);
+        this.apiKey = secrets.elevenlabs_api_key;
 
-            const audioBlob = await this.client.textToSpeech(request);
-            const arrayBuffer = await audioBlob.arrayBuffer();
-            const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-            
-            const source = this.audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(this.audioContext.destination);
-            source.start(0);
-
-            return new Promise((resolve) => {
-                source.onended = () => resolve();
-            });
-        } catch (error) {
-            console.error('Error in speakText:', error);
-            throw error;
+        if (!this.apiKey) {
+            throw new Error('ElevenLabs API key not found');
         }
     }
 
-    async startListening(options: {
-        language?: string;
-        onInterimResult?: (text: string) => void;
-        onError?: (error: Error) => void;
-    } = {}): Promise<string> {
+    private async getSecrets(userId: string): Promise<SecretsResponse> {
+        const { data, error } = await supabase.rpc('get_secrets', { user_id: userId });
+        if (error) throw error;
+        if (!data) throw new Error('No secrets found');
+        return data as SecretsResponse;
+    }
+
+    public async generateResponse(request: VoiceRequest): Promise<VoiceResponse> {
+        if (!this.apiKey) throw new Error('API not initialized');
+        
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const mediaRecorder = new MediaRecorder(stream);
-            const audioChunks: Blob[] = [];
-
-            return new Promise((resolve, reject) => {
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    try {
-                        const request: SpeechToTextRequest = {
-                            audio: audioBlob,
-                            language: options.language,
-                        };
-                        const result = await this.client.speechToText(request);
-                        resolve(result.text);
-                    } catch (error) {
-                        reject(error);
-                    } finally {
-                        stream.getTracks().forEach(track => track.stop());
+            const response = await axios.post(
+                `${this.baseUrl}/text-to-speech`,
+                {
+                    text: request.text,
+                    voice_settings: {
+                        stability: 0.75,
+                        similarity_boost: 0.75
                     }
-                };
+                },
+                {
+                    headers: {
+                        'xi-api-key': this.apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    responseType: 'arraybuffer'
+                }
+            );
 
-                // Stop recording after 10 seconds or when silence is detected
-                setTimeout(() => mediaRecorder.stop(), 10000);
-                mediaRecorder.start();
-            });
+            const audioBuffer = Buffer.from(response.data);
+            const { audioUrl, duration } = await this.uploadToStorage(audioBuffer, request.messageId);
+
+            return { audioUrl, duration };
         } catch (error) {
-            console.error('Error in startListening:', error);
+            console.error('Error generating voice response:', error);
             throw error;
         }
     }
 
-    async getAvailableVoices(): Promise<Voice[]> {
-        return this.client.getVoices();
+    public async saveResponse(data: ResponseData): Promise<void> {
+        const { error } = await supabase
+            .from('message_responses')
+            .insert({
+                user_id: this.userId,
+                message_id: data.messageId,
+                audio_url: data.audioUrl,
+                duration: data.duration,
+                created_at: new Date().toISOString()
+            });
+
+        if (error) throw error;
     }
 
-    // Method to handle the complete voice interaction flow
-    async handleVoiceInteraction(
-        prompt: string,
-        options: {
-            voiceId?: string;
-            language?: string;
-            waitForResponse?: boolean;
-            onInterimResult?: (text: string) => void;
-        } = {}
-    ): Promise<string | void> {
-        // Speak the prompt
-        await this.speakText(prompt, options.voiceId);
-
-        // If we need to wait for a response, start listening
-        if (options.waitForResponse) {
-            return this.startListening({
-                language: options.language,
-                onInterimResult: options.onInterimResult,
+    private async uploadToStorage(audioBuffer: Buffer, messageId: string): Promise<{ audioUrl: string; duration: number }> {
+        const filename = `${this.userId}/${messageId}.mp3`;
+        const { error: uploadError } = await supabase.storage
+            .from('voice-responses')
+            .upload(filename, audioBuffer, {
+                contentType: 'audio/mp3'
             });
-        }
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('voice-responses')
+            .getPublicUrl(filename);
+
+        // TODO: Calculate actual duration from audio buffer
+        const duration = 0;
+
+        return {
+            audioUrl: publicUrl,
+            duration
+        };
     }
 }

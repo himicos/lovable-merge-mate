@@ -1,6 +1,7 @@
 import { WebClient } from '@slack/web-api';
 import { MessageContent, MessageSource } from '../../message-processor/types.js';
 import type { MessageSourceInterface, MessageSourceConfig, MessageSourceMetadata, MessageFilter } from '../types.js';
+import { supabase } from '../../../integrations/supabase/client';
 
 export class SlackAdapter implements MessageSourceInterface {
     readonly name = 'Slack';
@@ -8,18 +9,31 @@ export class SlackAdapter implements MessageSourceInterface {
     private client: WebClient | null = null;
     private userId: string;
 
-    constructor(userId: string, token: string) {
+    constructor(userId: string, credentials?: { access_token: string }) {
         this.userId = userId;
-        this.client = new WebClient(token);
+        this.client = new WebClient(credentials?.access_token);
     }
 
     async initialize(config: MessageSourceConfig): Promise<void> {
-        this.userId = config.userId;
-        this.client = new WebClient(config.credentials.access_token);
+        await this.connect();
     }
 
     async disconnect(): Promise<void> {
         this.client = null;
+    }
+
+    async connect(): Promise<void> {
+        const { data: credentials } = await supabase
+            .from('slack_connections')
+            .select('access_token')
+            .eq('user_id', this.userId)
+            .single();
+
+        if (!credentials) {
+            throw new Error('Slack credentials not found');
+        }
+
+        this.client = new WebClient(credentials.access_token);
     }
 
     async fetchMessages(filter?: MessageFilter): Promise<MessageContent[]> {
@@ -27,35 +41,32 @@ export class SlackAdapter implements MessageSourceInterface {
             throw new Error('Slack adapter not initialized');
         }
 
-        const messages: MessageContent[] = [];
-        const limit = filter?.limit ?? 10;
-
         try {
             const result = await this.client.conversations.list();
-            
-            for (const channel of result.channels || []) {
-                if (channel.id) {
-                    const history = await this.client.conversations.history({
-                        channel: channel.id,
-                        limit
+            const channels = result.channels || [];
+            const messages: MessageContent[] = [];
+            const limit = filter?.limit ?? 10;
+
+            for (const channel of channels) {
+                if (!channel.id) continue;
+
+                const history = await this.client.conversations.history({
+                    channel: channel.id,
+                    limit
+                });
+
+                const channelMessages = history.messages || [];
+                for (const msg of channelMessages) {
+                    if (!msg.ts || !msg.text) continue;
+
+                    messages.push({
+                        id: msg.ts,
+                        source: MessageSource.SLACK,
+                        sender: msg.user || 'unknown',
+                        content: msg.text,
+                        timestamp: new Date(Number(msg.ts) * 1000).toISOString(),
+                        raw: JSON.parse(JSON.stringify(msg))
                     });
-
-                    for (const msg of history.messages || []) {
-                        if (msg.ts && msg.user) {
-                            const userInfo = await this.client.users.info({
-                                user: msg.user
-                            });
-
-                            messages.push({
-                                id: msg.ts,
-                                source: MessageSource.SLACK,
-                                sender: userInfo.user?.real_name || msg.user,
-                                content: msg.text || '',
-                                timestamp: new Date(Number(msg.ts) * 1000).toISOString(),
-                                raw: JSON.parse(JSON.stringify(msg))
-                            });
-                        }
-                    }
                 }
             }
 
@@ -127,14 +138,5 @@ export class SlackAdapter implements MessageSourceInterface {
         } catch {
             return false;
         }
-    }
-
-    async connect(): Promise<void> {
-        if (!this.client) {
-            throw new Error('Slack adapter not initialized');
-        }
-
-        // Test connection by calling auth.test
-        await this.client.auth.test();
     }
 }

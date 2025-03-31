@@ -7,6 +7,19 @@ import type { MessageSourceInterface } from '../services/message-processor/types
 import { supabase } from '../integrations/supabase/client';
 import type { MessageContent } from '../services/message-processor/types';
 
+interface GmailCredentials {
+    access_token: string;
+    refresh_token: string;
+}
+
+interface SlackCredentials {
+    access_token: string;
+}
+
+interface TeamsCredentials {
+    access_token: string;
+}
+
 export class MessageMonitorWorker extends BaseWorker {
     private sources: MessageSourceInterface[] = [];
     private readonly userId: string;
@@ -46,35 +59,35 @@ export class MessageMonitorWorker extends BaseWorker {
         };
     }
 
-    private async loadCredentials(source: 'gmail' | 'slack' | 'teams'): Promise<Record<string, string> | null> {
+    private async loadCredentials<T>(source: 'gmail' | 'slack' | 'teams'): Promise<T | null> {
         const { data } = await supabase
             .from(`${source}_connections`)
             .select('*')
             .eq('user_id', this.userId)
             .single();
         
-        return data;
+        return data as T | null;
     }
 
     public async initialize(): Promise<void> {
         if (this.config.sources.gmail) {
-            const credentials = await this.loadCredentials('gmail');
+            const credentials = await this.loadCredentials<GmailCredentials>('gmail');
             if (credentials) {
                 this.sources.push(new GmailAdapter(this.userId, credentials));
             }
         }
 
         if (this.config.sources.slack) {
-            const credentials = await this.loadCredentials('slack');
+            const credentials = await this.loadCredentials<SlackCredentials>('slack');
             if (credentials) {
                 this.sources.push(new SlackAdapter(this.userId, credentials));
             }
         }
 
         if (this.config.sources.teams) {
-            const credentials = await this.loadCredentials('teams');
+            const credentials = await this.loadCredentials<TeamsCredentials>('teams');
             if (credentials) {
-                this.sources.push(new TeamsAdapter(this.userId));
+                this.sources.push(new TeamsAdapter(this.userId, credentials));
             }
         }
     }
