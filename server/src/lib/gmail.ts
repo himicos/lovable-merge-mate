@@ -34,12 +34,12 @@ export const getAuthUrl = (auth: OAuth2Client): string => {
     });
 };
 
-export const initiateGmailAuth = async (): Promise<{ success: boolean }> => {
+export const initiateGmailAuth = async (redirectUrl: string): Promise<{ success: boolean, authUrl: string }> => {
   try {
     const auth = createOAuth2Client();
     const authUrl = getAuthUrl(auth);
-    window.location.href = authUrl;
-    return { success: true };
+    // Return the auth URL instead of redirecting
+    return { success: true, authUrl };
   } catch (error) {
     console.error('Failed to initiate Gmail auth:', error);
     throw new Error('Failed to initiate Gmail authentication');
@@ -49,10 +49,10 @@ export const initiateGmailAuth = async (): Promise<{ success: boolean }> => {
 export const checkGmailConnection = async (auth: OAuth2Client): Promise<boolean> => {
     try {
         const gmail = await getGmailService(auth);
-        await gmail.users.getProfile({ userId: 'me' });
-        return true;
+        const response = await gmail.users.getProfile({ userId: 'me' });
+        return !!response.data.emailAddress;
     } catch (error) {
-        console.error('Error checking Gmail connection:', error);
+        console.error('Failed to check Gmail connection:', error);
         return false;
     }
 };
@@ -61,7 +61,7 @@ export const disconnectGmail = async (auth: OAuth2Client): Promise<void> => {
     try {
         await auth.revokeCredentials();
     } catch (error) {
-        console.error('Error disconnecting Gmail:', error);
-        throw error;
+        console.error('Failed to disconnect Gmail:', error);
+        throw new Error('Failed to disconnect Gmail');
     }
 };

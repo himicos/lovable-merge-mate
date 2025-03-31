@@ -1,5 +1,5 @@
-import { MessageCategory, MessageAction } from '../../services/message-processor/types';
-import { supabase } from '../supabase/client';
+import { MessageCategory, MessageAction } from '../../services/message-processor/types.js';
+import { supabase } from '../supabase/client.js';
 import Anthropic from '@anthropic-ai/sdk';
 
 interface ClaudeResponse {

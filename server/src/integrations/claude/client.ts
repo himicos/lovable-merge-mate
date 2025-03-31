@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { supabase } from '../supabase/client';
+import { supabase } from '../supabase/client.js';
 
 let anthropicClient: Anthropic | null = null;
 

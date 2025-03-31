@@ -1,6 +1,6 @@
 import { OAuth2Client, Credentials } from 'google-auth-library';
 import { google, gmail_v1, oauth2_v2 } from 'googleapis';
-import { supabase } from '../integrations/supabase/client';
+import { supabase } from '../integrations/supabase/client.js';
 
 interface TokenData {
     access_token: string;

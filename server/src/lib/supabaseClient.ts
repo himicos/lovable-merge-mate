@@ -12,7 +12,7 @@ export const supabase = createClient(
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        storage: undefined, // Server-side doesn't need storage
         flowType: 'pkce',
         debug: process.env.NODE_ENV === 'development'
       }

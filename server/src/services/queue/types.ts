@@ -1,4 +1,4 @@
-import type { MessageContent } from '../message-processor/types';
+import type { MessageContent } from '../message-processor/types.js';
 
 export type QueueItemStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
 

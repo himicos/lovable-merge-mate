@@ -1,6 +1,6 @@
 import { Client } from '@microsoft/microsoft-graph-client';
-import { MessageSourceInterface, MessageContent, MessageSource } from '../../message-processor/types';
-import { supabase } from '../../../integrations/supabase/client';
+import { MessageSourceInterface, MessageContent, MessageSource } from '../../message-processor/types.js';
+import { supabase } from '../../../integrations/supabase/client.js';
 
 export class TeamsAdapter implements MessageSourceInterface {
     private client: Client;

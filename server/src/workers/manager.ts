@@ -1,5 +1,5 @@
-import type { Worker, WorkerStatus } from './types';
-import { MessageMonitorWorker } from './message-monitor';
+import type { Worker, WorkerStatus } from './types.js';
+import { MessageMonitorWorker } from './message-monitor.js';
 
 export class WorkerManager {
     private static instance: WorkerManager;

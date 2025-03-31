@@ -1,1 +1,1 @@
-export { ClaudeAPI } from './client';
+export { ClaudeAPI } from './client.js';

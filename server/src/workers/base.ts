@@ -1,4 +1,4 @@
-import type { Worker, WorkerConfig, WorkerStatus } from './types';
+import type { Worker, WorkerConfig, WorkerStatus } from './types.js';
 
 export abstract class BaseWorker implements Worker {
     protected status: WorkerStatus = 'idle';

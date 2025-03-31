@@ -1,7 +1,7 @@
-import { supabase } from '../../integrations/supabase/client';
-import { ClaudeAPI } from '../../integrations/claude/api';
-import { VoiceAPI } from '../../integrations/elevenlabs/api';
-import { MessageCategory, MessageAction, MessageContent, ProcessedMessage } from './types';
+import { supabase } from '../../integrations/supabase/client.js';
+import { ClaudeAPI } from '../../integrations/claude/api.js';
+import { VoiceAPI } from '../../integrations/elevenlabs/api.js';
+import { MessageCategory, MessageAction, MessageContent, ProcessedMessage } from './types.js';
 
 interface ProcessorConfig {
     voice_enabled: boolean;

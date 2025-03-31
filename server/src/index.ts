@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import { GmailService } from './services/gmail.service';
-import { QueueProcessor } from './services/queue/processor';
-import { supabase } from './integrations/supabase/client';
-import { MessageContent } from './services/message-processor/types';
+import { GmailService } from './services/gmail.service.js';
+import { QueueProcessor } from './services/queue/processor.js';
+import { supabase } from './integrations/supabase/client.js';
+import { MessageContent } from './services/message-processor/types.js';
 
 const app = express();
 app.use(cors());

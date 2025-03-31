@@ -1,11 +1,11 @@
-import { BaseWorker } from './base';
-import type { MessageMonitorConfig, WorkerConfig } from './types';
-import { GmailAdapter } from '../services/message-sources/gmail/adapter';
-import { SlackAdapter } from '../services/message-sources/slack/adapter';
-import { TeamsAdapter } from '../services/message-sources/teams/adapter';
-import type { MessageSourceInterface } from '../services/message-processor/types';
-import { supabase } from '../integrations/supabase/client';
-import type { MessageContent } from '../services/message-processor/types';
+import { BaseWorker } from './base.js';
+import type { MessageMonitorConfig, WorkerConfig } from './types.js';
+import { GmailAdapter } from '../services/message-sources/gmail/adapter.js';
+import { SlackAdapter } from '../services/message-sources/slack/adapter.js';
+import { TeamsAdapter } from '../services/message-sources/teams/adapter.js';
+import type { MessageSourceInterface } from '../services/message-processor/types.js';
+import { supabase } from '../integrations/supabase/client.js';
+import type { MessageContent } from '../services/message-processor/types.js';
 
 interface GmailCredentials {
     access_token: string;

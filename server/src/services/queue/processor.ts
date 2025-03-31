@@ -1,6 +1,6 @@
-import { supabase } from '../../integrations/supabase/client';
-import { MessageProcessor } from '../message-processor/processor';
-import { MessageContent } from '../message-processor/types';
+import { supabase } from '../../integrations/supabase/client.js';
+import { MessageProcessor } from '../message-processor/processor.js';
+import { MessageContent } from '../message-processor/types.js';
 
 export interface QueueItem {
     id: string;
