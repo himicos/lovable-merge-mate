@@ -1,24 +1,16 @@
-import { sendMessage } from './client';
-import type { ClaudeMessage } from './types';
-import { supabase } from '../supabase/client';
 import { MessageCategory, MessageAction } from '../../services/message-processor/types';
-import { Configuration, OpenAIApi } from 'openai';
+import { supabase } from '../supabase/client';
+import Anthropic from '@anthropic-ai/sdk';
 
-interface AnalysisResult {
+interface ClaudeResponse {
     category: MessageCategory;
     action: MessageAction;
     summary?: string;
     prompt?: string;
 }
 
-interface AnalysisInput {
-    subject: string;
-    content: string;
-    sender: string;
-}
-
 export class ClaudeAPI {
-    private api: OpenAIApi | null = null;
+    private client: Anthropic | null = null;
     private userId: string;
 
     private constructor(userId: string) {
@@ -32,123 +24,91 @@ export class ClaudeAPI {
     }
 
     private async initialize(): Promise<void> {
-        const { data: { session } } = await supabase.auth.getSession();
-        const apiKey = session?.user?.user_metadata?.claude_api_key;
+        const { data: settings } = await supabase
+            .from('user_settings')
+            .select('claude_api_key')
+            .eq('user_id', this.userId)
+            .single();
 
-        if (!apiKey) {
-            throw new Error('Claude API key not found in user metadata');
+        if (!settings?.claude_api_key) {
+            throw new Error('Claude API key not found in user settings');
         }
 
-        this.api = new OpenAIApi(new Configuration({ apiKey }));
+        this.client = new Anthropic({
+            apiKey: settings.claude_api_key
+        });
     }
 
-    async chat(messages: ClaudeMessage[], systemPrompt?: string) {
-        try {
-            if (!this.api) throw new Error('API not initialized');
-            const response = await sendMessage(messages, systemPrompt);
-            return response;
-        } catch (error) {
-            console.error('Error in Claude chat:', error);
-            throw error;
+    public async analyze(input: { subject: string; content: string; sender: string }): Promise<ClaudeResponse> {
+        if (!this.client) {
+            throw new Error('Claude API not initialized');
         }
-    }
-
-    async complete(prompt: string, systemPrompt?: string) {
-        try {
-            if (!this.api) throw new Error('API not initialized');
-            const messages: ClaudeMessage[] = [{
-                role: 'user',
-                content: prompt
-            }];
-            
-            const response = await sendMessage(messages, systemPrompt);
-            return response;
-        } catch (error) {
-            console.error('Error in Claude completion:', error);
-            throw error;
-        }
-    }
-
-    public async analyze(input: AnalysisInput): Promise<AnalysisResult> {
-        if (!this.api) throw new Error('API not initialized');
 
         try {
-            const analysisPrompt = `
-                Analyze this message:
-                From: ${input.sender}
-                Subject: ${input.subject}
-                Content: ${input.content}
+            const prompt = `Analyze this message and categorize it:
+Subject: ${input.subject}
+From: ${input.sender}
+Content: ${input.content}
 
-                Categorize it as one of:
-                - IMPORTANT (requires immediate action)
-                - INDIRECTLY_RELEVANT (good to know)
-                - MARKETING (promotional)
-                - SYSTEM_ALERT (system notification)
-                - UNKNOWN (can't determine)
+Provide a JSON response with:
+1. category (important/indirect/marketing/system)
+2. action (generate_prompt/summarize/mark_read/move)
+3. summary (brief description)
+4. prompt (if action is generate_prompt)`;
 
-                Also provide a brief summary and suggest an action if needed.
-            `;
-
-            const response = await this.api.createChatCompletion({
-                model: 'gpt-4',
-                messages: [{ role: 'user', content: analysisPrompt }],
-                temperature: 0.3,
-                max_tokens: 500
+            const response = await this.client.messages.create({
+                model: 'claude-3-opus-20240229',
+                max_tokens: 1000,
+                messages: [{ role: 'user', content: prompt }]
             });
 
-            const result = response.data.choices[0]?.message?.content;
-            if (!result) throw new Error('No analysis result from Claude');
+            const result = JSON.parse(response.content[0].text);
 
-            // Parse the result to extract category, action, and summary
-            const lines = result.split('\n');
-            const category = this.parseCategory(lines.find((line: string) => line.includes('Category:')) || '');
-            const action = this.determineAction(category);
-            const summary = lines.find((line: string) => line.includes('Summary:'))?.replace('Summary:', '').trim();
-            const responsePrompt = category === MessageCategory.IMPORTANT ? 
-                this.generatePrompt(input, summary || '') : undefined;
+            // Map the response to our enums
+            const category = this.mapCategory(result.category);
+            const action = this.mapAction(result.action);
 
-            return { category, action, summary, prompt: responsePrompt };
+            return {
+                category,
+                action,
+                summary: result.summary,
+                prompt: result.prompt
+            };
+
         } catch (error) {
             console.error('Error analyzing message with Claude:', error);
             return {
-                category: MessageCategory.UNKNOWN,
+                category: MessageCategory.MARKETING,
                 action: MessageAction.MARK_READ
             };
         }
     }
 
-    private parseCategory(categoryLine: string): MessageCategory {
-        if (categoryLine.includes('IMPORTANT')) return MessageCategory.IMPORTANT;
-        if (categoryLine.includes('INDIRECTLY_RELEVANT')) return MessageCategory.INDIRECTLY_RELEVANT;
-        if (categoryLine.includes('MARKETING')) return MessageCategory.MARKETING;
-        if (categoryLine.includes('SYSTEM_ALERT')) return MessageCategory.SYSTEM_ALERT;
-        return MessageCategory.UNKNOWN;
-    }
-
-    private determineAction(category: MessageCategory): MessageAction {
-        switch (category) {
-            case MessageCategory.IMPORTANT:
-                return MessageAction.GENERATE_PROMPT;
-            case MessageCategory.INDIRECTLY_RELEVANT:
-                return MessageAction.CREATE_SUMMARY;
-            case MessageCategory.MARKETING:
-                return MessageAction.MARK_READ;
-            case MessageCategory.SYSTEM_ALERT:
-                return MessageAction.MOVE;
+    private mapCategory(category: string): MessageCategory {
+        switch (category.toLowerCase()) {
+            case 'important':
+                return MessageCategory.IMPORTANT;
+            case 'indirect':
+                return MessageCategory.INDIRECT;
+            case 'system':
+                return MessageCategory.SYSTEM;
+            case 'marketing':
             default:
-                return MessageAction.MARK_READ;
+                return MessageCategory.MARKETING;
         }
     }
 
-    private generatePrompt(input: AnalysisInput, summary: string): string {
-        return `Based on this message:
-            From: ${input.sender}
-            Subject: ${input.subject}
-            Summary: ${summary}
-
-            Here's what you should do:
-            1. Review the message content
-            2. Take appropriate action based on the summary
-            3. Respond if necessary`;
+    private mapAction(action: string): MessageAction {
+        switch (action.toLowerCase()) {
+            case 'generate_prompt':
+                return MessageAction.GENERATE_PROMPT;
+            case 'summarize':
+                return MessageAction.SUMMARIZE;
+            case 'move':
+                return MessageAction.MOVE;
+            case 'mark_read':
+            default:
+                return MessageAction.MARK_READ;
+        }
     }
 }

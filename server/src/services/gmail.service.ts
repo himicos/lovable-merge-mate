@@ -3,25 +3,23 @@ import { MessageQueue } from '@/services/queue/queue';
 import { GOOGLE_CONFIG } from '@/config/google';
 import { MessageSource, MessageContent } from '@/services/message-processor/types';
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
 
 export class GmailService {
   private static instance: GmailService;
   private userId: string;
-  private oauth2Client: OAuth2Client;
   private gmail: any;
+  private auth: any;
 
   private constructor(userId: string) {
     this.userId = userId;
-    this.oauth2Client = new google.auth.OAuth2(
+    this.auth = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID!,
       process.env.GOOGLE_CLIENT_SECRET!,
       process.env.GOOGLE_REDIRECT_URI!
     );
   }
 
-  public static async create(): Promise<GmailService> {
-    const userId = 'me'; // Replace with actual user ID
+  public static async create(userId: string): Promise<GmailService> {
     const service = new GmailService(userId);
     await service.initialize();
     return service;
@@ -38,19 +36,19 @@ export class GmailService {
       throw new Error('Gmail credentials not found');
     }
 
-    this.oauth2Client.setCredentials({
+    this.auth.setCredentials({
       access_token: credentials.access_token,
       refresh_token: credentials.refresh_token
     });
 
     this.gmail = google.gmail({ 
       version: 'v1', 
-      auth: this.oauth2Client as any // Force type to bypass version mismatch
+      auth: this.auth
     });
   }
 
   public getAuthUrl(): string {
-    return this.oauth2Client.generateAuthUrl({
+    return this.auth.generateAuthUrl({
       access_type: 'offline',
       scope: [
         'https://www.googleapis.com/auth/gmail.readonly',
@@ -535,31 +533,6 @@ export class GmailService {
     } catch (error) {
       console.error('Error starting Gmail watcher:', error);
     }
-  }
-
-  private async getAuth(): Promise<OAuth2Client> {
-    const auth = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID!,
-      process.env.GOOGLE_CLIENT_SECRET!,
-      process.env.GOOGLE_REDIRECT_URI!
-    );
-
-    const { data: credentials } = await supabase
-      .from('gmail_connections')
-      .select('access_token, refresh_token')
-      .eq('user_id', 'me')
-      .single();
-
-    if (!credentials) {
-      throw new Error('Gmail credentials not found');
-    }
-
-    auth.setCredentials({
-      access_token: credentials.access_token,
-      refresh_token: credentials.refresh_token
-    });
-
-    return auth;
   }
 
   public async markAsRead(messageId: string): Promise<void> {
