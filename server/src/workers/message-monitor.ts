@@ -3,11 +3,12 @@ import type { MessageMonitorConfig, WorkerConfig } from './types';
 import { GmailAdapter } from '../services/message-sources/gmail/adapter';
 import { SlackAdapter } from '../services/message-sources/slack/adapter';
 import { TeamsAdapter } from '../services/message-sources/teams/adapter';
-import type { MessageSource } from '../services/message-sources/types';
+import type { MessageSourceInterface } from '../services/message-processor/types';
 import { supabase } from '../integrations/supabase/client';
+import type { MessageContent } from '../services/message-processor/types';
 
 export class MessageMonitorWorker extends BaseWorker {
-    private sources: MessageSource[] = [];
+    private sources: MessageSourceInterface[] = [];
     private readonly userId: string;
     protected override config: MessageMonitorConfig = {
         enabled: true,
@@ -25,9 +26,9 @@ export class MessageMonitorWorker extends BaseWorker {
     constructor(userId: string, workerConfig: Partial<MessageMonitorConfig> = {}) {
         const baseConfig: WorkerConfig = {
             enabled: workerConfig.enabled ?? true,
-            pollInterval: workerConfig.pollInterval ?? 60000, // 1 minute
+            pollInterval: workerConfig.pollInterval ?? 60000,
             maxRetries: workerConfig.maxRetries ?? 3,
-            retryDelay: workerConfig.retryDelay ?? 5000 // 5 seconds
+            retryDelay: workerConfig.retryDelay ?? 5000
         };
 
         super('message-monitor', baseConfig);
@@ -37,30 +38,52 @@ export class MessageMonitorWorker extends BaseWorker {
             ...this.config,
             ...baseConfig,
             batchSize: workerConfig.batchSize ?? this.config.batchSize,
-            sources: workerConfig.sources ?? this.config.sources
+            sources: {
+                gmail: workerConfig.sources?.gmail ?? true,
+                slack: workerConfig.sources?.slack ?? true,
+                teams: workerConfig.sources?.teams ?? true
+            }
         };
+    }
 
-        // Initialize message sources
+    private async loadCredentials(source: 'gmail' | 'slack' | 'teams'): Promise<Record<string, string> | null> {
+        const { data } = await supabase
+            .from(`${source}_connections`)
+            .select('*')
+            .eq('user_id', this.userId)
+            .single();
+        
+        return data;
+    }
+
+    public async initialize(): Promise<void> {
         if (this.config.sources.gmail) {
-            const gmail = new GmailAdapter();
-            gmail.initialize({ userId }).catch(console.error);
-            this.sources.push(gmail);
+            const credentials = await this.loadCredentials('gmail');
+            if (credentials) {
+                this.sources.push(new GmailAdapter(this.userId, credentials));
+            }
         }
 
         if (this.config.sources.slack) {
-            const slack = new SlackAdapter();
-            slack.initialize({ userId }).catch(console.error);
-            this.sources.push(slack);
+            const credentials = await this.loadCredentials('slack');
+            if (credentials) {
+                this.sources.push(new SlackAdapter(this.userId, credentials));
+            }
         }
 
         if (this.config.sources.teams) {
-            const teams = new TeamsAdapter();
-            teams.initialize({ userId }).catch(console.error);
-            this.sources.push(teams);
+            const credentials = await this.loadCredentials('teams');
+            if (credentials) {
+                this.sources.push(new TeamsAdapter(this.userId));
+            }
         }
     }
 
     async process(): Promise<void> {
+        if (this.sources.length === 0) {
+            await this.initialize();
+        }
+
         for (const source of this.sources) {
             try {
                 await source.connect();
@@ -71,28 +94,27 @@ export class MessageMonitorWorker extends BaseWorker {
                 }
             } catch (error) {
                 console.error(`Error processing messages from ${source.name}:`, error);
-                throw error; // Let base worker handle retry logic
+                throw error;
             }
         }
     }
 
-    private async enqueueMessage(message: any): Promise<void> {
+    private async enqueueMessage(message: MessageContent): Promise<void> {
         const { error } = await supabase
             .from('message_queue')
             .insert({
                 user_id: this.userId,
                 message_id: message.id,
                 source: message.source,
-                priority: 1,
+                sender: message.sender,
+                subject: message.subject,
+                content: message.content,
+                timestamp: message.timestamp,
+                raw_data: message.raw,
                 status: 'pending',
-                retry_count: 0,
-                max_retries: this.config.maxRetries,
-                next_retry_at: null
+                created_at: new Date().toISOString()
             });
 
-        if (error) {
-            console.error('Error enqueueing message:', error);
-            throw error;
-        }
+        if (error) throw error;
     }
 }

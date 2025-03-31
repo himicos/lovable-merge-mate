@@ -2,7 +2,7 @@ import { ClaudeAPI } from '../../integrations/claude';
 import { VoiceAPI } from '../../integrations/elevenlabs';
 import { supabase } from '../../integrations/supabase/client';
 import type { MessageContent, ProcessedMessage, UserSettings } from './types';
-import { MessageCategory, MessageAction } from './types';
+import { MessageCategory, MessageAction, MessageSource } from './types';
 
 export class MessageProcessor {
     private static instance: MessageProcessor;
@@ -22,46 +22,41 @@ export class MessageProcessor {
     }
 
     private async getUserSettings(userId: string): Promise<UserSettings> {
-        const { data, error } = await supabase
+        const { data: settings, error } = await supabase
             .from('user_settings')
             .select('*')
             .eq('user_id', userId)
             .single();
 
         if (error) throw error;
+        if (!settings) throw new Error('User settings not found');
 
-        return {
-            marketing_email_policy: data.marketing_email_policy as 'trash' | 'leave',
-            system_alert_policy: data.system_alert_policy as 'trash' | 'leave',
-            voice_enabled: data.voice_enabled,
-            auto_process_enabled: data.auto_process_enabled
-        };
+        return settings as UserSettings;
     }
 
-    private async analyzeMessage(message: MessageContent): Promise<{category: MessageCategory; summary?: string}> {
-        const response = await this.claudeApi.analyze(message);
-        return {
-            category: response.category as MessageCategory,
-            summary: response.summary
-        };
+    private async analyzeMessage(message: MessageContent): Promise<{ category: MessageCategory; summary?: string }> {
+        try {
+            const result = await this.claudeApi.analyzeMessage(message);
+            return {
+                category: result.category || MessageCategory.UNKNOWN,
+                summary: result.summary
+            };
+        } catch (error) {
+            console.error('Error analyzing message:', error);
+            return { category: MessageCategory.UNKNOWN };
+        }
     }
 
     private determineAction(category: MessageCategory, settings: UserSettings): MessageAction {
         switch (category) {
             case MessageCategory.IMPORTANT:
                 return MessageAction.GENERATE_PROMPT;
-            
             case MessageCategory.INDIRECTLY_RELEVANT:
                 return MessageAction.CREATE_SUMMARY;
-            
             case MessageCategory.MARKETING:
-                return settings.marketing_email_policy === 'trash' ? 
-                    MessageAction.MOVE : MessageAction.MARK_READ;
-            
+                return settings.marketing_email_policy === 'trash' ? MessageAction.DELETE : MessageAction.MARK_READ;
             case MessageCategory.SYSTEM_ALERT:
-                return settings.system_alert_policy === 'trash' ? 
-                    MessageAction.MOVE : MessageAction.MARK_READ;
-            
+                return MessageAction.MOVE;
             default:
                 return MessageAction.MARK_READ;
         }
@@ -71,25 +66,23 @@ export class MessageProcessor {
         return this.claudeApi.generatePrompt(message, summary);
     }
 
-    async processMessage(message: MessageContent, userId: string): Promise<ProcessedMessage> {
+    public async processMessage(message: MessageContent, userId: string): Promise<ProcessedMessage> {
         try {
             const settings = await this.getUserSettings(userId);
             const { category, summary } = await this.analyzeMessage(message);
             const action = this.determineAction(category, settings);
-
             let prompt: string | undefined;
+
             if (action === MessageAction.GENERATE_PROMPT) {
                 prompt = await this.generatePrompt(message, summary!);
                 
-                // If voice is enabled, speak the prompt
                 if (settings.voice_enabled) {
                     await this.voiceApi.speakText(prompt);
                 }
             }
 
             const processedMessage: ProcessedMessage = {
-                id: message.id,
-                originalMessage: message,
+                ...message,
                 category,
                 action,
                 summary,
@@ -98,10 +91,9 @@ export class MessageProcessor {
                 processed_at: new Date().toISOString()
             };
 
-            // Store the processed message in Supabase
             await this.storeProcessedMessage(processedMessage, userId);
-
             return processedMessage;
+
         } catch (error) {
             console.error('Error processing message:', error);
             throw error;
@@ -114,43 +106,37 @@ export class MessageProcessor {
             .insert({
                 id: message.id,
                 user_id: userId,
-                original_message_id: message.originalMessage.id,
-                source: message.originalMessage.source,
-                sender: message.originalMessage.sender,
-                subject: message.originalMessage.subject,
-                content: message.originalMessage.content,
+                source: message.source,
+                sender: message.sender,
+                subject: message.subject,
+                content: message.content,
+                timestamp: message.timestamp,
                 category: message.category,
                 action: message.action,
                 summary: message.summary,
                 prompt: message.prompt,
                 requires_voice_response: message.requires_voice_response,
                 processed_at: message.processed_at,
-                raw_data: message.originalMessage.raw
+                raw_data: message.raw
             });
 
         if (error) throw error;
     }
 
-    async handleVoiceResponse(messageId: string, userId: string): Promise<string> {
-        try {
-            const response = await this.voiceApi.startListening();
-            
-            // Store the voice response in Supabase
-            const { error } = await supabase
-                .from('message_responses')
-                .insert({
-                    message_id: messageId,
-                    user_id: userId,
-                    response_text: response,
-                    response_type: 'voice',
-                    created_at: new Date().toISOString()
-                });
+    public async handleVoiceResponse(messageId: string, userId: string): Promise<string> {
+        const response = await this.voiceApi.recordResponse();
+        if (!response) throw new Error('No voice response recorded');
 
-            if (error) throw error;
-            return response;
-        } catch (error) {
-            console.error('Error handling voice response:', error);
-            throw error;
-        }
+        const { error } = await supabase
+            .from('message_responses')
+            .insert({
+                message_id: messageId,
+                user_id: userId,
+                response,
+                created_at: new Date().toISOString()
+            });
+
+        if (error) throw error;
+        return response;
     }
 }

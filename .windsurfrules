@@ -5,3 +5,4 @@ The backend env variables are stored in the .env file on the server
 The back-end service is hosted on "https://lovable-merge-mate.onrender.com", we should not use local host
 As we are hosted online, we cannot test the server in the local terminal, and should SSH to render using the following public key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL68IDnL/9aGpNV/qcUqnvmMswl2pEpEMiSiL4mNhQ/Z dslwallett@gmail.com
 If you make any changes to the server code, be sure to say "SERVER CODE CHANGED, PUSH TO RENDER & DEPLOY"
+Always generate a title and a summary for the github commit at the end of your changes.
