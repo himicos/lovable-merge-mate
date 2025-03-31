@@ -1,5 +1,5 @@
 import { Client } from '@microsoft/microsoft-graph-client';
-import { supabase } from '../../../integrations/supabase/client';
+import { supabase } from '../../../integrations/supabase/client.js';
 import { MessageContent, MessageSource } from '../../message-processor/types.js';
 import type { MessageSourceInterface, MessageSourceConfig, MessageSourceMetadata, MessageFilter } from '../types.js';
 
