@@ -10,8 +10,46 @@ import { Server } from 'http';
 const app = express();
 const port = parseInt(process.env.PORT || '3000', 10);
 
+// Memory monitoring
+const MB = 1024 * 1024;
+const logMemoryUsage = () => {
+    const used = process.memoryUsage();
+    console.log('Memory usage:');
+    for (const [key, value] of Object.entries(used)) {
+        console.log(`${key}: ${Math.round(value / MB)}MB`);
+    }
+};
+
+// Log memory usage every 5 minutes
+setInterval(logMemoryUsage, 5 * 60 * 1000);
+
+// Request timeout middleware
+const timeout = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    res.setTimeout(30000, () => {
+        res.status(408).send('Request timeout');
+    });
+    next();
+};
+
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' })); // Limit payload size
+app.use(timeout);
+
+// Memory leak protection - limit concurrent requests
+let currentRequests = 0;
+const MAX_CONCURRENT_REQUESTS = 100;
+
+app.use((req, res, next) => {
+    if (currentRequests >= MAX_CONCURRENT_REQUESTS) {
+        res.status(503).send('Server is busy');
+        return;
+    }
+    currentRequests++;
+    res.on('finish', () => {
+        currentRequests--;
+    });
+    next();
+});
 
 // Log incoming requests
 app.use((req, res, next) => {
@@ -126,6 +164,7 @@ app.post('/messages/process', async (req, res) => {
 
 const server = app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
+  logMemoryUsage(); // Initial memory usage log
 });
 
 // Handle shutdown gracefully
