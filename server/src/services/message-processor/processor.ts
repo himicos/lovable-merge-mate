@@ -1,14 +1,31 @@
 import { supabase } from '../../integrations/supabase/client';
 import { ClaudeAPI } from '../../integrations/claude/api';
 import { VoiceAPI } from '../../integrations/elevenlabs/api';
-import { MessageCategory, MessageAction, ProcessedMessage, MessageContent } from './types';
+import { MessageCategory, MessageAction, MessageContent, ProcessedMessage } from './types';
+
+interface ProcessorConfig {
+    voice_enabled: boolean;
+}
+
+interface MessageAnalysis {
+    category: MessageCategory;
+    action: MessageAction;
+    summary: string;
+    prompt: string;
+}
+
+interface ClaudeAnalysisInput {
+    subject: string;
+    content: string;
+    sender: string;
+}
 
 export class MessageProcessor {
-    private claudeApi: ClaudeAPI | null = null;
-    private voiceApi: VoiceAPI | null = null;
+    private claudeAPI: ClaudeAPI | null = null;
+    private voiceAPI: VoiceAPI | null = null;
     private userId: string;
 
-    constructor(userId: string) {
+    private constructor(userId: string) {
         this.userId = userId;
     }
 
@@ -19,69 +36,77 @@ export class MessageProcessor {
     }
 
     private async initialize(): Promise<void> {
-        this.claudeApi = await ClaudeAPI.create(this.userId);
-        this.voiceApi = await VoiceAPI.create(this.userId);
+        this.claudeAPI = await ClaudeAPI.create(this.userId);
+        this.voiceAPI = await VoiceAPI.create(this.userId);
     }
 
-    public async processMessage(message: MessageContent, settings: { voice_enabled: boolean }): Promise<ProcessedMessage> {
-        if (!this.claudeApi) throw new Error('Claude API not initialized');
-        if (!this.voiceApi) throw new Error('Voice API not initialized');
+    private async analyzeMessage(message: MessageContent): Promise<MessageAnalysis> {
+        if (!this.claudeAPI) {
+            throw new Error('Claude API not initialized');
+        }
 
+        const analysisInput: ClaudeAnalysisInput = {
+            subject: message.subject ?? '',
+            content: message.content,
+            sender: message.sender
+        };
+
+        const result = await this.claudeAPI.analyze(analysisInput);
+
+        return {
+            category: result.category as MessageCategory,
+            action: result.action as MessageAction,
+            summary: result.summary ?? '',
+            prompt: result.prompt ?? ''
+        };
+    }
+
+    public async processMessage(message: MessageContent, config: ProcessorConfig): Promise<void> {
         try {
-            const { category, action, summary, prompt } = await this.claudeApi.analyze({
-                subject: message.subject || '',
-                content: message.content || '',
-                sender: message.sender || ''
-            });
-
+            // Analyze message with Claude
+            const analysis = await this.analyzeMessage(message);
+            
+            // Create processed message
             const processedMessage: ProcessedMessage = {
-                ...message,
-                category,
-                action,
-                summary: summary || '',
-                prompt: prompt || '',
-                requires_voice_response: action === MessageAction.GENERATE_PROMPT && settings.voice_enabled,
-                processed_at: new Date().toISOString()
+                id: message.id,
+                user_id: this.userId,
+                source: message.source,
+                sender: message.sender,
+                subject: message.subject ?? '',
+                content: message.content,
+                category: analysis.category,
+                action: analysis.action,
+                summary: analysis.summary,
+                prompt: analysis.prompt,
+                requires_voice_response: analysis.action === MessageAction.GENERATE_PROMPT && config.voice_enabled,
+                processed_at: new Date().toISOString(),
+                timestamp: new Date().toISOString(),
+                raw: message.raw ?? {}
             };
 
-            await this.saveProcessedMessage(processedMessage);
+            // Save to database
+            const { error } = await supabase
+                .from('processed_messages')
+                .insert(processedMessage);
 
-            if (processedMessage.requires_voice_response && prompt) {
-                const voiceResponse = await this.voiceApi.generateResponse({
-                    text: prompt,
-                    messageId: message.id
-                });
-
-                await this.voiceApi.saveResponse({
-                    messageId: message.id,
-                    audioUrl: voiceResponse.audioUrl,
-                    duration: voiceResponse.duration
-                });
+            if (error) {
+                throw new Error(`Failed to save processed message: ${error.message}`);
             }
 
-            return processedMessage;
+            // Generate voice response if needed
+            if (processedMessage.requires_voice_response && this.voiceAPI) {
+                try {
+                    await this.voiceAPI.generateResponse({
+                        text: processedMessage.prompt,
+                        messageId: processedMessage.id
+                    });
+                } catch (error) {
+                    console.error('Failed to generate voice response:', error);
+                }
+            }
         } catch (error) {
             console.error('Error processing message:', error);
             throw error;
         }
-    }
-
-    private async saveProcessedMessage(message: ProcessedMessage): Promise<void> {
-        const { error } = await supabase
-            .from('processed_messages')
-            .insert({
-                user_id: this.userId,
-                message_id: message.id,
-                source: message.source,
-                category: message.category,
-                action: message.action,
-                summary: message.summary,
-                prompt: message.prompt,
-                requires_voice_response: message.requires_voice_response,
-                processed_at: message.processed_at,
-                raw: message.raw
-            });
-
-        if (error) throw error;
     }
 }

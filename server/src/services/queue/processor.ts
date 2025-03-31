@@ -1,32 +1,67 @@
+import { supabase } from '../../integrations/supabase/client';
 import { MessageProcessor } from '../message-processor/processor';
-import type { QueueItem, QueueProcessor } from './types';
+import { MessageContent } from '../message-processor/types';
 
-export class MessageQueueProcessor implements QueueProcessor {
-    private messageProcessor: MessageProcessor;
+export interface QueueItem {
+    id: string;
+    user_id: string;
+    payload: MessageContent;
+    created_at: string;
+    processed_at?: string;
+    error?: string;
+}
 
-    constructor() {
-        this.messageProcessor = MessageProcessor.getInstance();
+export class QueueProcessor {
+    private processor: MessageProcessor | null = null;
+
+    private constructor() {}
+
+    public static async create(): Promise<QueueProcessor> {
+        return new QueueProcessor();
     }
 
-    async processItem(item: QueueItem): Promise<void> {
+    public async processItem(item: QueueItem): Promise<void> {
         try {
-            await this.messageProcessor.processMessage(
-                item.payload,
-                item.user_id
-            );
+            // Get user settings for voice
+            const { data: settings } = await supabase
+                .from('user_settings')
+                .select('voice_enabled')
+                .eq('user_id', item.user_id)
+                .single();
+
+            if (!settings) {
+                throw new Error('User settings not found');
+            }
+
+            // Initialize processor for this user
+            const processor = await MessageProcessor.create(item.user_id);
+
+            // Process the message
+            await processor.processMessage(item.payload, {
+                voice_enabled: settings.voice_enabled
+            });
+
+            // Update queue item status
+            await supabase
+                .from('message_queue')
+                .update({
+                    processed_at: new Date().toISOString()
+                })
+                .eq('id', item.id);
+
         } catch (error) {
-            throw new Error(`Failed to process message: ${(error as Error).message}`);
+            console.error('Failed to process queue item:', error);
+            
+            // Update queue item with error
+            await supabase
+                .from('message_queue')
+                .update({
+                    error: (error as Error).message,
+                    processed_at: new Date().toISOString()
+                })
+                .eq('id', item.id);
+
+            throw error;
         }
-    }
-
-    async handleError(item: QueueItem, error: Error): Promise<void> {
-        // Log the error
-        console.error(`Error processing message ${item.message_id}:`, error);
-
-        // Here we could implement additional error handling:
-        // - Send notifications to admins
-        // - Log to error tracking service
-        // - Update user's error statistics
-        // - etc.
     }
 }

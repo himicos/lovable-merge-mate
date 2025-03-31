@@ -7,43 +7,64 @@ import { OAuth2Client } from 'google-auth-library';
 
 export class GmailService {
   private static instance: GmailService;
+  private userId: string;
   private oauth2Client: OAuth2Client;
+  private gmail: any;
 
-  private constructor() {
+  private constructor(userId: string) {
+    this.userId = userId;
     this.oauth2Client = new google.auth.OAuth2(
-      GOOGLE_CONFIG.clientId,
-      GOOGLE_CONFIG.clientSecret,
-      GOOGLE_CONFIG.redirectUri
+      process.env.GOOGLE_CLIENT_ID!,
+      process.env.GOOGLE_CLIENT_SECRET!,
+      process.env.GOOGLE_REDIRECT_URI!
     );
   }
 
-  public static getInstance(): GmailService {
-    if (!GmailService.instance) {
-      GmailService.instance = new GmailService();
-    }
-    return GmailService.instance;
+  public static async create(): Promise<GmailService> {
+    const userId = 'me'; // Replace with actual user ID
+    const service = new GmailService(userId);
+    await service.initialize();
+    return service;
   }
 
-  public getAuthUrl(userId: string): string {
-    const params = {
-      client_id: GOOGLE_CONFIG.clientId,
-      redirect_uri: GOOGLE_CONFIG.redirectUri,
-      response_type: 'code',
-      access_type: 'offline',
-      prompt: 'consent',
-      scope: GOOGLE_CONFIG.scopes.join(' '),
-      state: userId
-    };
+  private async initialize(): Promise<void> {
+    const { data: credentials } = await supabase
+      .from('gmail_connections')
+      .select('access_token, refresh_token')
+      .eq('user_id', this.userId)
+      .single();
 
-    return `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams(params).toString()}`;
+    if (!credentials) {
+      throw new Error('Gmail credentials not found');
+    }
+
+    this.oauth2Client.setCredentials({
+      access_token: credentials.access_token,
+      refresh_token: credentials.refresh_token
+    });
+
+    this.gmail = google.gmail({ 
+      version: 'v1', 
+      auth: this.oauth2Client as any // Force type to bypass version mismatch
+    });
+  }
+
+  public getAuthUrl(): string {
+    return this.oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: [
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/gmail.modify'
+      ]
+    });
   }
 
   public async handleCallback(code: string, userId: string): Promise<void> {
     try {
       const params = {
-        client_id: GOOGLE_CONFIG.clientId,
-        client_secret: GOOGLE_CONFIG.clientSecret,
-        redirect_uri: GOOGLE_CONFIG.redirectUri,
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
         grant_type: 'authorization_code',
         code
       };
@@ -76,7 +97,7 @@ export class GmailService {
       }
 
       // Verify the token works by getting user profile
-      const profileResponse = await fetch(`${GOOGLE_CONFIG.apiEndpoint}/users/me/profile`, {
+      const profileResponse = await fetch(`${process.env.GOOGLE_API_ENDPOINT!}/users/me/profile`, {
         headers: {
           'Authorization': `Bearer ${access_token}`
         }
@@ -102,8 +123,8 @@ export class GmailService {
 
   private async refreshToken(refreshToken: string): Promise<string> {
     const params = {
-      client_id: GOOGLE_CONFIG.clientId,
-      client_secret: GOOGLE_CONFIG.clientSecret,
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
       refresh_token: refreshToken,
       grant_type: 'refresh_token'
     };
@@ -334,8 +355,7 @@ export class GmailService {
 
   public async getMessage(messageId: string): Promise<any> {
     try {
-      const gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
-      const response = await gmail.users.messages.get({
+      const response = await this.gmail.users.messages.get({
         userId: 'me',
         id: messageId
       });
@@ -515,6 +535,59 @@ export class GmailService {
     } catch (error) {
       console.error('Error starting Gmail watcher:', error);
     }
+  }
+
+  private async getAuth(): Promise<OAuth2Client> {
+    const auth = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID!,
+      process.env.GOOGLE_CLIENT_SECRET!,
+      process.env.GOOGLE_REDIRECT_URI!
+    );
+
+    const { data: credentials } = await supabase
+      .from('gmail_connections')
+      .select('access_token, refresh_token')
+      .eq('user_id', 'me')
+      .single();
+
+    if (!credentials) {
+      throw new Error('Gmail credentials not found');
+    }
+
+    auth.setCredentials({
+      access_token: credentials.access_token,
+      refresh_token: credentials.refresh_token
+    });
+
+    return auth;
+  }
+
+  public async markAsRead(messageId: string): Promise<void> {
+    if (!this.gmail) {
+      await this.initialize();
+    }
+
+    await this.gmail.users.messages.modify({
+      userId: 'me',
+      id: messageId,
+      requestBody: {
+        removeLabelIds: ['UNREAD']
+      }
+    });
+  }
+
+  public async moveToFolder(messageId: string, folderId: string): Promise<void> {
+    if (!this.gmail) {
+      await this.initialize();
+    }
+
+    await this.gmail.users.messages.modify({
+      userId: 'me',
+      id: messageId,
+      requestBody: {
+        addLabelIds: [folderId]
+      }
+    });
   }
 
   private getMessageContent(message: any): string {

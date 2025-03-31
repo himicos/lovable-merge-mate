@@ -1,18 +1,43 @@
-import { GmailService } from '@/services/gmail.service';
-import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
 
-export function createOAuth2Client(clientId: string): OAuth2Client {
-    return new OAuth2Client({
-        clientId,
-        redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+// Ensure environment variables are defined
+if (!process.env.GOOGLE_CLIENT_ID) throw new Error('GOOGLE_CLIENT_ID is not defined');
+if (!process.env.GOOGLE_CLIENT_SECRET) throw new Error('GOOGLE_CLIENT_SECRET is not defined');
+if (!process.env.GOOGLE_REDIRECT_URI) throw new Error('GOOGLE_REDIRECT_URI is not defined');
+
+export const createOAuth2Client = (): OAuth2Client => {
+    const auth = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        process.env.GOOGLE_REDIRECT_URI
+    );
+
+    // Cast to unknown first to bypass type mismatch between different versions
+    return auth as unknown as OAuth2Client;
+};
+
+export const getGmailService = async (auth: OAuth2Client): Promise<any> => {
+    return google.gmail({ 
+        version: 'v1', 
+        auth: auth as any // Force type to bypass version mismatch
     });
-}
+};
 
-export const initiateGmailAuth = async () => {
+export const getAuthUrl = (auth: OAuth2Client): string => {
+    return auth.generateAuthUrl({
+        access_type: 'offline',
+        scope: [
+            'https://www.googleapis.com/auth/gmail.readonly',
+            'https://www.googleapis.com/auth/gmail.modify'
+        ]
+    });
+};
+
+export const initiateGmailAuth = async (): Promise<{ success: boolean }> => {
   try {
-    const gmailService = GmailService.getInstance();
-    const authUrl = gmailService.getAuthUrl();
+    const auth = createOAuth2Client();
+    const authUrl = getAuthUrl(auth);
     window.location.href = authUrl;
     return { success: true };
   } catch (error) {
@@ -21,23 +46,22 @@ export const initiateGmailAuth = async () => {
   }
 };
 
-export const checkGmailConnection = async (userId: string) => {
-  try {
-    const gmailService = GmailService.getInstance();
-    return await gmailService.checkConnection(userId);
-  } catch (error) {
-    console.error('Error checking Gmail connection:', error);
-    return { isConnected: false };
-  }
+export const checkGmailConnection = async (auth: OAuth2Client): Promise<boolean> => {
+    try {
+        const gmail = await getGmailService(auth);
+        await gmail.users.getProfile({ userId: 'me' });
+        return true;
+    } catch (error) {
+        console.error('Error checking Gmail connection:', error);
+        return false;
+    }
 };
 
-export const disconnectGmail = async (userId: string) => {
-  try {
-    const gmailService = GmailService.getInstance();
-    await gmailService.disconnect(userId);
-    return { success: true };
-  } catch (error) {
-    console.error('Error disconnecting Gmail:', error);
-    throw error;
-  }
+export const disconnectGmail = async (auth: OAuth2Client): Promise<void> => {
+    try {
+        await auth.revokeCredentials();
+    } catch (error) {
+        console.error('Error disconnecting Gmail:', error);
+        throw error;
+    }
 };
