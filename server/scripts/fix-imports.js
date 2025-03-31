@@ -19,6 +19,7 @@ function processFile(filePath) {
     if (importMatch) {
       const [_, start, importPath, end] = importMatch;
       // Don't add .js if it's already there or if it's importing a directory index
+      if (!importPath.endsWith('.js') && !importPath.endsWith('/')) {
         return `${start}${importPath}.js${end}`;
       }
     }
