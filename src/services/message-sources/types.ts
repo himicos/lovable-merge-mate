@@ -1,48 +1,37 @@
-import type { MessageContent } from '../message-processor/types';
+import type { Json } from '../../integrations/supabase/types.js';
+import { MessageContent, MessageSource as MessageSourceEnum } from '../message-processor/types.js';
 
 export interface MessageSourceConfig {
     userId: string;
-    enabled?: boolean;
-    pollInterval?: number;
-    credentials?: Record<string, any>;
-}
-
-export interface MessageFilter {
-    since?: Date;
-    until?: Date;
-    limit?: number;
-    labels?: string[];
-    folders?: string[];
-    channels?: string[];
-    [key: string]: any;
+    credentials: {
+        access_token: string;
+        refresh_token?: string;
+        expiry_date?: number;
+    };
 }
 
 export interface MessageSourceMetadata {
     lastSyncTime?: string;
-    cursor?: string;
-    nextPageToken?: string;
-    [key: string]: any;
+    nextSyncTime?: string;
+    totalMessages?: number;
+    unreadMessages?: number;
 }
 
-export interface MessageSource {
-    readonly name: string;
-    readonly sourceType: 'email' | 'slack' | 'teams';
-    
-    initialize(config: MessageSourceConfig): Promise<void>;
-    connect(): Promise<void>;
-    disconnect(): Promise<void>;
-    
-    // Get new messages since last sync
-    fetchMessages(filter?: MessageFilter): Promise<any[]>;
-    
-    // Mark message as read/moved
-    markMessageAsRead(messageId: string): Promise<void>;
-    moveMessage(messageId: string, destination: string): Promise<void>;
-    
-    // Get and update source metadata
-    getMetadata(): MessageSourceMetadata;
-    updateMetadata(metadata: Partial<MessageSourceMetadata>): Promise<void>;
-    
-    // Health check
-    isHealthy(): Promise<boolean>;
+export interface MessageFilter {
+    since?: string;
+    until?: string;
+    limit?: number;
+    unreadOnly?: boolean;
 }
+
+export interface MessageSourceInterface {
+    readonly name: string;
+    readonly sourceType: MessageSourceEnum;
+    initialize(config: MessageSourceConfig): Promise<void>;
+    disconnect(): Promise<void>;
+    fetchMessages(filter?: MessageFilter): Promise<MessageContent[]>;
+    getMetadata(): Promise<MessageSourceMetadata>;
+}
+
+export type { MessageContent };
+export { MessageSourceEnum as MessageSource };

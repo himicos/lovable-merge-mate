@@ -1,97 +1,100 @@
 import { WebClient } from '@slack/web-api';
-import { supabase } from '../../../integrations/supabase/client';
-import type { MessageSource, MessageSourceConfig, MessageSourceMetadata, MessageFilter } from '../types';
+import { MessageContent, MessageSource } from '../../message-processor/types.js';
+import type { MessageSourceInterface, MessageSourceConfig, MessageSourceMetadata, MessageFilter } from '../types.js';
 
-export class SlackAdapter implements MessageSource {
+export class SlackAdapter implements MessageSourceInterface {
     readonly name = 'Slack';
-    readonly sourceType = 'slack' as const;
-    private userId: string;
-    private enabled = false;
-    private pollInterval = 60000;
+    readonly sourceType = MessageSource.SLACK;
     private client: WebClient | null = null;
+    private userId: string;
+
+    constructor(userId: string, token: string) {
+        this.userId = userId;
+        this.client = new WebClient(token);
+    }
 
     async initialize(config: MessageSourceConfig): Promise<void> {
         this.userId = config.userId;
-        this.enabled = config.enabled ?? true;
-        this.pollInterval = config.pollInterval ?? 60000;
-
-        const { data: credentials, error } = await supabase
-            .from('slack_connections')
-            .select('*')
-            .eq('user_id', this.userId)
-            .single();
-
-        if (error || !credentials) {
-            throw new Error('Slack credentials not found');
-        }
-
-        this.client = new WebClient(credentials.access_token);
-    }
-
-    async connect(): Promise<void> {
-        if (!this.client) {
-            throw new Error('Slack adapter not initialized');
-        }
-
-        // Test connection by calling auth.test
-        await this.client.auth.test();
+        this.client = new WebClient(config.credentials.access_token);
     }
 
     async disconnect(): Promise<void> {
         this.client = null;
     }
 
-    async fetchMessages(filter?: MessageFilter): Promise<any[]> {
+    async fetchMessages(filter?: MessageFilter): Promise<MessageContent[]> {
         if (!this.client) {
             throw new Error('Slack adapter not initialized');
         }
 
-        const messages = [];
+        const messages: MessageContent[] = [];
         const limit = filter?.limit ?? 10;
 
-        // Get list of channels
-        const { channels } = await this.client.conversations.list({
-            limit: 100,
-            exclude_archived: true,
-            types: 'public_channel,private_channel,im,mpim'
-        });
+        try {
+            const result = await this.client.conversations.list();
+            
+            for (const channel of result.channels || []) {
+                if (channel.id) {
+                    const history = await this.client.conversations.history({
+                        channel: channel.id,
+                        limit
+                    });
 
-        if (!channels) {
-            return [];
-        }
+                    for (const msg of history.messages || []) {
+                        if (msg.ts && msg.user) {
+                            const userInfo = await this.client.users.info({
+                                user: msg.user
+                            });
 
-        // Get messages from each channel
-        for (const channel of channels) {
-            try {
-                const params: any = {
-                    channel: channel.id,
-                    limit
-                };
-
-                if (filter?.since) {
-                    params.oldest = (filter.since.getTime() / 1000).toString();
+                            messages.push({
+                                id: msg.ts,
+                                source: MessageSource.SLACK,
+                                sender: userInfo.user?.real_name || msg.user,
+                                content: msg.text || '',
+                                timestamp: new Date(Number(msg.ts) * 1000).toISOString(),
+                                raw: JSON.parse(JSON.stringify(msg))
+                            });
+                        }
+                    }
                 }
-
-                const { messages: channelMessages } = await this.client.conversations.history(params);
-
-                if (channelMessages) {
-                    messages.push(...channelMessages.map(msg => ({
-                        id: msg.ts,
-                        source: this.sourceType,
-                        channelId: channel.id,
-                        channelName: channel.name,
-                        text: msg.text,
-                        user: msg.user,
-                        timestamp: new Date(parseInt(msg.ts) * 1000).toISOString(),
-                        raw: msg
-                    })));
-                }
-            } catch (error) {
-                console.error(`Error fetching messages from channel ${channel.id}:`, error);
             }
+
+            return messages;
+        } catch (error) {
+            console.error('Error fetching Slack messages:', error);
+            throw error;
+        }
+    }
+
+    async getMetadata(): Promise<MessageSourceMetadata> {
+        if (!this.client) {
+            throw new Error('Slack adapter not initialized');
         }
 
-        return messages;
+        try {
+            const result = await this.client.conversations.list();
+            let unreadMessages = 0;
+
+            for (const channel of result.channels || []) {
+                if (channel.id) {
+                    const info = await this.client.conversations.info({
+                        channel: channel.id
+                    });
+                    
+                    if (info.channel && 'unread_count' in info.channel) {
+                        unreadMessages += info.channel.unread_count as number;
+                    }
+                }
+            }
+
+            return {
+                lastSyncTime: new Date().toISOString(),
+                unreadMessages
+            };
+        } catch (error) {
+            console.error('Error getting Slack metadata:', error);
+            throw error;
+        }
     }
 
     async markMessageAsRead(messageId: string): Promise<void> {
@@ -113,12 +116,6 @@ export class SlackAdapter implements MessageSource {
         });
     }
 
-    getMetadata(): MessageSourceMetadata {
-        return {
-            lastSyncTime: new Date().toISOString()
-        };
-    }
-
     async updateMetadata(metadata: Partial<MessageSourceMetadata>): Promise<void> {
         // Not implemented
     }
@@ -130,5 +127,14 @@ export class SlackAdapter implements MessageSource {
         } catch {
             return false;
         }
+    }
+
+    async connect(): Promise<void> {
+        if (!this.client) {
+            throw new Error('Slack adapter not initialized');
+        }
+
+        // Test connection by calling auth.test
+        await this.client.auth.test();
     }
 }

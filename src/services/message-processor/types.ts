@@ -48,3 +48,5 @@ export interface UserSettings {
     voice_enabled: boolean;
     auto_process_enabled: boolean;
 }
+
+export type QueueProcessor = (message: MessageContent, userId: string) => Promise<void>;

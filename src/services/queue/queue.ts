@@ -1,12 +1,12 @@
-import { supabase } from '../../integrations/supabase/client';
-import type { MessageContent } from '../message-processor/types';
-import type { QueueItem, QueueOptions, QueueProcessor, QueueMetrics } from './types';
+import { supabase } from '../../integrations/supabase/client.js';
+import type { MessageContent } from '../message-processor/types.js';
+import type { QueueItem, QueueOptions } from './types.js';
 
 export class MessageQueue {
     private static instance: MessageQueue;
-    private processor: QueueProcessor | null = null;
+    private processor: ((message: MessageContent, userId: string) => Promise<void>) | null = null;
     private isProcessing = false;
-    private metrics: QueueMetrics = {
+    private metrics = {
         totalProcessed: 0,
         totalFailed: 0,
         averageProcessingTime: 0,
@@ -29,7 +29,7 @@ export class MessageQueue {
         return MessageQueue.instance;
     }
 
-    setProcessor(processor: QueueProcessor): void {
+    setProcessor(processor: (message: MessageContent, userId: string) => Promise<void>): void {
         this.processor = processor;
     }
 
@@ -66,99 +66,37 @@ export class MessageQueue {
         return data.id;
     }
 
-    async startProcessing(batchSize: number = 10, pollInterval: number = 1000): Promise<void> {
-        if (!this.processor) {
-            throw new Error('No processor set');
-        }
-
-        if (this.isProcessing) {
-            return;
-        }
+    async processQueue(): Promise<void> {
+        if (this.isProcessing || !this.processor) return;
 
         this.isProcessing = true;
-        await this.processBatch(batchSize, pollInterval);
-    }
-
-    async stopProcessing(): Promise<void> {
-        this.isProcessing = false;
-    }
-
-    private async processBatch(batchSize: number, pollInterval: number): Promise<void> {
-        while (this.isProcessing) {
-            try {
-                // Get batch of messages
-                const { data: items, error } = await supabase
-                    .from('message_queue')
-                    .select('*')
-                    .in('status', ['pending'])
-                    .lte('visible_after', new Date().toISOString())
-                    .order('priority', { ascending: false })
-                    .order('created_at', { ascending: true })
-                    .limit(batchSize);
-
-                if (error) throw error;
-
-                if (items.length === 0) {
-                    await new Promise(resolve => setTimeout(resolve, pollInterval));
-                    continue;
-                }
-
-                // Process items in parallel
-                await Promise.all(
-                    items.map(async (item: QueueItem) => {
-                        try {
-                            // Mark as processing
-                            await this.updateItemStatus(item.id, 'processing');
-
-                            const startTime = Date.now();
-                            await this.processor!.processItem(item);
-                            const processingTime = Date.now() - startTime;
-
-                            // Update metrics
-                            this.updateMetrics(processingTime, true);
-
-                            // Mark as completed
-                            await this.updateItemStatus(item.id, 'completed');
-                        } catch (error) {
-                            await this.handleProcessingError(item, error as Error);
-                        }
-                    })
-                );
-            } catch (error) {
-                console.error('Error processing batch:', error);
-                await new Promise(resolve => setTimeout(resolve, pollInterval));
-            }
-        }
-    }
-
-    private async handleProcessingError(item: QueueItem, error: Error): Promise<void> {
         try {
-            // Update metrics
-            this.updateMetrics(0, false);
+            const { data: items } = await supabase
+                .from('message_queue')
+                .select('*')
+                .eq('status', 'pending')
+                .order('priority', { ascending: false })
+                .order('created_at', { ascending: true })
+                .limit(10);
 
-            // Call processor's error handler
-            await this.processor!.handleError(item, error);
+            if (!items?.length) return;
 
-            const shouldRetry = item.retry_count < item.max_retries;
-            if (shouldRetry) {
-                // Calculate next retry time with exponential backoff
-                const backoffDelay = Math.pow(2, item.retry_count) * 1000;
-                const visibleAfter = new Date(Date.now() + backoffDelay).toISOString();
+            for (const item of items) {
+                try {
+                    const startTime = Date.now();
+                    await this.processor(item.payload, item.user_id);
+                    const processingTime = Date.now() - startTime;
 
-                await supabase
-                    .from('message_queue')
-                    .update({
-                        status: 'pending',
-                        retry_count: item.retry_count + 1,
-                        visible_after: visibleAfter,
-                        error: error.message
-                    })
-                    .eq('id', item.id);
-            } else {
-                await this.updateItemStatus(item.id, 'failed', error.message);
+                    await this.updateItemStatus(item.id, 'completed');
+                    this.updateMetrics(processingTime, true);
+                } catch (error) {
+                    console.error('Error processing message:', error);
+                    await this.updateItemStatus(item.id, 'failed', error instanceof Error ? error.message : String(error));
+                    this.updateMetrics(0, false);
+                }
             }
-        } catch (err) {
-            console.error('Error handling processing error:', err);
+        } finally {
+            this.isProcessing = false;
         }
     }
 
@@ -167,64 +105,26 @@ export class MessageQueue {
         status: QueueItem['status'],
         error?: string
     ): Promise<void> {
-        const { error: updateError } = await supabase
+        await supabase
             .from('message_queue')
-            .update({ status, error })
+            .update({
+                status,
+                error,
+                updated_at: new Date().toISOString()
+            })
             .eq('id', id);
-
-        if (updateError) throw updateError;
     }
 
     private updateMetrics(processingTime: number, success: boolean): void {
         if (success) {
             this.metrics.totalProcessed++;
             this.metrics.averageProcessingTime = (
-                this.metrics.averageProcessingTime * (this.metrics.totalProcessed - 1) +
-                processingTime
-            ) / this.metrics.totalProcessed;
+                (this.metrics.averageProcessingTime * (this.metrics.totalProcessed - 1) +
+                    processingTime) /
+                this.metrics.totalProcessed
+            );
         } else {
             this.metrics.totalFailed++;
         }
-    }
-
-    async getMetrics(): Promise<QueueMetrics> {
-        // Get current queue stats
-        const { data, error } = await supabase
-            .from('message_queue')
-            .select('status')
-            .not('status', 'eq', 'completed');
-
-        if (error) throw error;
-
-        // Update items by status
-        this.metrics.itemsByStatus = {
-            pending: 0,
-            processing: 0,
-            completed: 0,
-            failed: 0,
-            cancelled: 0
-        };
-
-        data.forEach(item => {
-            this.metrics.itemsByStatus[item.status as keyof typeof this.metrics.itemsByStatus]++;
-        });
-
-        this.metrics.itemsInQueue = data.length;
-
-        return { ...this.metrics };
-    }
-
-    async clearQueue(userId?: string): Promise<void> {
-        let query = supabase
-            .from('message_queue')
-            .delete()
-            .in('status', ['pending', 'processing']);
-
-        if (userId) {
-            query = query.eq('user_id', userId);
-        }
-
-        const { error } = await query;
-        if (error) throw error;
     }
 }

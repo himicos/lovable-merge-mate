@@ -11,11 +11,19 @@
     "baseUrl": "../",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "types": ["node"],
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"]
   },
   "include": [
     "src/**/*",
-    "../src/services/**/*"
+    "../src/services/**/*",
+    "../src/config/**/*",
+    "../src/integrations/**/*",
+    "../src/lib/**/*"
   ],
   "exclude": ["node_modules"]
 }
