@@ -1,49 +1,69 @@
+import { supabase } from '../../integrations/supabase/client';
 import { ClaudeAPI } from '../../integrations/claude/api';
 import { VoiceAPI } from '../../integrations/elevenlabs/api';
-import { supabase } from '../../integrations/supabase/client';
-import { ProcessedMessage, MessageContent, MessageCategory, MessageAction } from './types';
+import { MessageCategory, MessageAction, ProcessedMessage, MessageContent } from './types';
 
 export class MessageProcessor {
-    private claudeApi: ClaudeAPI;
-    private voiceApi: VoiceAPI;
+    private claudeApi: ClaudeAPI | null = null;
+    private voiceApi: VoiceAPI | null = null;
     private userId: string;
 
     constructor(userId: string) {
         this.userId = userId;
-        this.claudeApi = new ClaudeAPI(userId);
-        this.voiceApi = new VoiceAPI(userId);
     }
 
-    public async processMessage(message: MessageContent): Promise<ProcessedMessage> {
-        const { data: settings } = await supabase
-            .from('user_settings')
-            .select('voice_enabled')
-            .eq('user_id', this.userId)
-            .single();
+    public static async create(userId: string): Promise<MessageProcessor> {
+        const processor = new MessageProcessor(userId);
+        await processor.initialize();
+        return processor;
+    }
 
-        const analysis = await this.claudeApi.analyze({
-            subject: message.subject,
-            content: message.content,
-            sender: message.sender
-        });
+    private async initialize(): Promise<void> {
+        this.claudeApi = await ClaudeAPI.create(this.userId);
+        this.voiceApi = await VoiceAPI.create(this.userId);
+    }
 
-        const processedMessage: ProcessedMessage = {
-            ...message,
-            category: analysis.category,
-            action: analysis.action,
-            summary: analysis.summary,
-            prompt: analysis.prompt,
-            requires_voice_response: analysis.action === MessageAction.GENERATE_PROMPT && settings?.voice_enabled,
-            processed_at: new Date().toISOString()
-        };
+    public async processMessage(message: MessageContent, settings: { voice_enabled: boolean }): Promise<ProcessedMessage> {
+        if (!this.claudeApi) throw new Error('Claude API not initialized');
+        if (!this.voiceApi) throw new Error('Voice API not initialized');
 
-        await this.saveProcessedMessage(processedMessage);
+        try {
+            const { category, action, summary, prompt } = await this.claudeApi.analyze({
+                subject: message.subject || '',
+                content: message.content || '',
+                sender: message.sender || ''
+            });
 
-        if (processedMessage.requires_voice_response) {
-            await this.generateVoiceResponse(processedMessage);
+            const processedMessage: ProcessedMessage = {
+                ...message,
+                category,
+                action,
+                summary: summary || '',
+                prompt: prompt || '',
+                requires_voice_response: action === MessageAction.GENERATE_PROMPT && settings.voice_enabled,
+                processed_at: new Date().toISOString()
+            };
+
+            await this.saveProcessedMessage(processedMessage);
+
+            if (processedMessage.requires_voice_response && prompt) {
+                const voiceResponse = await this.voiceApi.generateResponse({
+                    text: prompt,
+                    messageId: message.id
+                });
+
+                await this.voiceApi.saveResponse({
+                    messageId: message.id,
+                    audioUrl: voiceResponse.audioUrl,
+                    duration: voiceResponse.duration
+                });
+            }
+
+            return processedMessage;
+        } catch (error) {
+            console.error('Error processing message:', error);
+            throw error;
         }
-
-        return processedMessage;
     }
 
     private async saveProcessedMessage(message: ProcessedMessage): Promise<void> {
@@ -53,36 +73,15 @@ export class MessageProcessor {
                 user_id: this.userId,
                 message_id: message.id,
                 source: message.source,
-                sender: message.sender,
-                subject: message.subject,
-                content: message.content,
                 category: message.category,
                 action: message.action,
                 summary: message.summary,
                 prompt: message.prompt,
                 requires_voice_response: message.requires_voice_response,
                 processed_at: message.processed_at,
-                raw_data: message.raw
+                raw: message.raw
             });
 
         if (error) throw error;
-    }
-
-    private async generateVoiceResponse(message: ProcessedMessage): Promise<void> {
-        try {
-            const response = await this.voiceApi.generateResponse({
-                text: message.prompt || message.summary,
-                messageId: message.id
-            });
-
-            await this.voiceApi.saveResponse({
-                messageId: message.id,
-                audioUrl: response.audioUrl,
-                duration: response.duration
-            });
-        } catch (error) {
-            console.error('Error generating voice response:', error);
-            throw error;
-        }
     }
 }

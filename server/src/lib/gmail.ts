@@ -1,4 +1,13 @@
 import { GmailService } from '@/services/gmail.service';
+import { OAuth2Client } from 'google-auth-library';
+import { google } from 'googleapis';
+
+export function createOAuth2Client(clientId: string): OAuth2Client {
+    return new OAuth2Client({
+        clientId,
+        redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+    });
+}
 
 export const initiateGmailAuth = async () => {
   try {

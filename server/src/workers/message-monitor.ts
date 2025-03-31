@@ -36,6 +36,12 @@ export class MessageMonitorWorker extends BaseWorker {
         }
     };
 
+    private static async create(userId: string, workerConfig: Partial<MessageMonitorConfig> = {}): Promise<MessageMonitorWorker> {
+        const worker = new MessageMonitorWorker(userId, workerConfig);
+        await worker.initialize();
+        return worker;
+    }
+
     constructor(userId: string, workerConfig: Partial<MessageMonitorConfig> = {}) {
         const baseConfig: WorkerConfig = {
             enabled: workerConfig.enabled ?? true,
@@ -59,37 +65,67 @@ export class MessageMonitorWorker extends BaseWorker {
         };
     }
 
-    private async loadCredentials<T>(source: 'gmail' | 'slack' | 'teams'): Promise<T | null> {
-        const { data } = await supabase
-            .from(`${source}_connections`)
-            .select('*')
+    private async initialize(): Promise<void> {
+        // Initialize message processor
+        // this.processor = await MessageProcessor.create(this.userId);
+
+        // Get user settings
+        const { data: settings } = await supabase
+            .from('user_settings')
+            .select('gmail_enabled, teams_enabled, slack_enabled')
             .eq('user_id', this.userId)
             .single();
-        
-        return data as T | null;
+
+        if (!settings) {
+            throw new Error('User settings not found');
+        }
+
+        // Get credentials
+        const { data: credentials } = await supabase
+            .from('user_credentials')
+            .select('gmail_credentials, teams_credentials, slack_credentials')
+            .eq('user_id', this.userId)
+            .single();
+
+        // Initialize enabled sources
+        if (settings.gmail_enabled && credentials?.gmail_credentials) {
+            this.sources.push(new GmailAdapter(
+                this.userId,
+                credentials.gmail_credentials
+            ));
+        }
+
+        if (settings.teams_enabled && credentials?.teams_credentials) {
+            this.sources.push(new TeamsAdapter(
+                this.userId,
+                credentials.teams_credentials
+            ));
+        }
+
+        if (settings.slack_enabled && credentials?.slack_credentials) {
+            this.sources.push(new SlackAdapter(
+                this.userId,
+                credentials.slack_credentials
+            ));
+        }
     }
 
-    public async initialize(): Promise<void> {
-        if (this.config.sources.gmail) {
-            const credentials = await this.loadCredentials<GmailCredentials>('gmail');
-            if (credentials) {
-                this.sources.push(new GmailAdapter(this.userId, credentials));
+    public async start(): Promise<void> {
+        if (this.config.enabled) {
+            while (true) {
+                try {
+                    await this.process();
+                    await new Promise(resolve => setTimeout(resolve, this.config.pollInterval)); // Wait for poll interval
+                } catch (error) {
+                    console.error('Error in message monitor loop:', error);
+                    await new Promise(resolve => setTimeout(resolve, this.config.retryDelay)); // Wait for retry delay on error
+                }
             }
         }
+    }
 
-        if (this.config.sources.slack) {
-            const credentials = await this.loadCredentials<SlackCredentials>('slack');
-            if (credentials) {
-                this.sources.push(new SlackAdapter(this.userId, credentials));
-            }
-        }
-
-        if (this.config.sources.teams) {
-            const credentials = await this.loadCredentials<TeamsCredentials>('teams');
-            if (credentials) {
-                this.sources.push(new TeamsAdapter(this.userId, credentials));
-            }
-        }
+    public async stop(): Promise<void> {
+        this.config.enabled = false;
     }
 
     async process(): Promise<void> {
