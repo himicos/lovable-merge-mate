@@ -4,6 +4,9 @@
   "description": "Backend server for Lovable Merge Mate",
   "main": "dist/server.js",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",

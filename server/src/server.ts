@@ -6,13 +6,18 @@ import { supabase } from './integrations/supabase/client';
 dotenv.config();
 
 const app = express();
-const port = parseInt(process.env.PORT || '8081', 10);
+// Render expects port 8080 or process.env.PORT
+const port = parseInt(process.env.PORT || '8080', 10);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // Health check endpoint
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
