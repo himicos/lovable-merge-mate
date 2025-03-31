@@ -2,28 +2,19 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "outDir": "dist",
     "skipLibCheck": true,
-    "rootDir": "../",
-    "baseUrl": "../",
+    "outDir": "dist",
+    "rootDir": "src",
+    "baseUrl": "src",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./*"]
     },
-    "types": ["node"],
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"]
+    "types": ["node"]
   },
-  "include": [
-    "src/**/*",
-    "../src/services/**/*",
-    "../src/config/**/*",
-    "../src/integrations/**/*",
-    "../src/lib/**/*"
-  ],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -1,19 +1,15 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { supabase } from './integrations/supabase/client.js';
-import { GmailService } from '@/services/gmail.service.js';
-import { MessageQueue } from '@/services/queue/queue.js';
-import { MessageSource } from '@/services/message-processor/types.js';
-
-dotenv.config();
+import { GOOGLE_CONFIG } from './config/google.js';
+import { GmailService } from './services/gmail.service.js';
+import { MessageQueue } from './services/queue/queue.js';
+import { MessageSource } from './services/message-processor/types.js';
+import { Server } from 'http';
 
 const app = express();
-const port = parseInt(process.env.PORT || '8080', 10);
-const gmailService = GmailService.getInstance();
-const messageQueue = MessageQueue.getInstance();
+const port = parseInt(process.env.PORT || '3000', 10);
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -26,33 +22,33 @@ app.use((req, res, next) => {
 // Health check endpoint
 app.get('/', (req, res) => {
   console.log('Health check request received');
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'healthy' });
 });
 
 app.get('/health', (req, res) => {
   console.log('Health check request received');
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'healthy' });
 });
 
-// Gmail OAuth callback endpoint
-app.get('/auth/gmail/callback', async (req, res) => {
-  try {
-    const { code } = req.query;
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!code || typeof code !== 'string') {
-      throw new Error('Invalid code');
-    }
-    
-    if (!session) {
-      throw new Error('No active session');
-    }
+// Google OAuth callback
+app.get('/auth/google/callback', async (req, res) => {
+  const { code } = req.query;
+  if (!code || typeof code !== 'string') {
+    res.status(400).json({ error: 'Missing authorization code' });
+    return;
+  }
 
-    await gmailService.handleCallback(code, session.user.id);
+  try {
+    const gmailService = GmailService.getInstance();
+    const userId = req.query.state;
+    if (!userId || typeof userId !== 'string') {
+      throw new Error('Missing user ID in state');
+    }
+    await gmailService.handleCallback(code, userId);
     res.json({ success: true });
   } catch (error) {
-    console.error('Error in Gmail callback:', error);
-    res.status(500).json({ error: 'Failed to handle Gmail callback' });
+    console.error('Error handling Google callback:', error);
+    res.status(500).json({ error: 'Failed to handle Google callback' });
   }
 });
 
@@ -72,11 +68,11 @@ app.post('/webhook/gmail', async (req, res) => {
 
       if (connection) {
         // Get messages using Gmail API
-        const messages = await gmailService.getMessage(data.historyId);
+        const messages = await GmailService.getInstance().getMessage(data.historyId);
         
         // Add each message to the queue
         for (const message of messages) {
-          await messageQueue.enqueue(
+          await MessageQueue.getInstance().enqueue(
             {
               id: message.id,
               source: MessageSource.EMAIL,
@@ -86,8 +82,7 @@ app.post('/webhook/gmail', async (req, res) => {
               timestamp: message.timestamp,
               raw: message
             },
-            connection.user_id,
-            { priority: 1 }
+            connection.user_id
           );
         }
       }
@@ -100,9 +95,37 @@ app.post('/webhook/gmail', async (req, res) => {
   }
 });
 
-// Start server
-const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on port ${port}`);
+// Message processing endpoints
+app.post('/messages/process', async (req, res) => {
+  const { userId, messageId, source } = req.body;
+
+  if (!userId || !messageId || !source) {
+    res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
+
+  try {
+    const queue = MessageQueue.getInstance();
+    const id = await queue.enqueue(
+      {
+        id: messageId,
+        source: source as MessageSource,
+        sender: '',
+        content: '',
+        timestamp: new Date().toISOString(),
+        raw: {}
+      },
+      userId
+    );
+    res.json({ id });
+  } catch (error) {
+    console.error('Error enqueueing message:', error);
+    res.status(500).json({ error: 'Failed to enqueue message' });
+  }
+});
+
+const server = app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
 
 // Handle shutdown gracefully

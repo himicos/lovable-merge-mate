@@ -1,9 +1,21 @@
+// This file configures the Supabase client with proper environment handling
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import type { Database } from './database.types';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../config/env.js';
 
-dotenv.config();
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Missing Supabase environment variables');
+}
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://gbhpprzcwearsppfwwon.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    {
+        auth: {
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: true,
+            flowType: 'pkce'
+        }
+    }
+);
