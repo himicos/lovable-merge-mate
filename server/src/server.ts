@@ -13,12 +13,20 @@ const port = parseInt(process.env.PORT || '8080', 10);
 app.use(cors());
 app.use(express.json());
 
+// Log incoming requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
 // Health check endpoint
 app.get('/', (req, res) => {
+  console.log('Health check request received');
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 app.get('/health', (req, res) => {
+  console.log('Health check request received');
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
@@ -56,6 +64,14 @@ app.get('/auth/gmail/callback', async (req, res) => {
 });
 
 // Start server
-app.listen(port, '0.0.0.0', () => {
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
+});
+
+// Handle shutdown gracefully
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+  });
 });
