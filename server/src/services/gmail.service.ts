@@ -2,11 +2,20 @@ import { supabase } from '@/lib/supabaseClient';
 import { MessageQueue } from '@/services/queue/queue';
 import { GOOGLE_CONFIG } from '@/config/google';
 import { MessageSource, MessageContent } from '@/services/message-processor/types';
+import { google } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
 
 export class GmailService {
   private static instance: GmailService;
+  private oauth2Client: OAuth2Client;
 
-  private constructor() {}
+  private constructor() {
+    this.oauth2Client = new google.auth.OAuth2(
+      GOOGLE_CONFIG.clientId,
+      GOOGLE_CONFIG.clientSecret,
+      GOOGLE_CONFIG.redirectUri
+    );
+  }
 
   public static getInstance(): GmailService {
     if (!GmailService.instance) {
@@ -15,89 +24,61 @@ export class GmailService {
     return GmailService.instance;
   }
 
-  public getAuthUrl(): string {
-    if (!GOOGLE_CONFIG.clientId) {
-      throw new Error('Google Client ID is not configured');
-    }
-
-    const params = new URLSearchParams({
+  public getAuthUrl(userId: string): string {
+    const params = {
       client_id: GOOGLE_CONFIG.clientId,
       redirect_uri: GOOGLE_CONFIG.redirectUri,
       response_type: 'code',
       access_type: 'offline',
-      prompt: 'select_account',
-      scope: GOOGLE_CONFIG.scopes.join(' ')
-    });
+      prompt: 'consent',
+      scope: GOOGLE_CONFIG.scopes.join(' '),
+      state: userId
+    };
 
-    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    return `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams(params).toString()}`;
   }
 
   public async handleCallback(code: string, userId: string): Promise<void> {
     try {
-      // Get the current session
-      const { data: { session }, error: sessionGetError } = await supabase.auth.getSession();
-      console.log('Session check:', { 
-        hasSession: !!session, 
-        sessionUserId: session?.user?.id,
-        requestedUserId: userId,
-        sessionError: sessionGetError 
-      });
+      const params = {
+        client_id: GOOGLE_CONFIG.clientId,
+        client_secret: GOOGLE_CONFIG.clientSecret,
+        redirect_uri: GOOGLE_CONFIG.redirectUri,
+        grant_type: 'authorization_code',
+        code
+      };
 
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      if (session.user.id !== userId) {
-        console.error('Session user ID mismatch:', { sessionUserId: session.user.id, requestedUserId: userId });
-        throw new Error('User ID mismatch');
-      }
-
-      // Exchange code for tokens directly with Google
-      console.log('Exchanging code for tokens...');
-      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: new URLSearchParams({
-          client_id: GOOGLE_CONFIG.clientId,
-          client_secret: GOOGLE_CONFIG.clientSecret,
-          redirect_uri: GOOGLE_CONFIG.redirectUri,
-          grant_type: 'authorization_code',
-          code
-        })
+        body: new URLSearchParams(params)
       });
 
-      // Try to get the response text first
-      const responseText = await tokenResponse.text();
-      console.log('Raw token response:', responseText);
-
-      // Try to parse as JSON
-      let tokens;
-      try {
-        tokens = JSON.parse(responseText);
-      } catch (e) {
-        console.error('Failed to parse token response as JSON:', e);
-        throw new Error(`Token exchange error: ${responseText.substring(0, 100)}`);
+      if (!response.ok) {
+        throw new Error('Failed to exchange code for tokens');
       }
 
-      console.log('Token exchange:', {
-        ok: tokenResponse.ok,
-        status: tokenResponse.status,
-        hasAccessToken: !!tokens.access_token,
-        hasRefreshToken: !!tokens.refresh_token,
-        error: tokens.error,
-        errorDescription: tokens.error_description
-      });
+      const { access_token, refresh_token, expires_in } = await response.json();
 
-      if (!tokenResponse.ok) {
-        throw new Error(tokens.error_description || tokens.error || 'Failed to exchange code for tokens');
+      const { error } = await supabase
+        .from('gmail_connections')
+        .upsert({
+          user_id: userId,
+          access_token,
+          refresh_token,
+          expires_at: new Date(Date.now() + expires_in * 1000).toISOString()
+        });
+
+      if (error) {
+        throw error;
       }
 
       // Verify the token works by getting user profile
       const profileResponse = await fetch(`${GOOGLE_CONFIG.apiEndpoint}/users/me/profile`, {
         headers: {
-          'Authorization': `Bearer ${tokens.access_token}`
+          'Authorization': `Bearer ${access_token}`
         }
       });
 
@@ -111,64 +92,36 @@ export class GmailService {
         messagesTotal: profile.messagesTotal
       });
 
-      // Store tokens in Supabase
-      console.log('Storing Gmail connection...');
-      const gmailData = {
-        user_id: userId,
-        email: profile.emailAddress,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expires_at: new Date(Date.now() + (tokens.expires_in * 1000)).toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      console.log('Attempting to store Gmail connection...', {
-        userId,
-        email: profile.emailAddress,
-        hasTokens: !!tokens.access_token && !!tokens.refresh_token,
-        expiresAt: gmailData.expires_at
-      });
-
-      const { error: gmailError } = await supabase
-        .from('gmail_connections')
-        .upsert(gmailData, {
-          onConflict: 'user_id'
-        });
-
-      if (gmailError) {
-        console.error('Failed to store Gmail connection:', {
-          error: gmailError,
-          errorMessage: gmailError.message,
-          details: gmailError.details,
-          hint: gmailError.hint
-        });
-        throw new Error('Database error: ' + gmailError.message);
-      }
-
-      // Verify the Gmail connection was stored
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('gmail_connections')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      console.log('Verification of stored Gmail connection:', {
-        success: !!verifyData,
-        error: verifyError,
-        userId,
-        hasData: !!verifyData,
-        storedEmail: verifyData?.email
-      });
-
-      console.log('Successfully stored Gmail connection for user:', userId);
-
       // Start watching for new messages
       await this.startMessageWatcher();
     } catch (error) {
       console.error('Error in handleCallback:', error);
       throw error;
     }
+  }
+
+  private async refreshToken(refreshToken: string): Promise<string> {
+    const params = {
+      client_id: GOOGLE_CONFIG.clientId,
+      client_secret: GOOGLE_CONFIG.clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token'
+    };
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams(params)
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh token');
+    }
+
+    const { access_token, expires_in } = await response.json();
+    return access_token;
   }
 
   public async checkConnection(userId: string): Promise<{ isConnected: boolean; email?: string }> {
@@ -220,40 +173,22 @@ export class GmailService {
 
         // Refresh the token
         console.log('Refreshing token...');
-        const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            client_id: GOOGLE_CONFIG.clientId,
-            client_secret: GOOGLE_CONFIG.clientSecret,
-            refresh_token: data.refresh_token,
-            grant_type: 'refresh_token'
-          })
-        });
-
-        const tokens = await refreshResponse.json();
+        const accessToken = await this.refreshToken(data.refresh_token);
         console.log('Token refresh:', {
-          ok: refreshResponse.ok,
-          status: refreshResponse.status,
-          hasAccessToken: !!tokens.access_token,
-          hasRefreshToken: !!tokens.refresh_token,
-          error: tokens.error,
-          errorDescription: tokens.error_description
+          ok: true,
+          status: 200,
+          hasAccessToken: !!accessToken,
+          error: null,
+          errorDescription: null
         });
-
-        if (!refreshResponse.ok) {
-          throw new Error('Failed to refresh token');
-        }
 
         // Update stored token
         console.log('Updating stored token...');
         const { error: updateError } = await supabase
           .from('gmail_connections')
           .update({
-            access_token: tokens.access_token,
-            expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
+            access_token: accessToken,
+            expires_at: Math.floor(Date.now() / 1000) + 3600,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', userId);
@@ -262,7 +197,7 @@ export class GmailService {
           throw new Error('Failed to update token');
         }
 
-        data.access_token = tokens.access_token;
+        data.access_token = accessToken;
       }
 
       // Test connection by getting user profile
@@ -399,49 +334,14 @@ export class GmailService {
 
   public async getMessage(messageId: string): Promise<any> {
     try {
-      // Get the current session
-      const { data: { session }, error: sessionGetError } = await supabase.auth.getSession();
-      console.log('Session check:', { 
-        hasSession: !!session, 
-        sessionUserId: session?.user?.id,
-        sessionError: sessionGetError 
+      const gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
+      const response = await gmail.users.messages.get({
+        userId: 'me',
+        id: messageId
       });
-
-      if (!session) {
-        console.error('No active session found');
-        return null;
-      }
-
-      // Set the session explicitly
-      const { error: sessionError } = await supabase.auth.setSession(session);
-      if (sessionError) {
-        console.error('Failed to set session:', sessionError);
-        return null;
-      }
-
-      const { data, error } = await supabase
-        .from('gmail_connections')
-        .select('access_token')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (error || !data) {
-        throw new Error('No access token found');
-      }
-
-      console.log('Access token:', data.access_token);
-
-      const response = await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}`, {
-        headers: {
-          'Authorization': `Bearer ${data.access_token}`
-        }
-      });
-
-      const message = await response.json();
-      console.log('Message:', message);
-      return message;
+      return response.data;
     } catch (error) {
-      console.error('Error getting message:', error);
+      console.error('Error fetching Gmail message:', error);
       throw error;
     }
   }

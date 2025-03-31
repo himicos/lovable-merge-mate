@@ -1,21 +1,26 @@
 import type { Json } from '../../integrations/supabase/types.js';
 
 export enum MessageSource {
-    EMAIL = 'email',
-    GMAIL = 'gmail',
-    SLACK = 'slack',
-    TEAMS = 'teams'
+    EMAIL = 'EMAIL',
+    GMAIL = 'GMAIL',
+    SLACK = 'SLACK',
+    TEAMS = 'TEAMS'
 }
 
 export enum MessageCategory {
-    IMPORTANT = 'important',
-    INDIRECT = 'indirect',
-    MARKETING = 'marketing',
-    SYSTEM = 'system',
-    UNKNOWN = 'unknown'
+    IMPORTANT = 'IMPORTANT',
+    INDIRECTLY_RELEVANT = 'INDIRECTLY_RELEVANT',
+    UNRELATED = 'UNRELATED',
+    SYSTEM_ALERT = 'SYSTEM_ALERT',
+    MARKETING = 'MARKETING',
+    UNKNOWN = 'UNKNOWN'
 }
 
 export enum MessageAction {
+    VOICE_RESPONSE = 'VOICE_RESPONSE',
+    SAVE_FOR_LATER = 'SAVE_FOR_LATER',
+    ARCHIVE = 'ARCHIVE',
+    DELETE = 'DELETE',
     GENERATE_PROMPT = 'generate_prompt',
     CREATE_SUMMARY = 'create_summary',
     MARK_READ = 'mark_read',
@@ -29,7 +34,7 @@ export interface MessageContent {
     subject?: string;
     content: string;
     timestamp: string;
-    raw: Json;
+    raw: Record<string, any>;
     [key: string]: Json | undefined; 
 }
 
@@ -47,6 +52,17 @@ export interface UserSettings {
     system_alert_policy: 'trash' | 'leave';
     voice_enabled: boolean;
     auto_process_enabled: boolean;
+}
+
+export interface MessageSourceConfig {
+    userId: string;
+    credentials: Record<string, any>;
+}
+
+export interface MessageSourceInterface {
+    connect(): Promise<void>;
+    fetchMessages(): Promise<MessageContent[]>;
+    name: string;
 }
 
 export interface QueueProcessor {
