@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from './integrations/supabase/client.js';
 
 dotenv.config();
 
