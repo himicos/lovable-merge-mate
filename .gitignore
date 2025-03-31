@@ -25,3 +25,8 @@ dist-ssr
 
 # Project specific
 .windsurfrules
+
+# Environment variables
+.env
+.env.*
+!.env.example
