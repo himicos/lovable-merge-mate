@@ -7,8 +7,15 @@
     "strict": true,
     "outDir": "dist",
     "skipLibCheck": true,
-    "rootDir": "src"
+    "rootDir": "../",
+    "baseUrl": "../",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "../src/services/**/*"
+  ],
   "exclude": ["node_modules"]
 }

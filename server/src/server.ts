@@ -2,12 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { supabase } from './integrations/supabase/client.js';
+import { GmailService } from '@/services/gmail.service.js';
+import { MessageQueue } from '@/services/queue/queue.js';
+import { MessageSource } from '@/services/message-processor/types.js';
 
 dotenv.config();
 
 const app = express();
-// Render expects port 8080 or process.env.PORT
 const port = parseInt(process.env.PORT || '8080', 10);
+const gmailService = GmailService.getInstance();
+const messageQueue = MessageQueue.getInstance();
 
 // Middleware
 app.use(cors());
@@ -43,23 +47,56 @@ app.get('/auth/gmail/callback', async (req, res) => {
     if (!session) {
       throw new Error('No active session');
     }
-    
-    // Store the Gmail connection
-    const { error } = await supabase
-      .from('gmail_connections')
-      .insert({
-        user_id: session.user.id,
-        code,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
 
-    if (error) throw error;
-    
+    await gmailService.handleCallback(code, session.user.id);
     res.json({ success: true });
   } catch (error) {
     console.error('Error in Gmail callback:', error);
     res.status(500).json({ error: 'Failed to handle Gmail callback' });
+  }
+});
+
+// Gmail webhook endpoint
+app.post('/webhook/gmail', async (req, res) => {
+  try {
+    const { message } = req.body;
+    const data = JSON.parse(Buffer.from(message.data, 'base64').toString());
+    
+    if (data.emailAddress && data.historyId) {
+      // Get user ID from email address
+      const { data: connection } = await supabase
+        .from('gmail_connections')
+        .select('user_id')
+        .eq('email', data.emailAddress)
+        .single();
+
+      if (connection) {
+        // Get messages using Gmail API
+        const messages = await gmailService.getMessage(data.historyId);
+        
+        // Add each message to the queue
+        for (const message of messages) {
+          await messageQueue.enqueue(
+            {
+              id: message.id,
+              source: MessageSource.EMAIL,
+              sender: message.from,
+              subject: message.subject,
+              content: message.content,
+              timestamp: message.timestamp,
+              raw: message
+            },
+            connection.user_id,
+            { priority: 1 }
+          );
+        }
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error in Gmail webhook:', error);
+    res.status(500).json({ error: 'Failed to handle Gmail webhook' });
   }
 });
 
