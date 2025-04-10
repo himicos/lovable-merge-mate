@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { GmailService } from '@/services/gmail.service';
+import { GmailService } from '@/services/gmail';
 import { useToast } from '@/hooks/use-toast';
 
 const GoogleCallback = () => {
@@ -61,8 +61,17 @@ const GoogleCallback = () => {
 
       try {
         console.log('Attempting to handle callback with code:', code.substring(0, 10) + '...');
-        const gmailService = GmailService.getInstance();
-        await gmailService.handleCallback(code, user.id);
+        
+        // Call the backend to handle the Gmail OAuth callback
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/auth/gmail/callback?code=${code}&user_id=${user.id}`);
+        
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(error || 'Failed to connect Gmail');
+        }
+        
+        const data = await response.json();
+        console.log('Gmail connection successful:', data);
         
         toast({
           title: "Success",

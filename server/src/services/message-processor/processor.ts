@@ -1,6 +1,6 @@
 import { supabase } from '../../integrations/supabase/client.js';
-import { ClaudeAPI } from '../../integrations/claude/api.js';
-import { VoiceAPI } from '../../integrations/elevenlabs/api.js';
+import { ClaudeAPI } from '../../integrations/ai/claude/api.js';
+import { ElevenLabsClient } from '../../integrations/ai/voice/client.js';
 import { MessageCategory, MessageAction, MessageContent, ProcessedMessage } from './types.js';
 
 interface ProcessorConfig {
@@ -22,7 +22,7 @@ interface ClaudeAnalysisInput {
 
 export class MessageProcessor {
     private claudeAPI: ClaudeAPI | null = null;
-    private voiceAPI: VoiceAPI | null = null;
+    private voiceAPI: ElevenLabsClient | null = null;
     private userId: string;
 
     private constructor(userId: string) {
@@ -37,7 +37,8 @@ export class MessageProcessor {
 
     private async initialize(): Promise<void> {
         this.claudeAPI = await ClaudeAPI.create(this.userId);
-        this.voiceAPI = await VoiceAPI.create(this.userId);
+        this.voiceAPI = ElevenLabsClient.getInstance();
+        await this.voiceAPI.initializeApiKey();
     }
 
     private async analyzeMessage(message: MessageContent): Promise<MessageAnalysis> {
@@ -96,9 +97,9 @@ export class MessageProcessor {
             // Generate voice response if needed
             if (processedMessage.requires_voice_response && this.voiceAPI) {
                 try {
-                    await this.voiceAPI.generateResponse({
+                    const audioBlob = await this.voiceAPI.textToSpeech({
                         text: processedMessage.prompt,
-                        messageId: processedMessage.id
+                        voice_id: this.voiceAPI.defaultVoiceId
                     });
                 } catch (error) {
                     console.error('Failed to generate voice response:', error);

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -7,7 +6,7 @@ import {
   useMotionValue,
   useSpring,
   type SpringOptions,
-} from 'motion/react';
+} from 'framer-motion';
 
 const SPRING_CONFIG = { stiffness: 26.7, damping: 4.1, mass: 0.2 };
 

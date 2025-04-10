@@ -8,7 +8,7 @@ import { Mail, Slack, MessageSquare, Moon, Sun } from "lucide-react";
 import IntegrationButton from "@/components/IntegrationButton";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/components/ui/theme-provider";
-import { initiateGmailAuth, checkGmailConnection, disconnectGmail } from "@/lib/gmail";
+import { gmailApi } from "@/services/api/message-sources";
 
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
@@ -35,7 +35,8 @@ const Settings = () => {
     console.log('Checking Gmail connection for user:', user.id);
     
     try {
-      const status = await checkGmailConnection(user.id);
+      const isConnected = await gmailApi.checkConnection();
+      const status = { isConnected, email: isConnected ? user.email : null };
       console.log('Gmail connection status:', { status, userId: user.id });
       
       if (status.isConnected !== gmailStatus.isConnected || status.email !== gmailStatus.email) {
@@ -78,7 +79,7 @@ const Settings = () => {
       });
 
       if (gmailStatus.isConnected) {
-        await disconnectGmail(user.id);
+        await gmailApi.disconnect();
         setGmailStatus({ isConnected: false, email: null });
         toast({
           title: "Success",
@@ -86,7 +87,7 @@ const Settings = () => {
         });
       } else {
         console.log('Initiating Gmail auth for user:', user.id);
-        await initiateGmailAuth();
+        await gmailApi.initiateAuth();
       }
     } catch (error) {
       console.error('Gmail action error:', error);

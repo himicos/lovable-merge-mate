@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import { MessageSourceInterface, MessageContent, MessageSource } from '../../message-processor/types.js';
-import { supabase } from '../../../integrations/supabase/client.js';
+import { supabase } from '../../../integrations/auth/client.js';
 
 interface GmailHeader {
     name: string;

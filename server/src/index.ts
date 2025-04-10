@@ -1,6 +1,8 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { GmailService } from './services/gmail.service.js';
+import { GmailService } from './integrations/messaging/gmail/service.js';
+import { initiateGmailAuth } from './integrations/messaging/gmail/client.js';
 import { QueueProcessor } from './services/queue/processor.js';
 import { supabase } from './integrations/supabase/client.js';
 import { MessageContent } from './services/message-processor/types.js';
@@ -22,8 +24,10 @@ app.get('/auth/gmail/url', async (req, res) => {
             throw new Error('Missing user ID');
         }
 
-        const gmailService = await GmailService.create(user_id);
-        const authUrl = gmailService.getAuthUrl();
+        const { success, authUrl } = await initiateGmailAuth(process.env.GOOGLE_REDIRECT_URI || '');
+        if (!success) {
+            throw new Error('Failed to initiate Gmail auth');
+        }
         res.json({ url: authUrl });
     } catch (error) {
         console.error('Error getting Gmail auth URL:', error);
