@@ -63,7 +63,7 @@ const GoogleCallback = () => {
         console.log('Attempting to handle callback with code:', code.substring(0, 10) + '...');
         
         // Call the backend to handle the Gmail OAuth callback
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/auth/gmail/callback?code=${code}&user_id=${user.id}`);
+        const response = await fetch(`https://www.verby.eu/auth/gmail/callback?code=${code}&user_id=${user.id}`);
         
         if (!response.ok) {
           const error = await response.text();
