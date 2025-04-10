@@ -3,19 +3,26 @@ import { OAuth2Client } from 'google-auth-library';
 
 import { supabase } from '../../supabase/client.js';
 
-export const getOAuthCredentials = async () => {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+interface GoogleSecrets {
+    google_client_id: string;
+    google_client_secret: string;
+    google_redirect_uri: string;
+}
 
-    if (!clientId || !clientSecret || !redirectUri) {
-        throw new Error('Google OAuth credentials not found in environment variables');
+export const getOAuthCredentials = async () => {
+    const { data, error } = await supabase.rpc('get_secrets');
+    if (error) throw error;
+    if (!data) throw new Error('No secrets found');
+
+    const secrets = data as GoogleSecrets;
+    if (!secrets.google_client_id || !secrets.google_client_secret || !secrets.google_redirect_uri) {
+        throw new Error('Google OAuth credentials not found in secrets');
     }
 
     return {
-        clientId,
-        clientSecret,
-        redirectUri
+        clientId: secrets.google_client_id,
+        clientSecret: secrets.google_client_secret,
+        redirectUri: secrets.google_redirect_uri
     };
 };
 
