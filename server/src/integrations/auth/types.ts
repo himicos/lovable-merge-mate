@@ -287,6 +287,7 @@ export type Database = {
           created_at: string | null
           expires_at: number | null
           id: string
+          metadata: Json | null
           provider: string
           refresh_token: string | null
           updated_at: string | null
@@ -297,6 +298,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: number | null
           id?: string
+          metadata?: Json | null
           provider: string
           refresh_token?: string | null
           updated_at?: string | null
@@ -307,6 +309,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: number | null
           id?: string
+          metadata?: Json | null
           provider?: string
           refresh_token?: string | null
           updated_at?: string | null

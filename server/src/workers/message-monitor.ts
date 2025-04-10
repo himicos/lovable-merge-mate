@@ -1,3 +1,4 @@
+
 import { BaseWorker } from './base.js';
 import type { MessageMonitorConfig, WorkerConfig } from './types.js';
 import { GmailAdapter } from '../services/message-sources/gmail/adapter.js';
@@ -36,12 +37,6 @@ export class MessageMonitorWorker extends BaseWorker {
         }
     };
 
-    private static async create(userId: string, workerConfig: Partial<MessageMonitorConfig> = {}): Promise<MessageMonitorWorker> {
-        const worker = new MessageMonitorWorker(userId, workerConfig);
-        await worker.initialize();
-        return worker;
-    }
-
     constructor(userId: string, workerConfig: Partial<MessageMonitorConfig> = {}) {
         const baseConfig: WorkerConfig = {
             enabled: workerConfig.enabled ?? true,
@@ -63,6 +58,12 @@ export class MessageMonitorWorker extends BaseWorker {
                 teams: workerConfig.sources?.teams ?? true
             }
         };
+    }
+
+    static async create(userId: string, workerConfig: Partial<MessageMonitorConfig> = {}): Promise<MessageMonitorWorker> {
+        const worker = new MessageMonitorWorker(userId, workerConfig);
+        await worker.initialize();
+        return worker;
     }
 
     private async initialize(): Promise<void> {
