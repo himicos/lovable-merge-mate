@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { GmailService } from '@/services/gmail';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/services/api/auth';
 
 const GoogleCallback = () => {
   const navigate = useNavigate();
@@ -20,63 +20,22 @@ const GoogleCallback = () => {
         window.location.hash.replace('#', '')
       );
       
-      // Check for query parameters (authorization code flow)
-      const queryParams = new URLSearchParams(window.location.search);
-      
-      const code = queryParams.get('code');
-      const error = queryParams.get('error') || hashParams.get('error');
       const accessToken = hashParams.get('access_token');
-      
-      console.log('Callback received:', { code, error, accessToken, user, attempts });
+      const error = hashParams.get('error');
       
       if (error) {
-        console.error('Google OAuth error:', error);
+        console.error('Auth error:', error);
         toast({
           title: "Error",
-          description: `Failed to connect Gmail: ${error}`,
+          description: "Authentication failed. Please try again.",
           variant: "destructive"
         });
-        navigate('/settings');
+        navigate('/login');
         return;
       }
 
-      // If no user yet and we haven't exceeded max attempts, wait and try again
-      if (!user?.id) {
-        if (attempts < maxAttempts) {
-          console.log('User session not ready, waiting... (attempt ${attempts + 1}/${maxAttempts})');
-          setTimeout(() => setAttempts(prev => prev + 1), 1000);
-          return;
-        } else {
-          console.error('Max attempts reached waiting for user session');
-          toast({
-            title: "Error",
-            description: "Failed to get user session. Please try again.",
-            variant: "destructive"
-          });
-          navigate('/settings');
-          return;
-        }
-      }
-
-      // Handle implicit flow (access token in hash)
-      if (accessToken) {
-        console.log('Using implicit flow with access token');
-        
-        // The session should be automatically handled by Supabase
-        // Just wait for the session to be established
-        if (user?.id) {
-          console.log('User session established');
-          navigate('/');
-          return;
-        }
-        
-        // If no user yet, keep waiting via the attempts counter
-        return;
-      }
-      
-      // Handle authorization code flow
-      if (!code) {
-        console.error('No code or access token found in callback URL');
+      if (!accessToken) {
+        console.error('No access token found in callback URL');
         toast({
           title: "Error",
           description: "Authentication failed. Please try again.",
@@ -87,27 +46,44 @@ const GoogleCallback = () => {
       }
 
       try {
-        console.log('Using authorization code flow');
+        // Let Supabase handle the session
+        const { data: { user: sessionUser }, error: sessionError } = await supabase.auth.getUser();
         
-        // Let Supabase handle the code exchange
-        // The session will be automatically established
-        if (user?.id) {
-          console.log('User session established');
+        if (sessionError) {
+          throw sessionError;
+        }
+        
+        if (sessionUser) {
+          console.log('Session established for user:', sessionUser.email);
           navigate('/');
           return;
         }
         
-        // If no user yet, keep waiting via the attempts counter
+        // If no session yet and we haven't exceeded max attempts, wait and try again
+        if (attempts < maxAttempts) {
+          console.log(`Waiting for session... (attempt ${attempts + 1}/${maxAttempts})`);
+          setTimeout(() => setAttempts(prev => prev + 1), 1000);
+          return;
+        }
+        
+        throw new Error('Failed to establish session after max attempts');
       } catch (error) {
-        console.error('Error handling Google callback:', error);
+        console.error('Error handling auth callback:', error);
         toast({
           title: "Error",
-          description: error instanceof Error ? error.message : "Failed to connect Gmail. Please try again.",
+          description: error instanceof Error ? error.message : "Authentication failed. Please try again.",
           variant: "destructive"
         });
+        navigate('/login');
+      } catch (error) {
+        console.error('Error handling auth callback:', error);
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Authentication failed. Please try again.",
+          variant: "destructive"
+        });
+        navigate('/login');
       }
-
-      navigate('/settings');
     };
 
     handleCallback();
