@@ -13,11 +13,21 @@ const GoogleCallback = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      const error = urlParams.get('error');
+      console.log('Auth callback triggered, current URL:', window.location.href);
       
-      console.log('Callback received:', { code, error, user, attempts });
+      // Check for hash parameters (implicit flow)
+      const hashParams = new URLSearchParams(
+        window.location.hash.replace('#', '')
+      );
+      
+      // Check for query parameters (authorization code flow)
+      const queryParams = new URLSearchParams(window.location.search);
+      
+      const code = queryParams.get('code');
+      const error = queryParams.get('error') || hashParams.get('error');
+      const accessToken = hashParams.get('access_token');
+      
+      console.log('Callback received:', { code, error, accessToken, user, attempts });
       
       if (error) {
         console.error('Google OAuth error:', error);
@@ -48,35 +58,46 @@ const GoogleCallback = () => {
         }
       }
 
+      // Handle implicit flow (access token in hash)
+      if (accessToken) {
+        console.log('Using implicit flow with access token');
+        
+        // The session should be automatically handled by Supabase
+        // Just wait for the session to be established
+        if (user?.id) {
+          console.log('User session established');
+          navigate('/');
+          return;
+        }
+        
+        // If no user yet, keep waiting via the attempts counter
+        return;
+      }
+      
+      // Handle authorization code flow
       if (!code) {
-        console.error('Missing authorization code');
+        console.error('No code or access token found in callback URL');
         toast({
           title: "Error",
-          description: "Failed to connect Gmail. Please try again.",
+          description: "Authentication failed. Please try again.",
           variant: "destructive"
         });
-        navigate('/settings');
+        navigate('/login');
         return;
       }
 
       try {
-        console.log('Attempting to handle callback with code:', code.substring(0, 10) + '...');
+        console.log('Using authorization code flow');
         
-        // Call the backend to handle the Gmail OAuth callback
-        const response = await fetch(`https://www.verby.eu/auth/gmail/callback?code=${code}&user_id=${user.id}`);
-        
-        if (!response.ok) {
-          const error = await response.text();
-          throw new Error(error || 'Failed to connect Gmail');
+        // Let Supabase handle the code exchange
+        // The session will be automatically established
+        if (user?.id) {
+          console.log('User session established');
+          navigate('/');
+          return;
         }
         
-        const data = await response.json();
-        console.log('Gmail connection successful:', data);
-        
-        toast({
-          title: "Success",
-          description: "Successfully connected your Gmail account!"
-        });
+        // If no user yet, keep waiting via the attempts counter
       } catch (error) {
         console.error('Error handling Google callback:', error);
         toast({
