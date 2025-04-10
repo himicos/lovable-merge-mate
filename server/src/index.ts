@@ -36,6 +36,12 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
+// Supabase Auth callback
+app.get('/auth/callback', (req, res) => {
+    // Just serve the SPA, Supabase Auth will handle the rest
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
 // Gmail auth endpoints
 app.get('/auth/gmail/url', async (req, res) => {
     try {
