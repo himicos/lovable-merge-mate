@@ -3,12 +3,9 @@
 # Get the port from environment or default to 10000
 PORT=${PORT:-10000}
 
-# Calculate frontend port (PORT + 1)
-FRONTEND_PORT=$((PORT + 1))
-
-# Start frontend preview
+# Build frontend
 cd "$(dirname "$0")"
-PORT=$FRONTEND_PORT npm run preview &
+npm run build
 
 # Start backend server
 cd "$(dirname "$0")/server"

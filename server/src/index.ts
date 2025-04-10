@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { GmailService } from './integrations/messaging/gmail/service.js';
 import { initiateGmailAuth } from './integrations/messaging/gmail/client.js';
 import { QueueProcessor } from './services/queue/processor.js';
@@ -10,6 +12,23 @@ import { MessageContent } from './services/message-processor/types.js';
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Serve static frontend files
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendPath = path.join(__dirname, '../../../dist');
+app.use(express.static(frontendPath));
+
+// SPA fallback
+app.get('*', (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/') || 
+        req.path.startsWith('/auth/') || 
+        req.path.startsWith('/webhook/')) {
+        return next();
+    }
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
