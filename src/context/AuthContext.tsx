@@ -34,7 +34,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check active session
     const checkSession = async () => {
       try {
+        // Get the current session
         const { data: { session }, error } = await supabase.auth.getSession();
+
+        // Handle auth callback if we're on the callback page
+        if (location.pathname === '/auth/callback') {
+          if (error) {
+            console.error('Auth callback error:', error);
+            throw error;
+          }
+          if (session) {
+            console.log('Auth callback successful');
+            navigate('/');
+            return;
+          }
+        }
+
+        // Handle session state
         if (error) {
           console.error('Session check error:', error);
           return;
