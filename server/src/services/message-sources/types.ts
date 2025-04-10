@@ -1,4 +1,4 @@
-import type { Json } from '../../integrations/supabase/types.js';
+import type { Json } from '../../integrations/auth/database.types.js';
 import { MessageContent, MessageSource as MessageSourceEnum } from '../message-processor/types.js';
 
 export interface MessageSourceConfig {
