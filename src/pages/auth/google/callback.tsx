@@ -75,14 +75,6 @@ const GoogleCallback = () => {
           variant: "destructive"
         });
         navigate('/login');
-      } catch (error) {
-        console.error('Error handling auth callback:', error);
-        toast({
-          title: "Error",
-          description: error instanceof Error ? error.message : "Authentication failed. Please try again.",
-          variant: "destructive"
-        });
-        navigate('/login');
       }
     };
 
