@@ -31,17 +31,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
-    // Check active session
+    // Check active session and handle PKCE callback
     const checkSession = async () => {
       try {
+        // If we're on the callback page, handle the code exchange
+        if (location.pathname === '/auth/callback') {
+          const params = new URLSearchParams(window.location.search);
+          const code = params.get('code');
+          const codeVerifier = sessionStorage.getItem('codeVerifier');
+          
+          if (code && codeVerifier) {
+            console.log('Exchanging code for session...');
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code, codeVerifier);
+            
+            if (error) {
+              console.error('Session exchange error:', error);
+              throw error;
+            }
+            
+            if (data?.user) {
+              console.log('Session exchange successful');
+              setUser(data.user);
+              sessionStorage.removeItem('codeVerifier'); // Clean up
+              navigate('/');
+              return;
+            }
+          }
+        }
+        
+        // Check for existing session
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
-          console.error("Session check error:", error);
+          console.error('Session check error:', error);
           return;
         }
         
         if (session?.user) {
-          console.log("Active session found:", {
+          console.log('Active session found:', {
             id: session.user.id,
             email: session.user.email,
             metadata: session.user.user_metadata
@@ -49,20 +75,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(session.user);
           
           // If we're on the login page with an active session, redirect to home
-          if (location.pathname === "/login") {
-            navigate("/");
+          if (location.pathname === '/login') {
+            navigate('/');
           }
         } else {
-          console.log("No active session");
+          console.log('No active session');
           setUser(null);
           
           // If we're not on login or callback page and have no session, redirect to login
-          if (!["/login", "/auth/callback"].includes(location.pathname)) {
-            navigate("/login");
+          if (!['/login', '/auth/callback'].includes(location.pathname)) {
+            navigate('/login');
           }
         }
       } catch (error) {
-        console.error("Session check failed:", error);
+        console.error('Session check failed:', error);
+        toast({
+          title: 'Authentication Error',
+          description: error instanceof Error ? error.message : 'Failed to authenticate',
+          variant: 'destructive'
+        });
+        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -106,6 +138,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Site URL:", siteUrl);
       console.log("Redirect URL:", redirectUrl);
       
+      // Generate PKCE verifier and challenge
+      const { data: { codeVerifier, codeChallenge }, error: pkceError } = await supabase.auth.generatePKCEVerifier();
+      
+      if (pkceError) {
+        throw pkceError;
+      }
+      
+      // Store code verifier in session storage
+      sessionStorage.setItem('codeVerifier', codeVerifier);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -114,7 +156,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             access_type: 'offline',
             prompt: 'consent'
           },
-          scopes: 'email profile'
+          scopes: 'email profile',
+          skipBrowserRedirect: true,
+          codeChallenge,
+          codeChallengeMethod: 'S256'
         }
       });
       
