@@ -107,20 +107,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log("Starting Google sign in...");
-      const siteUrl = window.location.origin;
-      const redirectUrl = `${siteUrl}/auth/callback`;
-      console.log("Site URL:", siteUrl);
-      console.log("Redirect URL:", redirectUrl);
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'email profile https://www.googleapis.com/auth/gmail.readonly',
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
-          },
-          scopes: 'email profile'
+          }
         }
       });
       
@@ -134,17 +129,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      console.log("Google sign in response:", {
-        provider: data?.provider,
-        url: data?.url
-      });
-      
-      // If we got a URL, redirect to it
       if (data?.url) {
-        console.log("Redirecting to Google OAuth URL...");
+        console.log("Redirecting to:", data.url);
         window.location.href = data.url;
       } else {
-        console.error("No redirect URL received from Supabase");
+        console.error("No redirect URL received");
         toast({
           title: "Authentication Error",
           description: "Failed to start Google sign in",
@@ -155,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Google sign in exception:", error);
       toast({
         title: "Authentication Error",
-        description: "An unexpected error occurred during Google sign in",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
     }
