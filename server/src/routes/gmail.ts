@@ -46,13 +46,14 @@ router.get('/auth/gmail/callback', async (req, res) => {
         // state contains the user_id
         const user_id = state as string;
         
-        // Store the code temporarily (you might want to use Redis in production)
-        // For now, we'll redirect with the code
-        const redirectUrl = `${process.env.FRONTEND_URL}/settings?code=${code}&user_id=${user_id}`;
+        // Ensure we redirect to www subdomain
+        const frontendUrl = process.env.FRONTEND_URL?.replace('https://verby.eu', 'https://www.verby.eu') || 'https://www.verby.eu';
+        const redirectUrl = `${frontendUrl}/settings?code=${code}&user_id=${user_id}`;
         res.redirect(redirectUrl);
     } catch (error) {
         console.error('Error in Gmail callback:', error);
-        res.redirect(`${process.env.FRONTEND_URL}/settings?error=auth_failed`);
+        const frontendUrl = process.env.FRONTEND_URL?.replace('https://verby.eu', 'https://www.verby.eu') || 'https://www.verby.eu';
+        res.redirect(`${frontendUrl}/settings?error=auth_failed`);
     }
 });
 
