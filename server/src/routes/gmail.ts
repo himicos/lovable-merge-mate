@@ -8,8 +8,9 @@ const router = Router();
 router.get('/status/:userId', async (req, res) => {
     try {
         const gmailService = await GmailService.create(req.params.userId);
-        const profile = await gmailService.getUserProfile();
-        res.json({ connected: !!profile });
+        // Try to list messages as a connection test
+        await gmailService.listMessages('');
+        res.json({ connected: true });
     } catch (error) {
         console.error('Error checking Gmail status:', error);
         res.json({ connected: false });
