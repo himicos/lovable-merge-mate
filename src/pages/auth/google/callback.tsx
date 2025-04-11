@@ -21,6 +21,8 @@ const GoogleCallback = () => {
       );
       
       const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      const expiresIn = hashParams.get('expires_in');
       const error = hashParams.get('error');
       
       if (error) {
@@ -46,15 +48,23 @@ const GoogleCallback = () => {
       }
 
       try {
-        // Let Supabase handle the session
-        const { data: { user: sessionUser }, error: sessionError } = await supabase.auth.getUser();
+        // Set the session with the tokens from the URL
+        const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+          expires_in: parseInt(expiresIn || '3600')
+        });
         
         if (sessionError) {
           throw sessionError;
         }
         
-        if (sessionUser) {
-          console.log('Session established for user:', sessionUser.email);
+        if (session?.user) {
+          console.log('Session established for user:', session.user.email);
+          toast({
+            title: "Success",
+            description: "Successfully signed in!"
+          });
           navigate('/');
           return;
         }
