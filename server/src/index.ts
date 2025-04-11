@@ -10,7 +10,12 @@ import { MessageContent } from './services/message-processor/types.js';
 import { gmailRouter } from './routes/gmail.js';
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL 
+    : ['http://localhost:5173', 'http://localhost:3000', 'https://lovable-merge-mate.onrender.com'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Serve static frontend files
