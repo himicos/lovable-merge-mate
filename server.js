@@ -1,6 +1,18 @@
-const express = require('express');
-const path = require('path');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { gmailRouter } from './server/src/routes/gmail.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+
+// Parse JSON bodies
+app.use(express.json());
+
+// API routes
+app.use('/api/gmail', gmailRouter);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'dist')));

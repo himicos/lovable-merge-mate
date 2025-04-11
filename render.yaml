@@ -1,6 +1,22 @@
 services:
+  # Public company website
   - type: web
-    name: lovable-merge-mate
+    name: verby-public
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./public/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-store
+
+  # Electron app web frontend
+  - type: web
+    name: verby-app
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
@@ -17,3 +33,23 @@ services:
         sync: false
       - key: VITE_SUPABASE_ANON_KEY
         sync: false
+      - key: VITE_API_URL
+        value: https://api.verby.eu
+
+  # API service for integrations
+  - type: web
+    name: verby-api
+    env: node
+    buildCommand: cd server && npm install && npm run build
+    startCommand: ./start.sh
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://api.verby.eu/api/gmail/callback

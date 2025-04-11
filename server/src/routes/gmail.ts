@@ -40,8 +40,8 @@ router.get('/auth-url', async (req, res) => {
     }
 });
 
-// Complete OAuth flow after callback
-router.get('/complete-auth', async (req, res) => {
+// Handle OAuth callback
+router.get('/callback', async (req, res) => {
     try {
         const { code, user_id } = req.query;
         if (!code || !user_id) {
