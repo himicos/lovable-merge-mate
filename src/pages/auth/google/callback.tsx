@@ -13,12 +13,19 @@ const GoogleCallback = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
-      console.log('Auth callback triggered, current URL:', window.location.href);
+      console.log('=== Auth Callback Start ===');
+      console.log('Current URL:', window.location.href);
       
-      // Check for hash parameters (implicit flow)
+      // Parse URL hash
       const hashParams = new URLSearchParams(
         window.location.hash.replace('#', '')
       );
+      
+      // Log all hash parameters for debugging
+      console.log('Hash parameters:');
+      for (const [key, value] of hashParams.entries()) {
+        console.log(`${key}:`, key.includes('token') ? `${value.substring(0, 10)}...` : value);
+      }
       
       const accessToken = hashParams.get('access_token');
       const refreshToken = hashParams.get('refresh_token');
@@ -26,7 +33,7 @@ const GoogleCallback = () => {
       const error = hashParams.get('error');
       
       if (error) {
-        console.error('Auth error:', error);
+        console.error('Auth error encountered:', error);
         toast({
           title: "Error",
           description: "Authentication failed. Please try again.",
@@ -37,7 +44,8 @@ const GoogleCallback = () => {
       }
 
       if (!accessToken) {
-        console.error('No access token found in callback URL');
+        console.error('Access token missing from callback URL');
+        console.log('Available hash params:', Array.from(hashParams.keys()));
         toast({
           title: "Error",
           description: "Authentication failed. Please try again.",
@@ -48,6 +56,15 @@ const GoogleCallback = () => {
       }
 
       try {
+        console.log('Attempting to set session with tokens...');
+        console.log('Access token length:', accessToken.length);
+        console.log('Refresh token present:', !!refreshToken);
+        console.log('Expires in:', expiresIn);
+        
+        // Check current session state
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log('Current session state:', currentSession ? 'Active' : 'None');
+        
         // Set the session with the tokens from the URL
         const { data: { session }, error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
@@ -56,11 +73,18 @@ const GoogleCallback = () => {
         });
         
         if (sessionError) {
+          console.error('Session error:', sessionError);
           throw sessionError;
         }
         
         if (session?.user) {
-          console.log('Session established for user:', session.user.email);
+          console.log('Session successfully established');
+          console.log('User:', {
+            id: session.user.id,
+            email: session.user.email,
+            role: session.user.role
+          });
+          
           toast({
             title: "Success",
             description: "Successfully signed in!"
@@ -69,13 +93,16 @@ const GoogleCallback = () => {
           return;
         }
         
+        console.log('No session created after setSession');
+        
         // If no session yet and we haven't exceeded max attempts, wait and try again
         if (attempts < maxAttempts) {
-          console.log(`Waiting for session... (attempt ${attempts + 1}/${maxAttempts})`);
+          console.log(`Retrying... (attempt ${attempts + 1}/${maxAttempts})`);
           setTimeout(() => setAttempts(prev => prev + 1), 1000);
           return;
         }
         
+        console.error('Max attempts reached without establishing session');
         throw new Error('Failed to establish session after max attempts');
       } catch (error) {
         console.error('Error handling auth callback:', error);
