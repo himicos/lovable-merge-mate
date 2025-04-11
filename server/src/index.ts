@@ -4,10 +4,10 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GmailService } from './integrations/messaging/gmail/service.js';
-import { initiateGmailAuth } from './integrations/messaging/gmail/client.js';
 import { QueueProcessor } from './services/queue/processor.js';
 import { supabase } from './integrations/supabase/client.js';
 import { MessageContent } from './services/message-processor/types.js';
+import gmailRouter from './routes/gmail.js';
 
 const app = express();
 app.use(cors());
@@ -42,46 +42,8 @@ app.get('/auth/callback', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-// Gmail auth endpoints
-app.get('/auth/gmail/url', async (req, res) => {
-    try {
-        const { user_id } = req.query;
-        if (!user_id || typeof user_id !== 'string') {
-            throw new Error('Missing user ID');
-        }
-
-        const { success, authUrl } = await initiateGmailAuth(process.env.GOOGLE_REDIRECT_URI || '');
-        if (!success) {
-            throw new Error('Failed to initiate Gmail auth');
-        }
-        res.json({ url: authUrl });
-    } catch (error) {
-        console.error('Error getting Gmail auth URL:', error);
-        res.status(500).json({ error: (error as Error).message });
-    }
-});
-
-app.get('/auth/gmail/callback', async (req, res) => {
-    const { code } = req.query;
-    if (!code || typeof code !== 'string') {
-        res.status(400).json({ error: 'Missing code parameter' });
-        return;
-    }
-
-    try {
-        const { user_id } = req.query;
-        if (!user_id || typeof user_id !== 'string') {
-            throw new Error('Missing user ID in state');
-        }
-
-        const gmailService = await GmailService.create(user_id);
-        await gmailService.handleCallback(code, user_id);
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error handling Gmail callback:', error);
-        res.status(500).json({ error: (error as Error).message });
-    }
-});
+// Gmail routes
+app.use('/api/gmail', gmailRouter);
 
 // Gmail webhook endpoint
 app.post('/webhook/gmail', async (req, res) => {
