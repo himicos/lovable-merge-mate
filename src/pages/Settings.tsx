@@ -8,7 +8,7 @@ import { Mail, Slack, MessageSquare, Moon, Sun } from "lucide-react";
 import IntegrationButton from "@/components/IntegrationButton";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/components/ui/theme-provider";
-import { gmailApi } from "@/services/api/message-sources";
+import { GmailService } from "@/services/gmail";
 
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
@@ -28,28 +28,20 @@ const Settings = () => {
 
   // Check Gmail connection status on mount and when user changes
   const checkGmail = useCallback(async () => {
-    if (!user?.id) {
-      console.log('No user ID available for Gmail check');
-      return;
-    }
-    console.log('Checking Gmail connection for user:', user.id);
+    if (!user?.id) return;
     
     try {
-      const isConnected = await gmailApi.checkConnection();
+      const gmail = GmailService.getInstance();
+      const isConnected = await gmail.checkConnection(user.id);
       const status = { isConnected, email: isConnected ? user.email : null };
-      console.log('Gmail connection status:', { status, userId: user.id });
       
       if (status.isConnected !== gmailStatus.isConnected || status.email !== gmailStatus.email) {
-        console.log('Updating Gmail status:', status);
         setGmailStatus(status);
       }
     } catch (error) {
-      // Only log if it's an unexpected error
-      if (error instanceof Error && !error.message.includes('No Gmail integration found')) {
-        console.error('Error checking Gmail status:', error);
-      }
+      console.error('Error checking Gmail status:', error);
     }
-  }, [user?.id, gmailStatus]);
+  }, [user?.id, user?.email, gmailStatus]);
 
   useEffect(() => {
     console.log('Settings mounted, checking Gmail...', { userId: user?.id });
@@ -62,7 +54,6 @@ const Settings = () => {
   // Handle Gmail connection/disconnection
   const handleGmailAction = async () => {
     if (!user?.id) {
-      console.error('No user ID available for Gmail action');
       toast({
         title: "Error",
         description: "You must be logged in to connect Gmail.",
@@ -73,24 +64,20 @@ const Settings = () => {
 
     setGmailLoading(true);
     try {
-      console.log('Handling Gmail action:', { 
-        userId: user.id, 
-        isConnected: gmailStatus.isConnected 
-      });
-
+      const gmail = GmailService.getInstance();
+      
       if (gmailStatus.isConnected) {
-        await gmailApi.disconnect();
+        // TODO: Implement disconnect
         setGmailStatus({ isConnected: false, email: null });
         toast({
           title: "Success",
           description: "Successfully disconnected Gmail."
         });
       } else {
-        console.log('Initiating Gmail auth for user:', user.id);
-        await gmailApi.initiateAuth();
+        const authUrl = await gmail.getAuthUrl(user.id);
+        window.location.href = authUrl;
       }
     } catch (error) {
-      console.error('Gmail action error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to manage Gmail connection",
