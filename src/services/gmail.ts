@@ -5,7 +5,7 @@ export class GmailService {
   private baseUrl: string;
 
   private constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    this.baseUrl = import.meta.env.VITE_API_URL || 'https://www.verby.eu';
   }
 
   public static getInstance(): GmailService {
@@ -17,7 +17,13 @@ export class GmailService {
 
   async checkConnection(userId: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/gmail/status/${userId}`);
+      const response = await fetch(`${this.baseUrl}/api/gmail/status/${userId}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to check Gmail connection');
       }
@@ -30,7 +36,13 @@ export class GmailService {
   }
 
   async getAuthUrl(userId: string): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/api/gmail/auth-url?user_id=${userId}`);
+    const response = await fetch(`${this.baseUrl}/api/gmail/auth-url?user_id=${userId}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
     if (!response.ok) {
       const error = await response.text();
       throw new Error(error || 'Failed to get Gmail auth URL');
@@ -40,7 +52,13 @@ export class GmailService {
   }
 
   async handleCallback(code: string, userId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/gmail/callback?code=${code}&user_id=${userId}`);
+    const response = await fetch(`${this.baseUrl}/api/gmail/callback?code=${code}&user_id=${userId}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
     if (!response.ok) {
       const error = await response.text();
       throw new Error(error || 'Failed to connect Gmail');
