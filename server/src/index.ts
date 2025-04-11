@@ -7,7 +7,7 @@ import { GmailService } from './integrations/messaging/gmail/service.js';
 import { QueueProcessor } from './services/queue/processor.js';
 import { supabase } from './integrations/supabase/client.js';
 import { MessageContent } from './services/message-processor/types.js';
-import gmailRouter from './routes/gmail.js';
+import { gmailRouter } from './routes/gmail.js';
 
 const app = express();
 app.use(cors());
