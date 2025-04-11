@@ -9,7 +9,7 @@ const router = Router();
  */
 
 // Gmail OAuth callback
-router.get('/oauth/gmail/callback', async (req, res) => {
+router.get('/gmail/callback', async (req, res) => {
     try {
         const { code, state } = req.query;
         if (!code || !state) {

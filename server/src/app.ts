@@ -23,7 +23,7 @@ app.use(express.json());
 app.use('/api/gmail', gmailRouter);
 
 // OAuth Routes - Authentication callbacks
-app.use('/api/oauth', authRouter);
+app.use('/api', authRouter);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
