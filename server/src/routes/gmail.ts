@@ -6,14 +6,10 @@ const router = Router();
 
 // Check Gmail connection status
 router.get('/status/:userId', async (req, res) => {
-    console.log('Checking Gmail status for user:', req.params.userId);
     try {
-        console.log('Creating Gmail service...');
         const gmailService = await GmailService.create(req.params.userId);
-        console.log('Gmail service created, checking connection...');
         // Try to list messages as a connection test
         await gmailService.listMessages('');
-        console.log('Connection test successful');
         res.json({ connected: true });
     } catch (error) {
         console.error('Error checking Gmail status:', error);
@@ -23,7 +19,6 @@ router.get('/status/:userId', async (req, res) => {
 
 // Get Gmail auth URL
 router.get('/auth-url', async (req, res) => {
-    console.log('Getting Gmail auth URL, query params:', req.query);
     try {
         const { user_id } = req.query;
         if (!user_id || typeof user_id !== 'string') {
@@ -31,9 +26,7 @@ router.get('/auth-url', async (req, res) => {
         }
 
         const redirectUri = process.env.GOOGLE_REDIRECT_URI || '';
-        console.log('Using redirect URI:', redirectUri);
         const { success, authUrl } = await initiateGmailAuth(redirectUri);
-        console.log('Auth URL generated:', { success, authUrl });
         if (!success) {
             throw new Error('Failed to initiate Gmail auth');
         }
