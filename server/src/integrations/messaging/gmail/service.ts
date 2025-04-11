@@ -3,11 +3,12 @@ import { createOAuth2Client, getAuthUrl, getGmailService } from './client.js';
 import { supabase } from '../../supabase/client.js';
 
 export class GmailService {
-    private authPromise: Promise<OAuth2Client> | null = null;
+    private auth: OAuth2Client | null = null;
     private userId: string;
 
     private constructor(userId: string) {
         this.userId = userId;
+        this.auth = createOAuth2Client();
     }
 
     public static async create(userId: string): Promise<GmailService> {
@@ -17,8 +18,10 @@ export class GmailService {
     }
 
     private async initialize(): Promise<void> {
-        // Create OAuth client and initialize it
-        this.authPromise = createOAuth2Client();
+        if (!this.auth) {
+            this.auth = createOAuth2Client();
+        }
+
         const { data: connection } = await supabase
             .from('gmail_connections')
             .select('refresh_token')
@@ -26,28 +29,25 @@ export class GmailService {
             .single();
 
         if (connection?.refresh_token) {
-            const auth = await this.authPromise;
-            auth.setCredentials({
+            this.auth.setCredentials({
                 refresh_token: connection.refresh_token
             });
         }
     }
 
     public async getAuthUrl(): Promise<string> {
-        if (!this.authPromise) {
-            this.authPromise = createOAuth2Client();
+        if (!this.auth) {
+            this.auth = createOAuth2Client();
         }
-        const auth = await this.authPromise;
-        return getAuthUrl(auth);
+        return getAuthUrl(this.auth, this.userId);
     }
 
     public async handleCallback(code: string, userId: string): Promise<void> {
-        if (!this.authPromise) {
-            this.authPromise = createOAuth2Client();
+        if (!this.auth) {
+            this.auth = createOAuth2Client();
         }
-        const auth = await this.authPromise;
-        const { tokens } = await auth.getToken(code);
-        auth.setCredentials(tokens);
+        const { tokens } = await this.auth.getToken(code);
+        this.auth.setCredentials(tokens);
 
         // Store refresh token
         await supabase
@@ -60,10 +60,10 @@ export class GmailService {
     }
 
     public async listMessages(query: string): Promise<any[]> {
-        if (!this.authPromise) {
+        if (!this.auth) {
             throw new Error('Gmail service not initialized');
         }
-        const gmail = await getGmailService(await this.authPromise);
+        const gmail = await getGmailService(this.auth);
         const messages = await gmail.users.messages.list({
             userId: 'me',
             q: query
@@ -72,10 +72,10 @@ export class GmailService {
     }
 
     public async getMessage(messageId: string): Promise<any> {
-        if (!this.authPromise) {
+        if (!this.auth) {
             throw new Error('Gmail service not initialized');
         }
-        const gmail = await getGmailService(await this.authPromise);
+        const gmail = await getGmailService(this.auth);
         const response = await gmail.users.messages.get({
             userId: 'me',
             id: messageId,

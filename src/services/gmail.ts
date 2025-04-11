@@ -52,7 +52,9 @@ export class GmailService {
   }
 
   async handleCallback(code: string, userId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/gmail/callback?code=${code}&user_id=${userId}`, {
+    // The callback is handled by the server at /auth/gmail/callback
+    // This method is just for completing the OAuth flow
+    const response = await fetch(`${this.baseUrl}/api/gmail/complete-auth?code=${code}&user_id=${userId}`, {
       method: 'GET',
       credentials: 'include',
       headers: {

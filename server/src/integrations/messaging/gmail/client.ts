@@ -9,32 +9,29 @@ interface GoogleSecrets {
     google_redirect_uri: string;
 }
 
-export const getOAuthCredentials = async () => {
-    const { data, error } = await supabase.rpc('get_secrets');
-    if (error) throw error;
-    if (!data) throw new Error('No secrets found');
+export const getOAuthCredentials = () => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
 
-    const secrets = data as GoogleSecrets;
-    if (!secrets.google_client_id || !secrets.google_client_secret || !secrets.google_redirect_uri) {
-        throw new Error('Google OAuth credentials not found in secrets');
+    if (!clientId || !clientSecret || !redirectUri) {
+        throw new Error('Google OAuth credentials not found in environment variables');
     }
 
     return {
-        clientId: secrets.google_client_id,
-        clientSecret: secrets.google_client_secret,
-        redirectUri: secrets.google_redirect_uri
+        clientId,
+        clientSecret,
+        redirectUri
     };
 };
 
-export const createOAuth2Client = async (): Promise<OAuth2Client> => {
-    const credentials = await getOAuthCredentials();
-    const auth = new google.auth.OAuth2(
+export const createOAuth2Client = (): OAuth2Client => {
+    const credentials = getOAuthCredentials();
+    return new google.auth.OAuth2(
         credentials.clientId,
         credentials.clientSecret,
         credentials.redirectUri
     );
-
-    return auth;
 };
 
 export const getGmailService = async (auth: OAuth2Client | Promise<OAuth2Client>): Promise<any> => {
@@ -45,21 +42,22 @@ export const getGmailService = async (auth: OAuth2Client | Promise<OAuth2Client>
     });
 };
 
-export const getAuthUrl = (auth: OAuth2Client | Promise<OAuth2Client>): Promise<string> => {
+export const getAuthUrl = (auth: OAuth2Client | Promise<OAuth2Client>, userId: string): Promise<string> => {
     const client = auth instanceof Promise ? auth : Promise.resolve(auth);
     return client.then(auth => auth.generateAuthUrl({
         access_type: 'offline',
         scope: [
             'https://www.googleapis.com/auth/gmail.readonly',
             'https://www.googleapis.com/auth/gmail.modify'
-        ]
+        ],
+        state: userId
     }));
 };
 
-export const initiateGmailAuth = async (redirectUrl: string): Promise<{ success: boolean, authUrl: string }> => {
+export const initiateGmailAuth = async (redirectUrl: string, userId: string): Promise<{ success: boolean, authUrl: string }> => {
   try {
     const auth = await createOAuth2Client();
-    const authUrl = await getAuthUrl(auth);
+    const authUrl = await getAuthUrl(auth, userId);
     return {
       success: true,
       authUrl

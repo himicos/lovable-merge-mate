@@ -21,42 +21,55 @@ router.get('/status/:userId', async (req, res) => {
 router.get('/auth-url', async (req, res) => {
     try {
         const { user_id } = req.query;
-        if (!user_id || typeof user_id !== 'string') {
-            throw new Error('Missing user ID');
+        if (!user_id) {
+            throw new Error('Missing user_id');
         }
-
-        const redirectUri = process.env.GOOGLE_REDIRECT_URI || '';
-        const { success, authUrl } = await initiateGmailAuth(redirectUri);
+        const { success, authUrl } = await initiateGmailAuth(req.headers.origin || '', user_id as string);
         if (!success) {
-            throw new Error('Failed to initiate Gmail auth');
+            throw new Error('Failed to get auth URL');
         }
         res.json({ url: authUrl });
     } catch (error) {
-        console.error('Error generating auth URL:', error);
-        res.status(500).json({ error: (error as Error).message });
+        console.error('Error getting Gmail auth URL:', error);
+        res.status(500).json({ error: 'Failed to get Gmail auth URL' });
     }
 });
 
-// Handle Gmail OAuth callback
-router.get('/callback', async (req, res) => {
-    const { code } = req.query;
-    if (!code || typeof code !== 'string') {
-        res.status(400).json({ error: 'Missing code parameter' });
-        return;
-    }
-
+// This route is called by Google OAuth
+router.get('/auth/gmail/callback', async (req, res) => {
     try {
-        const { user_id } = req.query;
-        if (!user_id || typeof user_id !== 'string') {
-            throw new Error('Missing user ID in state');
+        const { code, state } = req.query;
+        if (!code || !state) {
+            throw new Error('Missing code or state');
         }
 
-        const gmailService = await GmailService.create(user_id);
-        await gmailService.handleCallback(code, user_id);
-        res.redirect('/settings?gmailConnected=true');
+        // state contains the user_id
+        const user_id = state as string;
+        
+        // Store the code temporarily (you might want to use Redis in production)
+        // For now, we'll redirect with the code
+        const redirectUrl = `${process.env.FRONTEND_URL}/settings?code=${code}&user_id=${user_id}`;
+        res.redirect(redirectUrl);
     } catch (error) {
-        console.error('Error handling Gmail callback:', error);
-        res.redirect('/settings?gmailError=true');
+        console.error('Error in Gmail callback:', error);
+        res.redirect(`${process.env.FRONTEND_URL}/settings?error=auth_failed`);
+    }
+});
+
+// This route is called by our frontend to complete the OAuth flow
+router.get('/complete-auth', async (req, res) => {
+    try {
+        const { code, user_id } = req.query;
+        if (!code || !user_id) {
+            throw new Error('Missing code or user_id');
+        }
+
+        const service = await GmailService.create(user_id as string);
+        await service.handleCallback(code as string, user_id as string);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error completing Gmail auth:', error);
+        res.status(500).json({ error: 'Failed to complete Gmail authentication' });
     }
 });
 
