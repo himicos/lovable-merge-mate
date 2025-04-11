@@ -20,16 +20,18 @@ export const supabase = createClient(
       flowType: 'implicit',
       debug: true, // Enable debug logging
       storage: window.localStorage, // Explicitly set storage
-      storageKey: 'verby-auth-token', // Custom storage key
-      onAuthStateChange: (event, session) => {
-        console.log('Auth state changed:', event, {
-          userId: session?.user?.id,
-          hasSession: !!session
-        });
-      }
+      storageKey: 'verby-auth-token' // Custom storage key
     }
   }
 );
+
+// Set up auth state change listener
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state changed:', event, {
+    userId: session?.user?.id,
+    hasSession: !!session
+  });
+});
 
 // Log initial auth state
 supabase.auth.getSession().then(({ data: { session } }) => {
