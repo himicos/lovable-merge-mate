@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { gmailRouter } from './routes/gmail.js';
+import { authRouter } from './routes/auth.js';
 
 const app = express();
 
@@ -18,7 +19,11 @@ app.use(cors({
 app.use(express.json());
 
 // Routes
+// API Routes - Service-specific functionality
 app.use('/api/gmail', gmailRouter);
+
+// OAuth Routes - Authentication callbacks
+app.use('/api/oauth', authRouter);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -1,3 +1,9 @@
+/**
+ * Gmail API Routes
+ * These routes handle Gmail-specific functionality.
+ * OAuth callback is handled separately in auth.ts
+ */
+
 import { Router } from 'express';
 import { GmailService } from '../integrations/messaging/gmail/service.js';
 import { initiateGmailAuth } from '../integrations/messaging/gmail/client.js';
@@ -8,7 +14,6 @@ const router = Router();
 router.get('/status/:userId', async (req, res) => {
     try {
         const gmailService = await GmailService.create(req.params.userId);
-        // Try to list messages as a connection test
         await gmailService.listMessages('');
         res.json({ connected: true });
     } catch (error) {
@@ -35,29 +40,7 @@ router.get('/auth-url', async (req, res) => {
     }
 });
 
-// This route is called by Google OAuth
-router.get('/auth/gmail/callback', async (req, res) => {
-    try {
-        const { code, state } = req.query;
-        if (!code || !state) {
-            throw new Error('Missing code or state');
-        }
-
-        // state contains the user_id
-        const user_id = state as string;
-        
-        // Ensure we redirect to www subdomain
-        const frontendUrl = process.env.FRONTEND_URL?.replace('https://verby.eu', 'https://www.verby.eu') || 'https://www.verby.eu';
-        const redirectUrl = `${frontendUrl}/settings?code=${code}&user_id=${user_id}`;
-        res.redirect(redirectUrl);
-    } catch (error) {
-        console.error('Error in Gmail callback:', error);
-        const frontendUrl = process.env.FRONTEND_URL?.replace('https://verby.eu', 'https://www.verby.eu') || 'https://www.verby.eu';
-        res.redirect(`${frontendUrl}/settings?error=auth_failed`);
-    }
-});
-
-// This route is called by our frontend to complete the OAuth flow
+// Complete OAuth flow after callback
 router.get('/complete-auth', async (req, res) => {
     try {
         const { code, user_id } = req.query;
