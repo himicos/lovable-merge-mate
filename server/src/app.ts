@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { gmailRouter } from './routes/gmail';
+import { gmailRouter } from './routes/gmail.js';
 
 const app = express();
 
