@@ -28,48 +28,42 @@ function AuthCallback() {
     // Handle the OAuth callback
     const handleAuthCallback = async () => {
       try {
-        console.log("Auth callback triggered, current URL:", window.location.href);
+        const hashParams = new URLSearchParams(
+          window.location.hash.replace('#', '')
+        );
         
-        const { hash, searchParams } = new URL(window.location.href);
-        const code = searchParams.get('code');
-        const access_token = searchParams.get('access_token');
-        const error = searchParams.get('error');
-        const error_description = searchParams.get('error_description');
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const expiresIn = hashParams.get('expires_in');
+        const error = hashParams.get('error');
         
         if (error) {
-          console.error("Auth error:", error, error_description);
-          throw new Error(`${error}: ${error_description}`);
+          console.error('Auth error:', error);
+          throw new Error(`Authentication error: ${error}`);
         }
         
-        if (code) {
-          console.log("Exchanging code for session");
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-          
-          if (error) {
-            console.error("Session exchange error:", error);
-            throw error;
-          }
-          
-          console.log("Session exchange successful, redirecting to home");
-          navigate('/', { replace: true });
-        } else if (access_token) {
-          // Handle magic link or other token-based auth
-          console.log("Processing access token");
-          const { data, error } = await supabase.auth.getUser(access_token);
-          
-          if (error) {
-            console.error("Get user error:", error);
-            throw error;
-          }
-          
-          if (data?.user) {
-            console.log("User retrieved successfully, redirecting to home");
-            navigate('/', { replace: true });
-          }
-        } else {
-          console.error("No code or access token found in callback URL");
-          throw new Error("Invalid authentication callback");
+        if (!accessToken) {
+          console.error('No access token in callback URL');
+          throw new Error('Invalid authentication callback');
         }
+        
+        // Set the session with the tokens from the URL
+        const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+          expires_in: parseInt(expiresIn || '3600')
+        });
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          throw sessionError;
+        }
+        
+        if (!session?.user) {
+          throw new Error('No user in session after auth');
+        }
+        
+        navigate('/', { replace: true });
       } catch (error) {
         console.error('Error handling auth callback:', error);
         navigate('/login', { replace: true });
