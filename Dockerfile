@@ -21,13 +21,14 @@ RUN npm run build
 WORKDIR /
 RUN ls -l /
 
-
 # 2. Set up NGINX and Node server in the final image
 FROM node:20 as runner
 
 COPY --from=build /www /www
 COPY --from=build /app /app
 COPY --from=build /api /api
+COPY --from=build /package.json /package.json
+COPY --from=build /package-lock.json /package-lock.json
 
 # Install NGINX
 RUN apt-get update && apt-get install -y nginx
@@ -42,4 +43,5 @@ EXPOSE 80
 EXPOSE 13337
 
 # Start NGINX and Node backend
-CMD service nginx start && npm --workspace=server start
+WORKDIR /api
+CMD service nginx start && npm start
