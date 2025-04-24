@@ -3,7 +3,7 @@
   "private": true,
   "workspaces": [
     "app",
-    "server",
+    "api",
     "www"
   ],
   "version": "0.0.0",
@@ -14,7 +14,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview --port $PORT",
-    "start": "node server.js"
+    "start": "node api.js"
   },
   "dependencies": {
     "express": "^4.18.3",

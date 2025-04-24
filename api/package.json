@@ -1,8 +1,8 @@
 
 {
-  "name": "lovable-merge-mate-server",
+  "name": "lovable-merge-mate-api",
   "version": "1.0.0",
-  "description": "Backend server for Lovable Merge Mate",
+  "description": "Backend api for Lovable Merge Mate",
   "main": "dist/index.js",
   "type": "module",
   "engines": {
