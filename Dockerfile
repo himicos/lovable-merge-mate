@@ -6,9 +6,9 @@ WORKDIR /
 COPY . .
 
 RUN npm install
-RUN npm run build --workspace=/www
-RUN npm run build --workspace=/app
-RUN npm run build --workspace=/api
+RUN npm run build --workspace=www
+RUN npm run build --workspace=app
+RUN npm run build --workspace=api
 RUN ls -l /
 
 # 2. Set up NGINX and Node server in the final image
