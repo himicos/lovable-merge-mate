@@ -14,7 +14,6 @@ RUN ls -l /
 # 2. Set up NGINX and Node server in the final image
 FROM node:20 as runner
 
-WORKDIR /app
 COPY --from=build /www /www
 COPY --from=build /app /app
 COPY --from=build /api /api
