@@ -1,6 +1,6 @@
 
 {
-  "name": "lovable-merge-mate-api",
+  "name": "api",
   "version": "1.0.0",
   "description": "Backend api for Lovable Merge Mate",
   "main": "dist/index.js",
