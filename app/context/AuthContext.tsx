@@ -4,7 +4,7 @@ import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { supabase } from '@/services/api/auth';
+import { supabase } from '@/services/auth';
 
 type AuthContextType = {
   user: User | null;
