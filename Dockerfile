@@ -1,7 +1,7 @@
 # 1. Build all assets and install dependencies
 FROM node:20 as build
 
-WORKDIR /app
+WORKDIR /
 
 COPY . .
 
@@ -9,6 +9,7 @@ RUN npm install
 RUN npm run build --workspace=www
 RUN npm run build --workspace=app
 RUN npm run build --workspace=api
+RUN ls -l /
 
 # 2. Set up NGINX and Node server in the final image
 FROM node:20 as runner
