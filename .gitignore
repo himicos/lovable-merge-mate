@@ -8,8 +8,10 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
-dist-ssr
+# Ignore all dist folders in all workspaces
+**/dist/
+**/dist-ssr/
+
 *.local
 
 # Editor directories and files
