@@ -21,7 +21,7 @@ app.use(express.json());
 // Serve static frontend files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const frontendPath = path.resolve(__dirname, '../../dist');
+const frontendPath = path.resolve(__dirname, '../../www/dist');
 console.log('Serving frontend from:', frontendPath);
 app.use(express.static(frontendPath));
 
