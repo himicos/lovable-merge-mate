@@ -12,10 +12,10 @@ COPY . .
 # Install dependencies using the lock file
 RUN npm ci
 
-# Build each workspace individually from the root
-RUN npm run build --workspace=www --prefix /
-RUN npm run build --workspace=app --prefix /
-RUN npm run build --workspace=api --prefix /
+# Build each workspace by changing directory
+RUN cd www && npm run build
+RUN cd app && npm run build
+RUN cd api && npm run build
 
 # Production image, copy build artifacts and necessary files
 FROM node:20-slim AS runner
