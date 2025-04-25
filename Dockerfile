@@ -16,15 +16,10 @@ RUN npm install
 # Copy the rest of the source code
 COPY . .
 
-# Build each workspace by changing into its directory
-WORKDIR /www
-RUN npm run build
-
-WORKDIR /app
-RUN npm run build
-
-WORKDIR /api
-RUN npm run build
+# Build each workspace individually from the root
+RUN npm run build --workspace=www --prefix /
+RUN npm run build --workspace=app --prefix /
+RUN npm run build --workspace=api --prefix /
 
 WORKDIR / # Reset workdir before next stage
 
