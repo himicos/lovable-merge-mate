@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "next build",
+    "build": "npx next build",
     "start": "vite preview",
     "lint": "echo 'No lint script defined'"
   },
