@@ -16,12 +16,17 @@ RUN npm install
 # Copy the rest of the source code
 COPY . .
 
-# Build each workspace
-# Assuming 'build' scripts are correctly defined in each workspace's package.json
-# Based on previous logs: www uses 'next build', app uses 'vite build', api uses 'tsc'
-RUN npm run build -w www
-RUN npm run build -w app
-RUN npm run build -w api
+# Build each workspace by changing into its directory
+WORKDIR /www
+RUN npm run build
+
+WORKDIR /app
+RUN npm run build
+
+WORKDIR /api
+RUN npm run build
+
+WORKDIR / # Reset workdir before next stage
 
 # Use a smaller base image for the final stage
 FROM node:20-slim
