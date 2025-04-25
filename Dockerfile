@@ -1,59 +1,49 @@
-# Use an official Node.js runtime as a parent image
-FROM node:20 AS build
+# syntax=docker/dockerfile:1
 
-# Set the working directory in the container
+# Base image with Node.js
+FROM node:20 AS base
 WORKDIR /
 
-# Copy package.json and package-lock.json for root and workspaces (for cache optimization)
-COPY package.json package-lock.json ./
-COPY app/package.json ./app/
-COPY api/package.json ./api/
-COPY www/package.json ./www/
-
-# Install dependencies for all workspaces
-RUN npm install
-
-# Copy the rest of the source code
+# Builder stage: Copy source, install dependencies, and build
+FROM base AS builder
+# Copy the entire source code first
 COPY . .
+
+# Install dependencies using the lock file
+RUN npm ci
 
 # Build each workspace individually from the root
 RUN npm run build --workspace=www --prefix /
 RUN npm run build --workspace=app --prefix /
 RUN npm run build --workspace=api --prefix /
 
-WORKDIR / # Reset workdir before next stage
-
-# Use a smaller base image for the final stage
-FROM node:20-slim
-
-# Set the working directory
+# Production image, copy build artifacts and necessary files
+FROM node:20-slim AS runner
 WORKDIR /
 
 # Install nginx
 RUN apt-get update && apt-get install -y nginx && rm -rf /var/lib/apt/lists/*
 
-# Copy built artifacts from the build stage
-COPY --from=build /www/dist /www/dist
-COPY --from=build /app/dist /app/dist # Assuming app builds to 'dist'
-COPY --from=build /api/dist /api/dist
+# Copy necessary files from the builder stage
+COPY --from=builder /package.json /package.json
+COPY --from=builder /package-lock.json /package-lock.json
+# Ensure node_modules are copied for production dependencies if any are needed at runtime
+# If only devDependencies were needed for build, this might be optimized
+COPY --from=builder /node_modules /node_modules 
 
-# Copy runtime dependencies and necessary config files
-COPY --from=build /node_modules /node_modules
-COPY --from=build /package.json /package.json
-COPY --from=build /package-lock.json /package-lock.json
-# We might need workspace package.jsons if start script relies on them? Let's omit for now.
-# COPY --from=build /api/package.json /api/package.json
+# Copy built applications
+COPY --from=builder /www/dist /www/dist
+COPY --from=builder /app/dist /app/dist
+COPY --from=builder /api/dist /api/dist
 
+# Copy Nginx configuration
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Expose port (if your app listens on a specific port)
+# Expose port 10000
 EXPOSE 10000
 
 # Define the command to run your application
 # start.sh likely runs nginx and starts the API from the /api directory
 CMD ["sh", "/start.sh"]
-
-# Optional: Set WORKDIR just before CMD if start.sh relies on it
-# WORKDIR /api # Set WORKDIR to /api if 'npm start' inside start.sh needs it
