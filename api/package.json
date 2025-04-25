@@ -15,25 +15,18 @@
     "render:start": "npm run build && npm start"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.17.1",
     "@microsoft/microsoft-graph-client": "^3.0.0",
     "@slack/web-api": "^6.8.0",
     "@supabase/supabase-js": "^2.39.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.18.2",
     "google-auth-library": "^9.6.3",
     "googleapis": "^131.0.0"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
     "@types/node": "^20.11.16",
     "jest": "^29.7.0",
     "nodemon": "^3.1.9",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "tsx": "^4.19.3",
-    "typescript": "^5.3.3"
+    "tsx": "^4.19.3"
   }
 }
