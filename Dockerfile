@@ -12,10 +12,13 @@ COPY . .
 # Install dependencies using the lock file
 RUN npm ci
 
+# --- DIAGNOSTIC: Check root node_modules/.bin contents ---
+RUN echo "--- Contents of /node_modules/.bin after npm ci ---" && ls -la /node_modules/.bin
+
 # Build each workspace by changing directory
-RUN cd www && npm run build
-RUN cd app && npm run build
-RUN cd api && npm run build
+RUN cd www && echo "--- Contents of ../node_modules/.bin from www ---" && ls -la ../node_modules/.bin && npm run build
+RUN cd app && echo "--- Contents of ../node_modules/.bin from app ---" && ls -la ../node_modules/.bin && npm run build
+RUN cd api && echo "--- Contents of ../node_modules/.bin from api ---" && ls -la ../node_modules/.bin && npm run build
 
 # Production image, copy build artifacts and necessary files
 FROM node:20-slim AS runner
