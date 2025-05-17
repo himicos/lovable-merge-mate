@@ -1,11 +1,12 @@
+
 {
   "name": "www",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "next build",
-    "start": "vite preview",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint": "echo 'No lint script defined'"
   },
   "dependencies": {
@@ -64,8 +65,10 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.2.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "^5.0.0"
   }
 }
