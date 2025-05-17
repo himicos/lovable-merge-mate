@@ -10,4 +10,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./"),
     },
   },
+  server: {
+    port: 3000,
+    host: true,
+  },
+  build: {
+    outDir: "dist",
+    sourcemap: true,
+  },
 });
