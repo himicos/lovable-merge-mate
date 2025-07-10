@@ -8,6 +8,8 @@ import { QueueProcessor } from './services/queue/processor.js';
 import { supabase } from './integrations/supabase/client.js';
 import { MessageContent } from './services/message-processor/types.js';
 import { gmailRouter } from './routes/gmail.js';
+import { visionRouter } from './routes/vision.js';
+import bodyParser from 'body-parser';
 
 const app = express();
 app.use(cors({
@@ -17,6 +19,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use('/api/vision', bodyParser.raw({ limit: '5mb', type: () => true }));
 
 // Serve static frontend files
 const __filename = fileURLToPath(import.meta.url);
@@ -49,6 +52,9 @@ app.get('/auth/callback', (req, res) => {
 
 // Gmail routes
 app.use('/api/gmail', gmailRouter);
+
+// Vision routes
+app.use('/api/vision', visionRouter);
 
 // Gmail webhook endpoint
 app.post('/webhook/gmail', async (req, res) => {
