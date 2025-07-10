@@ -10,7 +10,7 @@ FROM base AS builder
 COPY . .
 
 # Install dependencies using the lock file
-RUN npm ci
+RUN npm install
 
 # Build each workspace by changing directory
 RUN cd www && npm run build
