@@ -28,9 +28,12 @@ function createMainWindow() {
   }
 }
 
+let overlayWin: BrowserWindow | null = null;
+
 function createOverlayWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  const overlay = new BrowserWindow({
+
+  overlayWin = new BrowserWindow({
     width,
     height,
     x: 0,
@@ -50,13 +53,13 @@ function createOverlayWindow() {
     },
   });
 
-  overlay.setIgnoreMouseEvents(true);
+  overlayWin.setIgnoreMouseEvents(true);
 
   const devServer = process.env.VITE_DEV_SERVER_URL;
   if (devServer) {
-    overlay.loadURL(devServer + '#overlay');
+    overlayWin.loadURL(devServer + '#overlay');
   } else {
-    overlay.loadFile(path.join(__dirname, 'overlay.html'));
+    overlayWin.loadFile(path.join(__dirname, 'overlay.html'));
   }
 }
 
@@ -108,8 +111,6 @@ ipcMain.handle('gmail:getUnread', async (_event, userId: string) => {
 
 // Demo: emit random overlay boxes every 3s
 setInterval(() => {
-  const allWindows = BrowserWindow.getAllWindows();
-  const overlayWin = allWindows.find(w => w.isAlwaysOnTop() && w.isVisible() && w.getIgnoreMouseEvents());
   if (!overlayWin) return;
   const boxes = Array.from({ length: Math.floor(Math.random()*3)+1 }, () => ({
     x: Math.random() * 400,

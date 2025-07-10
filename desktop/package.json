@@ -21,6 +21,7 @@
     "typescript": "^5.3.3",
     "vite": "^6.3.3",
     "@vitejs/plugin-react": "^4.2.1",
-    "@types/node": "^20.11.16"
+    "@types/node": "^20.11.16",
+    "@types/electron": "^1.6.10"
   }
 }
