@@ -1,4 +1,4 @@
-import { supabase } from '../../integrations/auth/client.js';
+import { supabase } from '../../integrations/supabase/client.js';
 import type { MessageContent } from '../message-processor/types.js';
 import type { QueueItem, QueueOptions } from './types.js';
 
