@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "moduleResolution": "nodenext",
     "lib": ["ES2020", "DOM"],
-    "types": ["node", "electron"],
+    "types": ["node", "electron", "eventsource"],
     "skipLibCheck": true
   },
   "include": ["main.ts", "preload.ts", "overlayPreload.ts"]
