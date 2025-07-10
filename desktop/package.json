@@ -1,0 +1,25 @@
+{
+  "name": "desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env VITE_DEV_SERVER_URL=http://localhost:5174 vite --config vite.renderer.config.ts & electron --no-color .",
+    "build": "tsc -p tsconfig.main.json && vite build --config vite.renderer.config.ts",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "electron": "^28.2.3",
+    "@supabase/supabase-js": "^2.39.3"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron-builder": "^24.13.1",
+    "typescript": "^5.3.3",
+    "vite": "^6.3.3",
+    "@vitejs/plugin-react": "^4.2.1"
+  }
+}

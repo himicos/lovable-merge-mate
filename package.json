@@ -4,7 +4,8 @@
   "workspaces": [
     "app",
     "api",
-    "www"
+    "www",
+    "desktop"
   ],
   "version": "0.0.0",
   "type": "module",
