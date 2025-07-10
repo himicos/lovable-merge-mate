@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, desktopCapturer } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 // Node 20 ships global fetch; if not, uncomment next line
@@ -107,6 +107,58 @@ ipcMain.handle('gmail:getUnread', async (_event, userId: string) => {
     console.error('Error fetching unread', e);
     return 0;
   }
+});
+
+// -------- Vision capture helpers --------
+
+async function captureScreenPNG(): Promise<Buffer> {
+  const sources = await desktopCapturer.getSources({ types: ['screen'] });
+  const primary = sources[0];
+  // Electron returns a thumbnail as nativeImage already scaled (~150px).
+  // We get full screen PNG via toPNG()
+  return primary.thumbnail.resize({ width: 1024 }).toPNG();
+}
+
+async function analyseFrame(buf: Buffer): Promise<any[]> {
+  try {
+    // TODO: send to real vision endpoint
+    const api = process.env.API_URL || 'http://localhost:13337';
+    const r = await fetch(`${api}/api/vision/analyse`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: buf,
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json(); // expecting [{x,y,w,h,label,score}]
+  } catch (e) {
+    console.error('Vision analysis failed', e);
+    return [];
+  }
+}
+
+ipcMain.handle('vision:capture', async () => {
+  const png = await captureScreenPNG();
+  const boxes = await analyseFrame(png);
+  if (overlayWin) {
+    overlayWin.webContents.send('overlay-boxes', boxes);
+  }
+  return boxes;
+});
+
+let visionInterval: NodeJS.Timeout | null = null;
+ipcMain.on('vision:start', async (_e, fps: number = 1) => {
+  if (visionInterval) return;
+  const intervalMs = Math.max(200, 1000 / fps);
+  visionInterval = setInterval(async () => {
+    const png = await captureScreenPNG();
+    const boxes = await analyseFrame(png);
+    if (overlayWin) overlayWin.webContents.send('overlay-boxes', boxes);
+  }, intervalMs);
+});
+
+ipcMain.on('vision:stop', () => {
+  if (visionInterval) clearInterval(visionInterval);
+  visionInterval = null;
 });
 
 // Demo: emit random overlay boxes every 3s
