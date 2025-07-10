@@ -7,6 +7,7 @@
 import { Router, Request, Response } from 'express';
 import { GmailService } from '../integrations/messaging/gmail/service.js';
 import { initiateGmailAuth } from '../integrations/messaging/gmail/client.js';
+import { SseManager } from '../services/sse.js';
 
 const router = Router();
 
@@ -74,6 +75,17 @@ router.get('/messages/:userId', async (req: Request<{ userId: string }>, res: Re
         console.error('Error listing Gmail messages:', error);
         res.status(500).json({ error: 'Failed to list Gmail messages' });
     }
+});
+
+// SSE inbox stream
+router.get('/stream/:userId', (req: Request<{ userId: string }>, res: Response) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+  SseManager.addClient(req.params.userId, res);
+  res.write('event: open\ndata: {}\n\n');
 });
 
 export const gmailRouter = router;

@@ -10,6 +10,7 @@ import { MessageContent } from './services/message-processor/types.js';
 import { gmailRouter } from './routes/gmail.js';
 import { visionRouter } from './routes/vision.js';
 import bodyParser from 'body-parser';
+import { SseManager } from './services/sse.js';
 
 const app = express();
 app.use(cors({
@@ -105,6 +106,9 @@ app.post('/webhook/gmail', async (req, res) => {
                 payload: content,
                 created_at: new Date().toISOString()
             });
+
+            // Notify via SSE
+            SseManager.push(connection.user_id, 'inbox', { messageId: messageData.id });
         }
 
         res.json({ success: true });

@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, screen, desktopCapturer } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import EventSource from 'eventsource';
 // Node 20 ships global fetch; if not, uncomment next line
 // import fetch from 'node-fetch';
 
@@ -107,6 +108,18 @@ ipcMain.handle('gmail:getUnread', async (_event, userId: string) => {
     console.error('Error fetching unread', e);
     return 0;
   }
+});
+
+ipcMain.on('gmail:subscribe', (event, userId: string) => {
+  const api = process.env.API_URL || 'http://localhost:13337';
+  const es = new EventSource(`${api}/api/gmail/stream/${userId}`);
+  es.onmessage = ev => {
+    const data = JSON.parse(ev.data);
+    event.sender.send('inbox:update', data);
+  };
+  es.onerror = err => {
+    console.error('SSE error', err);
+  };
 });
 
 // -------- Vision capture helpers --------
