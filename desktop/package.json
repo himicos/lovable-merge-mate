@@ -12,16 +12,16 @@
     "dist": "electron-builder"
   },
   "dependencies": {
-    "electron": "^28.2.3",
-    "@supabase/supabase-js": "^2.39.3"
+    "@supabase/supabase-js": "^2.39.3",
+    "electron": "^28.2.3"
   },
   "devDependencies": {
+    "@types/electron": "^1.6.12",
+    "@types/node": "^20.11.16",
+    "@vitejs/plugin-react": "^4.2.1",
     "cross-env": "^7.0.3",
     "electron-builder": "^24.13.1",
     "typescript": "^5.3.3",
-    "vite": "^6.3.3",
-    "@vitejs/plugin-react": "^4.2.1",
-    "@types/node": "^20.11.16",
-    "@types/electron": "^1.6.10"
+    "vite": "^6.3.3"
   }
 }

@@ -22,12 +22,12 @@
     "googleapis": "^131.0.0"
   },
   "devDependencies": {
+    "@types/express": "^4.17.23",
     "@types/node": "^20.11.16",
     "jest": "^29.7.0",
     "nodemon": "^3.1.9",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "tsx": "^4.19.3",
-    "@types/express": "^4.17.21"
+    "tsx": "^4.19.3"
   }
 }
