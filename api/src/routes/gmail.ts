@@ -23,7 +23,7 @@ router.get('/status/:userId', async (req: Request<{ userId: string }>, res: Resp
 });
 
 // Get Gmail auth URL
-router.get('/auth-url', async (req: Request, res: Response) => {
+router.get('/auth-url', async (req: Request<{}, {}, {}, { user_id?: string }>, res: Response) => {
     try {
         const { user_id } = req.query;
         if (!user_id) {
@@ -41,7 +41,7 @@ router.get('/auth-url', async (req: Request, res: Response) => {
 });
 
 // Handle OAuth callback
-router.get('/callback', async (req: Request, res: Response) => {
+router.get('/callback', async (req: Request<{}, {}, {}, { code?: string; user_id?: string }>, res: Response) => {
     try {
         const { code, user_id } = req.query;
         if (!code || !user_id) {
