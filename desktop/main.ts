@@ -1,11 +1,11 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function createWindow() {
+function createMainWindow() {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -26,10 +26,46 @@ function createWindow() {
   }
 }
 
+function createOverlayWindow() {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const overlay = new BrowserWindow({
+    width,
+    height,
+    x: 0,
+    y: 0,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
+    hasShadow: false,
+    focusable: false,
+    fullscreen: false,
+    skipTaskbar: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'overlayPreload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      backgroundThrottling: false,
+    },
+  });
+
+  overlay.setIgnoreMouseEvents(true);
+
+  const devServer = process.env.VITE_DEV_SERVER_URL;
+  if (devServer) {
+    overlay.loadURL(devServer + '#overlay');
+  } else {
+    overlay.loadFile(path.join(__dirname, 'overlay.html'));
+  }
+}
+
 app.whenReady().then(() => {
-  createWindow();
+  createMainWindow();
+  createOverlayWindow();
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createMainWindow();
+      createOverlayWindow();
+    }
   });
 });
 

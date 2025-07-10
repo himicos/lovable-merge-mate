@@ -10,5 +10,5 @@
     "types": ["node", "electron"],
     "skipLibCheck": true
   },
-  "include": ["main.ts", "preload.ts"]
+  "include": ["main.ts", "preload.ts", "overlayPreload.ts"]
 }
