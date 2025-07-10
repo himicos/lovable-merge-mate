@@ -22,7 +22,7 @@
     "cross-env": "^7.0.3",
     "electron-builder": "^24.13.1",
     "typescript": "^5.3.3",
-    "vite": "^6.3.3",
+    "vite": "^5.4.19",
     "eventsource": "^2.0.2",
     "@types/eventsource": "^1.1.4"
   }
