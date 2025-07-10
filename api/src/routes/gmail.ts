@@ -4,14 +4,14 @@
  * OAuth callback is handled separately in auth.ts
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { GmailService } from '../integrations/messaging/gmail/service.js';
 import { initiateGmailAuth } from '../integrations/messaging/gmail/client.js';
 
 const router = Router();
 
 // Check Gmail connection status
-router.get('/status/:userId', async (req, res) => {
+router.get('/status/:userId', async (req: Request<{ userId: string }>, res: Response) => {
     try {
         const gmailService = await GmailService.create(req.params.userId);
         const unreadMessages = await gmailService.listMessages('is:unread');
@@ -23,7 +23,7 @@ router.get('/status/:userId', async (req, res) => {
 });
 
 // Get Gmail auth URL
-router.get('/auth-url', async (req, res) => {
+router.get('/auth-url', async (req: Request, res: Response) => {
     try {
         const { user_id } = req.query;
         if (!user_id) {
@@ -41,7 +41,7 @@ router.get('/auth-url', async (req, res) => {
 });
 
 // Handle OAuth callback
-router.get('/callback', async (req, res) => {
+router.get('/callback', async (req: Request, res: Response) => {
     try {
         const { code, user_id } = req.query;
         if (!code || !user_id) {
@@ -57,7 +57,7 @@ router.get('/callback', async (req, res) => {
     }
 });
 
-router.get('/messages/:userId', async (req, res) => {
+router.get('/messages/:userId', async (req: Request<{ userId: string }>, res: Response) => {
     try {
         const gmailService = await GmailService.create(req.params.userId);
         const messageMetas = await gmailService.listMessages('');
