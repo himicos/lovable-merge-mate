@@ -4,40 +4,45 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, MessageSquare, Check, X } from "lucide-react";
 
-// Sample messages data for demo
-const sampleMessages = [
-  {
-    id: "1",
-    subject: "Project Update Meeting",
-    sender: "Sarah Johnson",
-    time: "10:30 AM",
-    type: "email",
-    isSelected: true,
-  },
-  {
-    id: "2",
-    subject: "Design Review Feedback",
-    sender: "Mike Chen",
-    time: "Yesterday",
-    type: "slack",
-    isSelected: false,
-  },
-  {
-    id: "3",
-    subject: "Weekly Team Standup",
-    sender: "Team Calendar",
-    time: "Tomorrow",
-    type: "teams",
-    isSelected: false,
-  },
-];
+type InboxMessage = {
+  id: string;
+  subject: string;
+  sender: string;
+  time: string;
+  type: string;
+  isSelected?: boolean;
+};
+
+const initialMessages: InboxMessage[] = [];
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [greeting, setGreeting] = useState("");
   const [showOnboarding, setShowOnboarding] = useState(true);
-  const [messages, setMessages] = useState(sampleMessages);
+  const [messages, setMessages] = useState<InboxMessage[]>(initialMessages);
+
+  // Fetch inbox on mount / when user changes
+  useEffect(() => {
+    const fetchInbox = async () => {
+      if (!user) return;
+      try {
+        const list = await window.verby.gmail.listInbox(user.id);
+        const mapped: InboxMessage[] = list.map((m: any) => ({
+          id: m.id,
+          subject: m.subject,
+          sender: m.sender,
+          time: new Date(parseInt(m.timestamp ?? Date.now())).toLocaleDateString(),
+          type: 'email',
+        }));
+        setMessages(mapped);
+      } catch (e) {
+        console.error('Failed to fetch inbox', e);
+        toast({ title: 'Error', description: 'Could not load inbox', variant: 'destructive' });
+      }
+    };
+    fetchInbox();
+  }, [user]);
 
   // Icon component for message types
   const IconForType = ({ type }: { type: string }) => {
