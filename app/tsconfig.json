@@ -22,7 +22,7 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["src", "components", "hooks", "lib", "context", "pages"],
+  "include": ["src", "components", "hooks", "lib", "context", "pages", "types"],
   "exclude": ["node_modules"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
