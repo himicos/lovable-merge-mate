@@ -14,11 +14,11 @@ const router = Router();
 router.get('/status/:userId', async (req, res) => {
     try {
         const gmailService = await GmailService.create(req.params.userId);
-        await gmailService.listMessages('');
-        res.json({ connected: true });
+        const unreadMessages = await gmailService.listMessages('is:unread');
+        res.json({ connected: true, unread: unreadMessages.length });
     } catch (error) {
         console.error('Error checking Gmail status:', error);
-        res.json({ connected: false });
+        res.json({ connected: false, unread: 0 });
     }
 });
 
@@ -54,6 +54,25 @@ router.get('/callback', async (req, res) => {
     } catch (error) {
         console.error('Error completing Gmail auth:', error);
         res.status(500).json({ error: 'Failed to complete Gmail authentication' });
+    }
+});
+
+router.get('/messages/:userId', async (req, res) => {
+    try {
+        const gmailService = await GmailService.create(req.params.userId);
+        const messageMetas = await gmailService.listMessages('');
+        const messages: any[] = [];
+        for (const meta of messageMetas.slice(0, 20)) {
+            const data = await gmailService.getMessage(meta.id);
+            const sender = data.payload?.headers.find((h: any) => h.name === 'From')?.value || '';
+            const subject = data.payload?.headers.find((h: any) => h.name === 'Subject')?.value || '';
+            const snippet = data.snippet || '';
+            messages.push({ id: data.id, sender, subject, snippet, timestamp: data.internalDate });
+        }
+        res.json(messages);
+    } catch (error) {
+        console.error('Error listing Gmail messages:', error);
+        res.status(500).json({ error: 'Failed to list Gmail messages' });
     }
 });
 
