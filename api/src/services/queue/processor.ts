@@ -1,4 +1,4 @@
-import { supabase } from '../../integrations/supabase/client.js';
+import { db } from '../database/client.js';
 import { MessageProcessor } from '../message-processor/processor.js';
 import { MessageContent } from '../message-processor/types.js';
 
@@ -22,44 +22,36 @@ export class QueueProcessor {
 
     public async processItem(item: QueueItem): Promise<void> {
         try {
-            // Get user settings for voice
-            const { data: settings } = await supabase
-                .from('user_settings')
-                .select('voice_enabled')
-                .eq('user_id', item.user_id)
-                .single();
+            // Get user settings for voice (default to false if not found)
+            const result = await db.query(
+                'SELECT voice_enabled FROM user_settings WHERE user_id = $1',
+                [item.user_id]
+            );
 
-            if (!settings) {
-                throw new Error('User settings not found');
-            }
+            const voiceEnabled = result.rows.length > 0 ? result.rows[0].voice_enabled : false;
 
             // Initialize processor for this user
             const processor = await MessageProcessor.create(item.user_id);
 
             // Process the message
             await processor.processMessage(item.payload, {
-                voice_enabled: settings.voice_enabled
+                voice_enabled: voiceEnabled
             });
 
             // Update queue item status
-            await supabase
-                .from('message_queue')
-                .update({
-                    processed_at: new Date().toISOString()
-                })
-                .eq('id', item.id);
+            await db.query(
+                'UPDATE message_queue SET processed_at = $1 WHERE id = $2',
+                [new Date().toISOString(), item.id]
+            );
 
         } catch (error) {
             console.error('Failed to process queue item:', error);
             
             // Update queue item with error
-            await supabase
-                .from('message_queue')
-                .update({
-                    error: (error as Error).message,
-                    processed_at: new Date().toISOString()
-                })
-                .eq('id', item.id);
+            await db.query(
+                'UPDATE message_queue SET error = $1, processed_at = $2 WHERE id = $3',
+                [(error as Error).message, new Date().toISOString(), item.id]
+            );
 
             throw error;
         }

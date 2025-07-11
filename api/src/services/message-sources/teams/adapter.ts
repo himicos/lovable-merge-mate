@@ -1,6 +1,6 @@
 import { Client } from '@microsoft/microsoft-graph-client';
 import { MessageSourceInterface, MessageContent, MessageSource } from '../../message-processor/types.js';
-import { supabase } from '../../../integrations/supabase/client.js';
+import { db } from '../../database/client.js';
 
 export class TeamsAdapter implements MessageSourceInterface {
     private client: Client;
@@ -17,19 +17,18 @@ export class TeamsAdapter implements MessageSourceInterface {
     }
 
     public async connect(): Promise<void> {
-        const { data: credentials } = await supabase
-            .from('teams_connections')
-            .select('access_token')
-            .eq('user_id', this.userId)
-            .single();
+        const result = await db.query(
+            'SELECT access_token FROM teams_connections WHERE user_id = $1',
+            [this.userId]
+        );
 
-        if (!credentials) {
+        if (result.rows.length === 0) {
             throw new Error('Teams credentials not found');
         }
 
         this.client = Client.init({
             authProvider: (done) => {
-                done(null, credentials.access_token);
+                done(null, result.rows[0].access_token);
             }
         });
     }
