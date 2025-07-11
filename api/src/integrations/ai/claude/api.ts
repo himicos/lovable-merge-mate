@@ -62,7 +62,13 @@ Provide a JSON response with:
                 messages: [{ role: 'user', content: prompt }]
             });
 
-            const result = JSON.parse(response.content[0].text);
+            // Handle different content block types
+            const firstContent = response.content[0];
+            if (firstContent.type !== 'text') {
+                throw new Error('Expected text response from Claude');
+            }
+            
+            const result = JSON.parse(firstContent.text);
 
             // Map the response to our enums
             const category = this.mapCategory(result.category);

@@ -4,6 +4,8 @@ import { db } from '../database/client.js';
 import { OAuth2Client } from 'google-auth-library';
 import { redis } from '../redis/client.js';
 
+declare const process: NodeJS.Process;
+
 interface User {
     id: string;
     email: string;
@@ -156,22 +158,31 @@ export class AuthService {
     // Sign in with Google OAuth
     public async signInWithGoogle(accessToken: string): Promise<{ user: User; tokens: AuthTokens }> {
         try {
-            // Verify Google token and get user info
-            const ticket = await this.googleClient.verifyIdToken({
-                idToken: accessToken
-            });
-
-            const payload = ticket.getPayload();
-            if (!payload) {
+            // Verify Google token by calling Google's tokeninfo endpoint
+            const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${accessToken}`);
+            
+            if (!response.ok) {
                 throw new Error('Invalid Google token');
+            }
+            
+            const tokenInfo = await response.json();
+            
+            // Verify audience matches our client ID
+            if (tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID) {
+                throw new Error('Invalid token audience');
+            }
+            
+            // Verify token is not expired
+            if (tokenInfo.exp && Date.now() >= tokenInfo.exp * 1000) {
+                throw new Error('Token expired');
             }
 
             const googleUser: GoogleUserInfo = {
-                id: payload.sub,
-                email: payload.email!,
-                verified_email: payload.email_verified || false,
-                name: payload.name || '',
-                picture: payload.picture || ''
+                id: tokenInfo.sub,
+                email: tokenInfo.email,
+                verified_email: tokenInfo.email_verified === 'true',
+                name: tokenInfo.name || '',
+                picture: tokenInfo.picture || ''
             };
 
             // Check if user exists
