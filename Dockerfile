@@ -12,6 +12,9 @@ COPY . .
 # Install dependencies using the lock file
 RUN npm install
 
+# Install workspace dependencies (including devDependencies needed for build)
+RUN npm install --workspaces --include-workspace-root
+
 # Build each workspace by changing directory
 RUN cd www && npm run build
 RUN cd app && npm run build
