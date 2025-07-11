@@ -3,6 +3,13 @@ import { redis } from '../redis/client.js';
 import { ClaudeAPI } from '../../integrations/ai/claude/api.js';
 import { ElevenLabsClient } from '../../integrations/ai/voice/client.js';
 import { MessageCategory, MessageAction, MessageContent, ProcessedMessage } from './types.js';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+const supabase = createClient(
+    process.env.SUPABASE_URL || '',
+    process.env.SUPABASE_ANON_KEY || ''
+);
 
 interface ProcessorConfig {
     voice_enabled: boolean;

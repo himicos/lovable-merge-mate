@@ -1,11 +1,10 @@
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 
 interface RedisConfig {
     host: string;
     port: number;
     password?: string;
     db?: number;
-    retryDelayOnFailover?: number;
     enableReadyCheck?: boolean;
     lazyConnect?: boolean;
     maxRetriesPerRequest?: number;
@@ -20,7 +19,6 @@ class RedisClient {
             port: parseInt(process.env.REDIS_PORT || '6379'),
             password: process.env.REDIS_PASSWORD || undefined,
             db: parseInt(process.env.REDIS_DB || '0'),
-            retryDelayOnFailover: 100,
             enableReadyCheck: false,
             lazyConnect: true,
             maxRetriesPerRequest: 3,
@@ -29,7 +27,6 @@ class RedisClient {
         // If Redis URL is provided (Railway format), use it directly
         if (process.env.REDIS_URL) {
             this.client = new Redis(process.env.REDIS_URL, {
-                retryDelayOnFailover: 100,
                 enableReadyCheck: false,
                 lazyConnect: true,
                 maxRetriesPerRequest: 3,
@@ -47,7 +44,7 @@ class RedisClient {
             console.log('✅ Redis client ready');
         });
 
-        this.client.on('error', (error) => {
+        this.client.on('error', (error: any) => {
             console.error('❌ Redis connection error:', error);
         });
 
