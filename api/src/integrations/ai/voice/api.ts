@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { db } from '../../../services/database/client.js';
 
 interface VoiceResponse {
     audioUrl: string;
@@ -36,19 +37,11 @@ export class VoiceAPI {
     }
 
     private async initialize(): Promise<void> {
-        const secrets = await this.getSecrets(this.userId);
-        this.apiKey = secrets.elevenlabs_api_key;
+        this.apiKey = process.env.ELEVENLABS_API_KEY || null;
 
         if (!this.apiKey) {
-            throw new Error('ElevenLabs API key not found');
+            throw new Error('ElevenLabs API key not found in environment variables');
         }
-    }
-
-    private async getSecrets(userId: string): Promise<SecretsResponse> {
-        const { data, error } = await supabase.rpc('get_secrets', { user_id: userId });
-        if (error) throw error;
-        if (!data) throw new Error('No secrets found');
-        return data as SecretsResponse;
     }
 
     public async generateResponse(request: VoiceRequest): Promise<VoiceResponse> {
@@ -84,38 +77,22 @@ export class VoiceAPI {
     }
 
     public async saveResponse(data: ResponseData): Promise<void> {
-        const { error } = await supabase
-            .from('message_responses')
-            .insert({
-                user_id: this.userId,
-                message_id: data.messageId,
-                audio_url: data.audioUrl,
-                duration: data.duration,
-                created_at: new Date().toISOString()
-            });
-
-        if (error) throw error;
+        await db.query(`
+            INSERT INTO message_responses (user_id, message_id, audio_url, duration, created_at)
+            VALUES ($1, $2, $3, $4, $5)
+        `, [this.userId, data.messageId, data.audioUrl, data.duration, new Date().toISOString()]);
     }
 
     private async uploadToStorage(audioBuffer: Buffer, messageId: string): Promise<{ audioUrl: string; duration: number }> {
-        const filename = `${this.userId}/${messageId}.mp3`;
-        const { error: uploadError } = await supabase.storage
-            .from('voice-responses')
-            .upload(filename, audioBuffer, {
-                contentType: 'audio/mp3'
-            });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-            .from('voice-responses')
-            .getPublicUrl(filename);
-
+        // For now, return a placeholder URL - file storage can be implemented later
+        const audioUrl = `/temp/audio/${this.userId}/${messageId}.mp3`;
+        
+        // TODO: Implement proper file storage (local filesystem or cloud storage)
         // TODO: Calculate actual duration from audio buffer
         const duration = 0;
 
         return {
-            audioUrl: publicUrl,
+            audioUrl,
             duration
         };
     }

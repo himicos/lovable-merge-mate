@@ -1,7 +1,8 @@
 import { WebClient } from '@slack/web-api';
 import { MessageContent, MessageSource } from '../../message-processor/types.js';
 import type { MessageSourceInterface, MessageSourceConfig, MessageSourceMetadata, MessageFilter } from '../types.js';
-import { supabase } from '../../../integrations/supabase/client.js';
+import { supabase, isSupabaseAvailable } from '../../../integrations/supabase/client.js';
+import { db } from '../../database/client.js';
 
 export class SlackAdapter implements MessageSourceInterface {
     readonly name = 'Slack';
@@ -23,17 +24,17 @@ export class SlackAdapter implements MessageSourceInterface {
     }
 
     async connect(): Promise<void> {
-        const { data: credentials } = await supabase
-            .from('slack_connections')
-            .select('access_token')
-            .eq('user_id', this.userId)
-            .single();
+        // Try to get credentials from PostgreSQL database
+        const result = await db.query(
+            'SELECT access_token FROM slack_connections WHERE user_id = $1',
+            [this.userId]
+        );
 
-        if (!credentials) {
+        if (result.rows.length === 0) {
             throw new Error('Slack credentials not found');
         }
 
-        this.client = new WebClient(credentials.access_token);
+        this.client = new WebClient(result.rows[0].access_token);
     }
 
     async fetchMessages(filter?: MessageFilter): Promise<MessageContent[]> {
