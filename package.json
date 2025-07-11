@@ -15,7 +15,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview --port $PORT",
-    "start": "node api.js"
+    "start": "bash /start.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.17.1",
