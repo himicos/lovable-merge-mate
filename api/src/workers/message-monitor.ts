@@ -5,7 +5,7 @@ import { GmailAdapter } from '../services/message-sources/gmail/adapter.js';
 import { SlackAdapter } from '../services/message-sources/slack/adapter.js';
 import { TeamsAdapter } from '../services/message-sources/teams/adapter.js';
 import type { MessageSourceInterface } from '../services/message-processor/types.js';
-import { supabase } from '../integrations/supabase/client.js';
+import { db } from '../services/database/client.js';
 import type { MessageContent } from '../services/message-processor/types.js';
 
 interface GmailCredentials {
@@ -70,44 +70,44 @@ export class MessageMonitorWorker extends BaseWorker {
         // Initialize message processor
         // this.processor = await MessageProcessor.create(this.userId);
 
-        // Get user settings
-        const { data: settings } = await supabase
-            .from('user_settings')
-            .select('gmail_enabled, teams_enabled, slack_enabled')
-            .eq('user_id', this.userId)
-            .single();
+        // Determine which integrations are enabled by checking presence of connection records
+        // Gmail
+        const gmailConn = await db.query(
+            `SELECT access_token, refresh_token
+             FROM gmail_connections
+             WHERE user_id = $1
+             LIMIT 1`,
+            [this.userId]
+        );
 
-        if (!settings) {
-            throw new Error('User settings not found');
+        if (gmailConn.rows.length) {
+            this.sources.push(new GmailAdapter(this.userId, gmailConn.rows[0]));
         }
 
-        // Get credentials
-        const { data: credentials } = await supabase
-            .from('user_credentials')
-            .select('gmail_credentials, teams_credentials, slack_credentials')
-            .eq('user_id', this.userId)
-            .single();
+        // Slack
+        const slackConn = await db.query(
+            `SELECT access_token
+             FROM slack_connections
+             WHERE user_id = $1
+             LIMIT 1`,
+            [this.userId]
+        );
 
-        // Initialize enabled sources
-        if (settings.gmail_enabled && credentials?.gmail_credentials) {
-            this.sources.push(new GmailAdapter(
-                this.userId,
-                credentials.gmail_credentials
-            ));
+        if (slackConn.rows.length) {
+            this.sources.push(new SlackAdapter(this.userId, slackConn.rows[0]));
         }
 
-        if (settings.teams_enabled && credentials?.teams_credentials) {
-            this.sources.push(new TeamsAdapter(
-                this.userId,
-                credentials.teams_credentials
-            ));
-        }
+        // Teams
+        const teamsConn = await db.query(
+            `SELECT access_token
+             FROM teams_connections
+             WHERE user_id = $1
+             LIMIT 1`,
+            [this.userId]
+        );
 
-        if (settings.slack_enabled && credentials?.slack_credentials) {
-            this.sources.push(new SlackAdapter(
-                this.userId,
-                credentials.slack_credentials
-            ));
+        if (teamsConn.rows.length) {
+            this.sources.push(new TeamsAdapter(this.userId, teamsConn.rows[0]));
         }
     }
 
@@ -150,21 +150,18 @@ export class MessageMonitorWorker extends BaseWorker {
     }
 
     private async enqueueMessage(message: MessageContent): Promise<void> {
-        const { error } = await supabase
-            .from('message_queue')
-            .insert({
-                user_id: this.userId,
-                message_id: message.id,
-                source: message.source,
-                sender: message.sender,
-                subject: message.subject,
-                content: message.content,
-                timestamp: message.timestamp,
-                raw_data: message.raw,
-                status: 'pending',
-                created_at: new Date().toISOString()
-            });
-
-        if (error) throw error;
+        await db.query(
+            `INSERT INTO message_queue (user_id, message_id, source, sender, subject, content, payload, status, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', NOW())`,
+            [
+                this.userId,
+                message.id,
+                message.source,
+                message.sender,
+                message.subject,
+                message.content,
+                JSON.stringify(message.raw ?? message)
+            ]
+        );
     }
 }

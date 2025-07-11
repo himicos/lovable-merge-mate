@@ -1,4 +1,5 @@
-import { supabase } from '../../integrations/supabase/client.js';
+// Switched from Supabase to direct Postgres queries via the shared database client
+import { db } from '../database/client.js';
 import type { MessageContent } from '../message-processor/types.js';
 import type { QueueItem, QueueOptions } from './types.js';
 
@@ -48,22 +49,22 @@ export class MessageQueue {
             Date.now() + visibilityTimeout * 1000
         ).toISOString();
 
-        const { data, error } = await supabase
-            .from('message_queue')
-            .insert({
-                user_id: userId,
-                message_id: message.id,
-                source: message.source,
+        const result = await db.query(
+            `INSERT INTO message_queue (user_id, message_id, source, priority, max_retries, visible_after, payload)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             RETURNING id`,
+            [
+                userId,
+                message.id,
+                message.source,
                 priority,
-                max_retries: maxRetries,
-                visible_after: visibleAfter,
-                payload: message
-            })
-            .select('id')
-            .single();
+                maxRetries,
+                visibleAfter,
+                JSON.stringify(message)
+            ]
+        );
 
-        if (error) throw error;
-        return data.id;
+        return result.rows[0].id as string;
     }
 
     async processQueue(): Promise<void> {
@@ -71,15 +72,16 @@ export class MessageQueue {
 
         this.isProcessing = true;
         try {
-            const { data: items } = await supabase
-                .from('message_queue')
-                .select('*')
-                .eq('status', 'pending')
-                .order('priority', { ascending: false })
-                .order('created_at', { ascending: true })
-                .limit(10);
+            const { rows: items } = await db.query(
+                `SELECT *
+                 FROM message_queue
+                 WHERE status = 'pending'
+                   AND visible_after <= NOW()
+                 ORDER BY priority DESC, created_at ASC
+                 LIMIT 10`
+            );
 
-            if (!items?.length) return;
+            if (!items.length) return;
 
             for (const item of items) {
                 try {
@@ -105,14 +107,14 @@ export class MessageQueue {
         status: QueueItem['status'],
         error?: string
     ): Promise<void> {
-        await supabase
-            .from('message_queue')
-            .update({
-                status,
-                error,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', id);
+        await db.query(
+            `UPDATE message_queue
+             SET status = $1,
+                 error = $2,
+                 updated_at = NOW()
+             WHERE id = $3`,
+            [status, error ?? null, id]
+        );
     }
 
     private updateMetrics(processingTime: number, success: boolean): void {
