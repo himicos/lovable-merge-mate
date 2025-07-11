@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Lovable Merge Mate DB",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "lovable_merge_mate",
+      "Username": "postgres",
+      "Password": "password",
+      "SSLMode": "prefer",
+      "Comment": "Local development database"
+    }
+  }
+} 

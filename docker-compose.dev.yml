@@ -1,24 +1,29 @@
 version: '3.8'
 
 services:
+  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: lovable-postgres
     environment:
       POSTGRES_DB: lovable_merge_mate
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/migrations:/docker-entrypoint-initdb.d
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lovable_merge_mate"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - lovable-network
 
+  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: lovable-redis
@@ -32,19 +37,42 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - lovable-network
 
-  # Optional: Redis Commander for Redis GUI
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: lovable-redis-commander
-    environment:
-      REDIS_HOSTS: local:redis:6379
-    ports:
-      - "8082:8081"
+  # Database Migration Service
+  migrate:
+    image: postgres:15-alpine
+    container_name: lovable-migrate
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: lovable_merge_mate
+      PGUSER: postgres
+      PGPASSWORD: password
+    volumes:
+      - ./database/migrations:/migrations:ro
+    command: >
+      sh -c "
+        echo 'Waiting for PostgreSQL to be ready...' &&
+        sleep 5 &&
+        echo 'Running database migrations...' &&
+        for file in /migrations/*.sql; do
+          if [ -f \"$$file\" ]; then
+            echo \"Executing: $$file\" &&
+            psql -f \"$$file\" || exit 1
+          fi
+        done &&
+        echo 'Database migration completed successfully!'
+      "
+    networks:
+      - lovable-network
+    restart: "no"
 
-  # Optional: pgAdmin for PostgreSQL GUI
+  # pgAdmin for database management
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: lovable-pgadmin
@@ -54,12 +82,37 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
       - "8080:80"
-    depends_on:
-      - postgres
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+      - ./config/pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      - postgres
+    networks:
+      - lovable-network
+
+  # Redis Commander for Redis management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: lovable-redis-commander
+    environment:
+      REDIS_HOSTS: redis:lovable-redis:6379
+      HTTP_USER: admin
+      HTTP_PASSWORD: admin
+    ports:
+      - "8082:8081"
+    depends_on:
+      - redis
+    networks:
+      - lovable-network
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
-  pgadmin_data: 
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  lovable-network:
+    driver: bridge 
