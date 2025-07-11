@@ -1,0 +1,36 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "nixpacks",
+    "buildCommand": "npm ci && npm run build"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "on_failure",
+    "restartPolicyMaxRetries": 3
+  },
+  "services": [
+    {
+      "name": "lovable-merge-mate-api",
+      "source": {
+        "repo": "himicos/lovable-merge-mate"
+      },
+      "variables": {
+        "NODE_ENV": "production",
+        "PORT": "${{PORT}}",
+        "DATABASE_URL": "${{DATABASE_URL}}",
+        "REDIS_URL": "${{REDIS_URL}}",
+        "JWT_SECRET": "${{JWT_SECRET}}",
+        "REFRESH_TOKEN_SECRET": "${{REFRESH_TOKEN_SECRET}}",
+        "GOOGLE_CLIENT_ID": "${{GOOGLE_CLIENT_ID}}",
+        "GOOGLE_CLIENT_SECRET": "${{GOOGLE_CLIENT_SECRET}}",
+        "GOOGLE_REDIRECT_URI": "${{GOOGLE_REDIRECT_URI}}",
+        "CLAUDE_API_KEY": "${{CLAUDE_API_KEY}}",
+        "ELEVENLABS_API_KEY": "${{ELEVENLABS_API_KEY}}",
+        "FRONTEND_URL": "${{FRONTEND_URL}}"
+      }
+    }
+  ]
+} 

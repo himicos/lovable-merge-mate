@@ -1,4 +1,5 @@
-import { supabase } from '../../integrations/supabase/client.js';
+import { db } from '../database/client.js';
+import { redis } from '../redis/client.js';
 import { ClaudeAPI } from '../../integrations/ai/claude/api.js';
 import { ElevenLabsClient } from '../../integrations/ai/voice/client.js';
 import { MessageCategory, MessageAction, MessageContent, ProcessedMessage } from './types.js';

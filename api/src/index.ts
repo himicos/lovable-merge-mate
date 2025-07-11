@@ -5,10 +5,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { GmailService } from './integrations/messaging/gmail/service.js';
 import { QueueProcessor } from './services/queue/processor.js';
-import { supabase } from './integrations/supabase/client.js';
+import { db } from './services/database/client.js';
+import { redis } from './services/redis/client.js';
 import { MessageContent } from './services/message-processor/types.js';
 import { gmailRouter } from './routes/gmail.js';
 import { visionRouter } from './routes/vision.js';
+import { authRoutes } from './routes/auth.routes.js';
 import bodyParser from 'body-parser';
 import { SseManager } from './services/sse.js';
 
@@ -19,6 +21,29 @@ app.use(cors({
     : ['http://localhost:5173', 'http://localhost:3000', 'https://lovable-merge-mate.onrender.com'],
   credentials: true
 }));
+
+// Test database and redis connections on startup
+async function initializeConnections() {
+  try {
+    const dbHealth = await db.healthCheck();
+    const redisHealth = await redis.healthCheck();
+    
+    if (!dbHealth) {
+      console.error('❌ Database health check failed');
+      process.exit(1);
+    }
+    
+    if (!redisHealth) {
+      console.error('❌ Redis health check failed');
+      process.exit(1);
+    }
+    
+    console.log('✅ All database connections initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize database connections:', error);
+    process.exit(1);
+  }
+}
 app.use(express.json());
 app.use('/api/vision', bodyParser.raw({ limit: '5mb', type: () => true }));
 
@@ -41,8 +66,28 @@ app.get('*', (req, res, next) => {
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok' });
+app.get('/health', async (req, res) => {
+  try {
+    const dbHealth = await db.healthCheck();
+    const redisHealth = await redis.healthCheck();
+    
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      database: dbHealth ? 'connected' : 'disconnected',
+      redis: redisHealth ? 'connected' : 'disconnected',
+      services: {
+        database: dbHealth,
+        redis: redisHealth
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'ERROR', 
+      timestamp: new Date().toISOString(),
+      error: 'Health check failed'
+    });
+  }
 });
 
 // Supabase Auth callback
@@ -51,7 +96,10 @@ app.get('/auth/callback', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-// Gmail routes
+// Auth routes
+app.use('/api/auth', authRoutes);
+
+// Gmail routes  
 app.use('/api/gmail', gmailRouter);
 
 // Vision routes
@@ -68,15 +116,16 @@ app.post('/webhook/gmail', async (req, res) => {
         }
 
         // Find the Gmail connection for this email
-        const { data: connection } = await supabase
-            .from('gmail_connections')
-            .select('user_id')
-            .eq('email', data.emailAddress)
-            .single();
+        const result = await db.query(
+            'SELECT user_id FROM gmail_connections WHERE email = $1',
+            [data.emailAddress]
+        );
 
-        if (!connection) {
+        if (result.rows.length === 0) {
             throw new Error('No Gmail connection found for email');
         }
+
+        const connection = result.rows[0];
 
         // Get messages using Gmail API
         const gmailService = await GmailService.create(connection.user_id);
@@ -119,6 +168,29 @@ app.post('/webhook/gmail', async (req, res) => {
 });
 
 const port = process.env.PORT || 13337;
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+
+// Initialize connections before starting server
+initializeConnections().then(() => {
+  app.listen(port, () => {
+    console.log(`🚀 Server running on port ${port}`);
+    console.log(`📊 Health check available at http://localhost:${port}/health`);
+  });
+}).catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  await db.close();
+  await redis.close();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, shutting down gracefully');
+  await db.close();
+  await redis.close();
+  process.exit(0);
 });

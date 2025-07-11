@@ -1,6 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+// Legacy Supabase client - now replaced with custom auth service
+// Import the new auth service instead:
+// import { authService } from './auth.service';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+console.warn('This file is deprecated. Use auth.service.ts instead.');
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = null; // Placeholder to prevent breaking existing imports

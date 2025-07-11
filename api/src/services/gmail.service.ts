@@ -1,6 +1,6 @@
 import { OAuth2Client, Credentials } from 'google-auth-library';
 import { google, gmail_v1, oauth2_v2 } from 'googleapis';
-import { supabase } from '../integrations/supabase/client.js';
+import { db } from './database/client.js';
 
 interface TokenData {
     access_token: string;
@@ -56,18 +56,17 @@ export class GmailService {
     }
 
     private async loadTokens(userId: string): Promise<void> {
-        const { data: connection } = await supabase
-            .from('gmail_connections')
-            .select('tokens')
-            .eq('user_id', userId)
-            .single();
+        const result = await db.query(
+            'SELECT access_token, refresh_token, expires_at FROM gmail_connections WHERE user_id = $1',
+            [userId]
+        );
 
-        if (connection?.tokens) {
-            const tokens = connection.tokens as TokenData;
+        if (result.rows.length > 0) {
+            const connection = result.rows[0];
             this.oauth2Client.setCredentials({
-                access_token: tokens.access_token,
-                refresh_token: tokens.refresh_token,
-                expiry_date: Date.now() + tokens.expires_in * 1000,
+                access_token: connection.access_token,
+                refresh_token: connection.refresh_token,
+                expiry_date: connection.expires_at ? new Date(connection.expires_at).getTime() : Date.now() + 3600000,
             });
         }
     }
@@ -90,27 +89,38 @@ export class GmailService {
 
         const { data: profile } = await this.oauth2.userinfo.get() as { data: UserProfile };
 
-        await supabase.from('gmail_connections').upsert({
-            user_id: userId,
-            email: profile.email,
-            name: profile.name,
-            tokens: {
-                access_token: tokens.access_token,
-                refresh_token: tokens.refresh_token,
-                expires_in: tokens.expiry_date ? Math.floor((tokens.expiry_date - Date.now()) / 1000) : 3600,
-            },
-        });
+        await db.query(`
+            INSERT INTO gmail_connections (user_id, email, access_token, refresh_token, expires_at)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (user_id, email) 
+            DO UPDATE SET 
+                access_token = $3,
+                refresh_token = $4,
+                expires_at = $5,
+                updated_at = NOW()
+        `, [
+            userId,
+            profile.email,
+            tokens.access_token,
+            tokens.refresh_token,
+            tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null
+        ]);
     }
 
     public async refreshTokens(userId: string): Promise<void> {
-        const { data: connection } = await supabase
-            .from('gmail_connections')
-            .select('tokens')
-            .eq('user_id', userId)
-            .single();
+        const result = await db.query(
+            'SELECT access_token, refresh_token, expires_at FROM gmail_connections WHERE user_id = $1',
+            [userId]
+        );
 
-        if (connection?.tokens) {
-            const tokens = connection.tokens as TokenData;
+        if (result.rows.length > 0) {
+            const connection = result.rows[0];
+            const tokens = {
+                access_token: connection.access_token,
+                refresh_token: connection.refresh_token,
+                expires_in: connection.expires_at ? 
+                    Math.floor((new Date(connection.expires_at).getTime() - Date.now()) / 1000) : 3600
+            } as TokenData;
             const response = await fetch('https://oauth2.googleapis.com/token', {
                 method: 'POST',
                 headers: {
@@ -136,14 +146,15 @@ export class GmailService {
                 token_type: 'Bearer',
             };
 
-            await supabase.from('gmail_connections').upsert({
-                user_id: userId,
-                tokens: {
-                    access_token: credentials.access_token,
-                    expires_in: newTokens.expires_in,
-                    refresh_token: tokens.refresh_token,
-                },
-            });
+            await db.query(`
+                UPDATE gmail_connections 
+                SET access_token = $1, expires_at = $2, updated_at = NOW()
+                WHERE user_id = $3
+            `, [
+                credentials.access_token,
+                new Date(credentials.expiry_date || Date.now() + (newTokens.expires_in * 1000)).toISOString(),
+                userId
+            ]);
 
             this.oauth2Client.setCredentials(credentials);
         }

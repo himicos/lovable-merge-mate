@@ -1,14 +1,11 @@
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
-import { toast } from "@/hooks/use-toast";
-import { useNavigate, useLocation } from "react-router-dom";
-
-import { supabase } from '@/services/auth';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { authService, User } from '../services/auth.service';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useToast } from '../hooks/use-toast';
 
 type AuthContextType = {
   user: User | null;
-  supabase: SupabaseClient;
   signIn: (email: string, password: string) => Promise<{
     error: Error | null;
     data: any | null;
@@ -29,51 +26,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Check active session
     const checkSession = async () => {
       try {
-        // Get the current session
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        // Handle auth callback if we're on the callback page
-        if (location.pathname === '/auth/callback') {
-          if (error) {
-            console.error('Auth callback error:', error);
-            throw error;
-          }
-          if (session) {
-            console.log('Auth callback successful');
-            navigate('/');
-            return;
-          }
-        }
-
-        // Handle session state
-        if (error) {
-          console.error('Session check error:', error);
-          return;
-        }
-        
-        if (session?.user) {
-          console.log('Active session found:', {
-            id: session.user.id,
-            email: session.user.email,
-            metadata: session.user.user_metadata
-          });
-          setUser(session.user);
-          
-          // If we're on the login page with an active session, redirect to home
-          if (location.pathname === '/login') {
-            navigate('/');
+        if (authService.isAuthenticated()) {
+          // Try to get current user
+          try {
+            const user = await authService.getCurrentUser();
+            console.log('Active session found:', {
+              id: user.id,
+              email: user.email,
+              email_verified: user.email_verified
+            });
+            setUser(user);
+            
+            // If we're on the login page with an active session, redirect to home
+            if (location.pathname === '/login') {
+              navigate('/');
+            }
+          } catch (error) {
+            console.error('Failed to get current user:', error);
+            setUser(null);
+            // If we're not on login page, redirect to login
+            if (location.pathname !== '/login') {
+              navigate('/login');
+            }
           }
         } else {
           console.log('No active session');
           setUser(null);
           
-          // If we're not on login or callback page and have no session, redirect to login
-          if (!['/login', '/auth/callback'].includes(location.pathname)) {
+          // If we're not on login page, redirect to login
+          if (location.pathname !== '/login') {
             navigate('/login');
           }
         }
@@ -91,71 +78,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     checkSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, {
-        user: session?.user ? {
-          id: session.user.id,
-          email: session.user.email,
-          metadata: session.user.user_metadata
-        } : null
-      });
-
-      if (event === 'SIGNED_IN') {
-        setUser(session?.user || null);
-        if (location.pathname === '/login' || location.pathname === '/auth/callback') {
-          navigate('/');
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        if (location.pathname !== '/login') {
-          navigate('/login');
-        }
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, toast]);
 
   const signInWithGoogle = async () => {
     try {
       console.log("Starting Google sign in...");
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: 'email profile',
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
-        }
-      });
-      
-      if (error) {
-        console.error("Google sign in error:", error);
-        toast({
-          title: "Authentication Error",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (data?.url) {
-        console.log("Redirecting to:", data.url);
-        window.location.href = data.url;
-      } else {
-        console.error("No redirect URL received");
-        toast({
-          title: "Authentication Error",
-          description: "Failed to start Google sign in",
-          variant: "destructive",
-        });
-      }
+      await authService.signInWithGoogle();
     } catch (error) {
       console.error("Google sign in exception:", error);
       toast({
@@ -169,11 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       console.log("Signing out...");
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Sign out error:", error);
-        throw error;
-      }
+      await authService.signOut();
       console.log("Sign out successful");
       setUser(null);
       navigate("/login");
@@ -191,16 +115,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signIn = async (email: string, password: string) => {
+    try {
+      const result = await authService.signIn(email, password);
+      setUser(result.user);
+      return { data: result, error: null };
+    } catch (error: any) {
+      return { data: null, error: { message: error.message } };
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      const result = await authService.signUp(email, password);
+      setUser(result.user);
+      return { data: result, error: null };
+    } catch (error: any) {
+      return { data: null, error: { message: error.message } };
+    }
+  };
+
   const value = {
     user,
-    supabase,
-    signIn: (email: string, password: string) => supabase.auth.signInWithPassword({ email, password }),
-    signUp: (email: string, password: string) => 
-      supabase.auth.signUp({ 
-        email, 
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
-      }),
+    signIn,
+    signUp,
     signInWithGoogle,
     signOut,
     loading,

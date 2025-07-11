@@ -1,69 +1,312 @@
-# Welcome to your Lovable project
+# Lovable Merge Mate
 
-## Project info
+A complete email and messaging management system with AI-powered processing capabilities, now fully migrated to Railway with custom authentication infrastructure.
 
-**URL**: https://lovable.dev/projects/8063cac0-0d07-4302-bea9-973f93e12e50
+## 🚀 **Migration Complete: Supabase → Railway + PostgreSQL + Redis**
 
-## How can I edit this code?
+This system has been completely migrated from Supabase to a custom infrastructure running on Railway with:
+- **PostgreSQL** for data storage
+- **Redis** for session management and caching  
+- **Custom JWT authentication** system
+- **Ready for Railway deployment**
 
-There are several ways of editing your application.
+## 🏗️ **Architecture**
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/8063cac0-0d07-4302-bea9-973f93e12e50) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   API Server    │    │   Database      │
+│   React + Vite  │◄──►│   Express + TS  │◄──►│   PostgreSQL    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                               │
+                               ▼
+                       ┌─────────────────┐
+                       │     Redis       │
+                       │  Session Cache  │
+                       └─────────────────┘
 ```
 
-**Edit a file directly in GitHub**
+## 📁 **Project Structure**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+lovable-merge-mate/
+├── api/                    # Backend API (Express + TypeScript)
+│   ├── src/
+│   │   ├── services/
+│   │   │   ├── auth/       # JWT Authentication
+│   │   │   ├── database/   # PostgreSQL client
+│   │   │   └── redis/      # Redis client
+│   │   ├── routes/         # API routes
+│   │   └── middleware/     # Auth middleware
+├── app/                    # Frontend (React + Vite)
+│   ├── services/           # Auth service (JWT-based)
+│   ├── context/            # Auth context
+│   └── components/         # UI components
+├── database/               # Database migrations
+│   └── migrations/         # SQL migration files
+├── scripts/                # Setup scripts
+│   ├── setup-dev.sh       # Local development setup
+│   └── deploy-railway.sh  # Railway deployment
+├── docker-compose.dev.yml # Local development stack
+└── railway.json           # Railway deployment config
+```
 
-**Use GitHub Codespaces**
+## 🛠️ **Local Development Setup**
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Prerequisites
+- **Node.js** 18+ 
+- **Docker** & **Docker Compose**
+- **Git**
 
-## What technologies are used for this project?
+### Quick Start
 
-This project is built with .
+1. **Clone and setup:**
+   ```bash
+   git clone https://github.com/himicos/lovable-merge-mate.git
+   cd lovable-merge-mate
+   chmod +x scripts/setup-dev.sh
+   ./scripts/setup-dev.sh
+   ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. **Update environment variables:**
+   Edit `.env` file with your Google OAuth credentials:
+   ```env
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
+   ```
 
-## How can I deploy this project?
+3. **Start development servers:**
+   ```bash
+   # Terminal 1: API Server
+   cd api && npm run dev
+   
+   # Terminal 2: Frontend
+   cd app && npm run dev
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/8063cac0-0d07-4302-bea9-973f93e12e50) and click on Share -> Publish.
+4. **Access the application:**
+   - **Frontend:** http://localhost:5173
+   - **API:** http://localhost:13337
+   - **pgAdmin:** http://localhost:8080 (admin@lovable.com / admin)
+   - **Redis Commander:** http://localhost:8082
 
-## I want to use a custom domain - is that possible?
+## 🚀 **Railway Deployment**
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+### Prerequisites
+- **Railway CLI:** `npm install -g @railway/cli`
+- **Railway Account:** [railway.app](https://railway.app)
+
+### Deploy Steps
+
+1. **Login to Railway:**
+   ```bash
+   railway login
+   ```
+
+2. **Create services:**
+   ```bash
+   # Create PostgreSQL service
+   railway add --service postgresql
+   
+   # Create Redis service  
+   railway add --service redis
+   ```
+
+3. **Set environment variables in Railway dashboard:**
+   ```env
+   NODE_ENV=production
+   JWT_SECRET=your-super-secure-jwt-secret
+   REFRESH_TOKEN_SECRET=your-super-secure-refresh-secret
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
+   GOOGLE_REDIRECT_URI=https://your-domain.railway.app/api/auth/google/callback
+   CLAUDE_API_KEY=your-claude-api-key (optional)
+   ELEVENLABS_API_KEY=your-elevenlabs-api-key (optional)
+   ```
+
+4. **Deploy:**
+   ```bash
+   ./scripts/deploy-railway.sh
+   ```
+
+5. **Run database migrations:**
+   ```bash
+   railway run --service=postgresql psql -f database/migrations/001_initial_schema.sql
+   ```
+
+## 🔐 **Authentication System**
+
+### JWT-Based Authentication
+- **Access Tokens:** 15-minute expiry
+- **Refresh Tokens:** 7-day expiry  
+- **Secure Storage:** Redis for session management
+- **Auto-refresh:** Frontend automatically refreshes expired tokens
+
+### Supported Authentication Methods
+- ✅ Email/Password
+- ✅ Google OAuth
+- 🔄 Microsoft OAuth (planned)
+- 🔄 GitHub OAuth (planned)
+
+### API Endpoints
+```
+POST /api/auth/signup          # Sign up with email/password
+POST /api/auth/signin          # Sign in with email/password  
+POST /api/auth/google          # Google OAuth
+POST /api/auth/refresh         # Refresh access token
+POST /api/auth/signout         # Sign out
+GET  /api/auth/me             # Get current user
+```
+
+## 📊 **Database Schema**
+
+The system uses PostgreSQL with the following key tables:
+
+- **`users`** - User accounts
+- **`user_auth_providers`** - OAuth provider connections  
+- **`gmail_connections`** - Gmail integration data
+- **`slack_connections`** - Slack integration data
+- **`teams_connections`** - Microsoft Teams integration data
+- **`message_queue`** - Message processing queue
+- **`processed_messages`** - AI-processed messages
+- **`user_settings`** - User preferences
+
+## 🔧 **Environment Variables**
+
+### Required for Production
+```env
+# Database
+DATABASE_URL=postgresql://...
+REDIS_URL=redis://...
+
+# Authentication  
+JWT_SECRET=your-secure-secret
+REFRESH_TOKEN_SECRET=your-secure-secret
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_REDIRECT_URI=https://your-domain/api/auth/google/callback
+```
+
+### Optional
+```env
+# AI Services
+CLAUDE_API_KEY=your-claude-key
+ELEVENLABS_API_KEY=your-elevenlabs-key
+
+# Monitoring
+SENTRY_DSN=your-sentry-dsn
+```
+
+## 📚 **API Documentation**
+
+### Health Check
+```bash
+GET /health
+# Returns system status including database and Redis connectivity
+```
+
+### Authentication
+```bash
+# Sign up
+POST /api/auth/signup
+Content-Type: application/json
+{
+  "email": "user@example.com",
+  "password": "secure-password"
+}
+
+# Sign in  
+POST /api/auth/signin
+Content-Type: application/json
+{
+  "email": "user@example.com", 
+  "password": "secure-password"
+}
+
+# Authenticated requests
+GET /api/auth/me
+Authorization: Bearer <access-token>
+```
+
+## 🧪 **Testing**
+
+```bash
+# Install dependencies
+npm install
+
+# Run API tests
+cd api && npm test
+
+# Run frontend tests  
+cd app && npm test
+
+# Run e2e tests
+npm run test:e2e
+```
+
+## 📈 **Monitoring & Logs**
+
+### Railway Deployment
+- **Logs:** `railway logs`
+- **Metrics:** Railway dashboard
+- **Health:** `/health` endpoint
+
+### Local Development
+- **API Logs:** Console output in terminal
+- **Database:** pgAdmin at http://localhost:8080
+- **Redis:** Redis Commander at http://localhost:8082
+
+## 🚨 **Troubleshooting**
+
+### Common Issues
+
+**Database Connection Failed:**
+```bash
+# Check DATABASE_URL format
+echo $DATABASE_URL
+# Should be: postgresql://user:pass@host:port/db
+```
+
+**Redis Connection Failed:**
+```bash  
+# Check Redis URL
+echo $REDIS_URL
+# Should be: redis://user:pass@host:port
+```
+
+**Authentication Not Working:**
+- Verify JWT_SECRET is set
+- Check Google OAuth credentials
+- Ensure CORS origins are configured
+
+### Reset Development Environment
+```bash
+# Stop and remove containers
+docker-compose -f docker-compose.dev.yml down -v
+
+# Restart setup
+./scripts/setup-dev.sh
+```
+
+## 🤝 **Contributing**
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 **License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙋‍♂️ **Support**
+
+- **Issues:** [GitHub Issues](https://github.com/himicos/lovable-merge-mate/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/himicos/lovable-merge-mate/discussions)
+- **Email:** support@lovable.dev
+
+---
+
+**✨ Ready for Railway deployment with custom authentication infrastructure!** 🚀
