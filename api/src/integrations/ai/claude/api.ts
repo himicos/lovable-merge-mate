@@ -23,18 +23,14 @@ export class ClaudeAPI {
     }
 
     private async initialize(): Promise<void> {
-        const { data: settings } = await supabase
-            .from('user_settings')
-            .select('claude_api_key')
-            .eq('user_id', this.userId)
-            .single();
+        const claudeApiKey = process.env.CLAUDE_API_KEY;
 
-        if (!settings?.claude_api_key) {
-            throw new Error('Claude API key not found in user settings');
+        if (!claudeApiKey) {
+            throw new Error('Claude API key not found in environment variables');
         }
 
         this.client = new Anthropic({
-            apiKey: settings.claude_api_key
+            apiKey: claudeApiKey
         });
     }
 

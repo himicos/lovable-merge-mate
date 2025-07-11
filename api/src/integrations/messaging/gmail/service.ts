@@ -1,5 +1,6 @@
 import { OAuth2Client } from 'google-auth-library';
 import { createOAuth2Client, getAuthUrl, getGmailService } from './client.js';
+import { db } from '../../services/database/client.js';
 
 export class GmailService {
     private auth: OAuth2Client | null = null;
@@ -21,15 +22,14 @@ export class GmailService {
             this.auth = createOAuth2Client();
         }
 
-        const { data: connection } = await supabase
-            .from('gmail_connections')
-            .select('refresh_token')
-            .eq('user_id', this.userId)
-            .single();
+        const result = await db.query(
+            'SELECT refresh_token FROM gmail_connections WHERE user_id = $1',
+            [this.userId]
+        );
 
-        if (connection?.refresh_token) {
+        if (result.rows.length > 0 && result.rows[0].refresh_token) {
             this.auth.setCredentials({
-                refresh_token: connection.refresh_token
+                refresh_token: result.rows[0].refresh_token
             });
         }
     }
@@ -49,13 +49,12 @@ export class GmailService {
         this.auth.setCredentials(tokens);
 
         // Store refresh token
-        await supabase
-            .from('gmail_connections')
-            .upsert({
-                user_id: userId,
-                refresh_token: tokens.refresh_token,
-                updated_at: new Date().toISOString()
-            });
+        await db.query(`
+            INSERT INTO gmail_connections (user_id, refresh_token, updated_at)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (user_id) 
+            DO UPDATE SET refresh_token = $2, updated_at = $3
+        `, [userId, tokens.refresh_token, new Date().toISOString()]);
     }
 
     public async listMessages(query: string): Promise<any[]> {

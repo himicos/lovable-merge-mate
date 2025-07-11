@@ -16,11 +16,10 @@ export class ElevenLabsClient {
     }
 
     public async initializeApiKey(): Promise<void> {
-        const { data: secrets } = await supabase.from('secrets').select('elevenlabs_api_key').single();
-        this.apiKey = secrets?.elevenlabs_api_key || null;
+        this.apiKey = process.env.ELEVENLABS_API_KEY || null;
         
         if (!this.apiKey) {
-            throw new Error('ElevenLabs API key not found');
+            throw new Error('ElevenLabs API key not found in environment variables');
         }
     }
 
