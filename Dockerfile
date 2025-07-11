@@ -48,8 +48,9 @@ COPY --from=builder /node_modules /node_modules
 COPY --from=builder /www/dist /www/dist
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /api/dist /api/dist
-# Copy the API's package.json needed to run 'npm start' correctly from /api
+# Copy the API's package.json and node_modules needed for runtime
 COPY --from=builder /api/package.json /api/package.json
+COPY --from=builder /api/node_modules /api/node_modules
 
 # Copy Nginx configuration
 COPY nginx/nginx.conf /etc/nginx/nginx.conf

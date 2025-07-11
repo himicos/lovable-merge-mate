@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verby Desktop</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+
+      .container {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .logo {
+        font-size: 48px;
+        margin-bottom: 20px;
+      }
+
+      .title {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .subtitle {
+        font-size: 18px;
+        opacity: 0.8;
+        margin-bottom: 30px;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: rgba(16, 185, 129, 0.2);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 12px;
+        padding: 12px 20px;
+        margin-top: 20px;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      .features {
+        margin-top: 30px;
+        text-align: left;
+        display: inline-block;
+      }
+
+      .feature {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 14px;
+        opacity: 0.9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">🤖</div>
+      <h1 class="title">Verby Desktop</h1>
+      <p class="subtitle">AI-Powered Email Assistant</p>
+      
+      <div class="status">
+        <div class="status-dot"></div>
+        <span>Overlay Active</span>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <span>✨</span>
+          <span>Glassmorphism overlay running</span>
+        </div>
+        <div class="feature">
+          <span>📧</span>
+          <span>Email notifications ready</span>
+        </div>
+        <div class="feature">
+          <span>🤖</span>
+          <span>AI assistant enabled</span>
+        </div>
+        <div class="feature">
+          <span>🎙️</span>
+          <span>Voice input available</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Connect to main process
+      console.log('Verby Desktop loaded!');
+      
+      // Demo: simulate receiving notifications
+      setInterval(() => {
+        console.log('Checking for new emails...');
+      }, 5000);
+    </script>
+  </body>
+</html> 
