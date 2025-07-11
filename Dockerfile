@@ -9,11 +9,21 @@ FROM base AS builder
 # Copy the entire source code first
 COPY . .
 
-# Install dependencies using the lock file
+# Install all dependencies including devDependencies (needed for build)
+RUN npm ci --include=dev
+
+# Change to each workspace and install dependencies individually
+WORKDIR /www
 RUN npm install
 
-# Install workspace dependencies (including devDependencies needed for build)
-RUN npm install --workspaces --include-workspace-root
+WORKDIR /app  
+RUN npm install
+
+WORKDIR /api
+RUN npm install
+
+# Return to root directory
+WORKDIR /
 
 # Build each workspace by changing directory
 RUN cd www && npm run build
