@@ -1,6 +1,5 @@
 import { OAuth2Client } from 'google-auth-library';
 import { createOAuth2Client, getAuthUrl, getGmailService } from './client.js';
-import { supabase } from '../../supabase/client.js';
 
 export class GmailService {
     private auth: OAuth2Client | null = null;

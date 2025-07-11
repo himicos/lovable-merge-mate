@@ -1,4 +1,3 @@
-import { supabase } from '../../supabase/client.js';
 import type { TextToSpeechRequest, SpeechToTextRequest, SpeechToTextResponse, Voice } from './types.js';
 
 export class ElevenLabsClient {

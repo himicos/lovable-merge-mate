@@ -1,8 +1,6 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 
-import { supabase } from '../../supabase/client.js';
-
 interface GoogleSecrets {
     google_client_id: string;
     google_client_secret: string;
