@@ -1,4 +1,5 @@
 import { Pool, PoolClient, QueryResult } from 'pg';
+import { URL } from 'url';
 
 interface DatabaseConfig {
     host: string;
@@ -16,7 +17,33 @@ class DatabaseClient {
     private pool: Pool;
 
     constructor() {
-        const config: DatabaseConfig = {
+        const config = this.parseConfig();
+        this.pool = new Pool(config);
+    }
+
+    private parseConfig(): DatabaseConfig {
+        // Try to parse DATABASE_URL first
+        if (process.env.DATABASE_URL) {
+            try {
+                const dbUrl = new URL(process.env.DATABASE_URL);
+                return {
+                    host: dbUrl.hostname,
+                    port: parseInt(dbUrl.port) || 5432,
+                    database: dbUrl.pathname.slice(1), // Remove leading slash
+                    user: dbUrl.username,
+                    password: dbUrl.password,
+                    ssl: process.env.NODE_ENV === 'production' ? true : false,
+                    max: 20,
+                    idleTimeoutMillis: 30000,
+                    connectionTimeoutMillis: 2000,
+                };
+            } catch (error) {
+                console.warn('Failed to parse DATABASE_URL, falling back to individual environment variables:', error);
+            }
+        }
+
+        // Fallback to individual environment variables
+        return {
             host: process.env.DATABASE_HOST || 'localhost',
             port: parseInt(process.env.DATABASE_PORT || '5432'),
             database: process.env.DATABASE_NAME || 'lovable_merge_mate',
@@ -27,8 +54,6 @@ class DatabaseClient {
             idleTimeoutMillis: 30000, // close idle clients after 30 seconds
             connectionTimeoutMillis: 2000, // return an error after 2 seconds if connection could not be established
         };
-
-        this.pool = new Pool(config);
 
         // Handle pool errors
         this.pool.on('error', (err) => {
@@ -47,7 +72,7 @@ class DatabaseClient {
             console.log('✅ Database connection established successfully');
         } catch (error) {
             console.error('❌ Failed to connect to database:', error);
-            throw error;
+            // Don't throw error in constructor to allow graceful startup
         }
     }
 
