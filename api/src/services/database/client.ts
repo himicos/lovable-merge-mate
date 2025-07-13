@@ -32,7 +32,7 @@ class DatabaseClient {
                     database: dbUrl.pathname.slice(1), // Remove leading slash
                     user: dbUrl.username,
                     password: dbUrl.password,
-                    ssl: process.env.NODE_ENV === 'production' ? true : false,
+                    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
                     max: 20,
                     idleTimeoutMillis: 30000,
                     connectionTimeoutMillis: 2000,
@@ -49,7 +49,7 @@ class DatabaseClient {
             database: process.env.DATABASE_NAME || 'lovable_merge_mate',
             user: process.env.DATABASE_USER || 'postgres',
             password: process.env.DATABASE_PASSWORD || '',
-            ssl: process.env.NODE_ENV === 'production' ? true : false,
+            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
             max: 20, // maximum number of connections in the pool
             idleTimeoutMillis: 30000, // close idle clients after 30 seconds
             connectionTimeoutMillis: 2000, // return an error after 2 seconds if connection could not be established
