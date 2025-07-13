@@ -69,7 +69,7 @@ app.use('/api/vision', bodyParser.raw({ limit: '5mb', type: () => true }));
 // Serve static frontend files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const frontendPath = path.resolve(__dirname, '../../www/dist');
+const frontendPath = path.resolve(__dirname, '../../app/dist');
 console.log('Serving frontend from:', frontendPath);
 app.use(express.static(frontendPath));
 
@@ -174,9 +174,9 @@ app.get('/auth/callback', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-// SPA fallback - THIS MUST BE LAST
+// Catch-all handler for SPA routing - must be after API routes but before server start
 app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 const port = process.env.PORT || 13337;
