@@ -23,7 +23,7 @@ class RedisClient {
         
         // Railway-specific Redis configuration for TLS connections
         if (process.env.REDIS_URL && isRailway) {
-            console.log('🚂 Configuring Redis for Railway with TLS support');
+            console.log('🚂 Configuring Redis for Railway with IPv6 and TLS support');
             
             // Parse Railway Redis URL to determine if it's TLS
             const url = new URL(process.env.REDIS_URL);
@@ -33,6 +33,7 @@ class RedisClient {
                 enableReadyCheck: false,
                 lazyConnect: true,
                 maxRetriesPerRequest: 3,
+                family: 0, // Enable dual stack (IPv4 + IPv6) for Railway private networking
                 // Configure TLS for Railway Redis
                 tls: isTls ? {
                     rejectUnauthorized: false, // Allow self-signed certificates
