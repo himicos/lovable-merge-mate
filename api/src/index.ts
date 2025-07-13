@@ -54,17 +54,6 @@ const frontendPath = path.resolve(__dirname, '../../www/dist');
 console.log('Serving frontend from:', frontendPath);
 app.use(express.static(frontendPath));
 
-// SPA fallback
-app.get('*', (req, res, next) => {
-    // Skip API routes
-    if (req.path.startsWith('/api/') || 
-        req.path.startsWith('/auth/') || 
-        req.path.startsWith('/webhook/')) {
-        return next();
-    }
-    res.sendFile(path.join(frontendPath, 'index.html'));
-});
-
 // Health check endpoint
 app.get('/health', async (req, res) => {
   try {
@@ -88,12 +77,6 @@ app.get('/health', async (req, res) => {
       error: 'Health check failed'
     });
   }
-});
-
-// Supabase Auth callback
-app.get('/auth/callback', (req, res) => {
-    // Just serve the SPA, Supabase Auth will handle the rest
-    res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // Auth routes
@@ -165,6 +148,16 @@ app.post('/webhook/gmail', async (req, res) => {
         console.error('Error processing Gmail webhook:', error);
         res.status(500).json({ error: (error as Error).message });
     }
+});
+
+// Auth callback (for OAuth flows)
+app.get('/auth/callback', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// SPA fallback - THIS MUST BE LAST
+app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 const port = process.env.PORT || 13337;

@@ -1,16 +1,23 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { supabase } from '../../auth/client.js';
+import { db } from '../../services/database/client.js';
 
 let anthropicClient: Anthropic | null = null;
 
 export const initClaudeClient = async () => {
     try {
-        // Get the API key from Supabase auth user's metadata
-        const { data: { user } } = await supabase.auth.getUser();
-        const claudeApiKey = user?.user_metadata?.claude_api_key;
+        // Get the API key from environment variables or database
+        let claudeApiKey = process.env.CLAUDE_API_KEY;
+        
+        if (!claudeApiKey) {
+            // Fallback: try to get from database secrets table
+            const result = await db.query('SELECT claude_api_key FROM secrets LIMIT 1');
+            if (result.rows.length > 0 && result.rows[0].claude_api_key) {
+                claudeApiKey = result.rows[0].claude_api_key;
+            }
+        }
 
         if (!claudeApiKey) {
-            throw new Error('Claude API key not found in user metadata');
+            throw new Error('Claude API key not found in environment variables or database');
         }
 
         anthropicClient = new Anthropic({
@@ -71,16 +78,19 @@ export class ClaudeAPI {
     private async initialize(): Promise<void> {
         if (this.apiKey) return;
 
-        const { data, error } = await supabase
-            .from('secrets')
-            .select('claude_api_key')
-            .single();
+        // Try to get API key from environment variables first
+        this.apiKey = process.env.CLAUDE_API_KEY;
+        
+        if (!this.apiKey) {
+            // Fallback: try to get from database
+            const result = await db.query('SELECT claude_api_key FROM secrets LIMIT 1');
+            
+            if (result.rows.length === 0 || !result.rows[0]?.claude_api_key) {
+                throw new Error('Failed to get Claude API key from environment or database');
+            }
 
-        if (error || !data?.claude_api_key) {
-            throw new Error('Failed to get Claude API key');
+            this.apiKey = result.rows[0].claude_api_key;
         }
-
-        this.apiKey = data.claude_api_key;
     }
 
     async complete(

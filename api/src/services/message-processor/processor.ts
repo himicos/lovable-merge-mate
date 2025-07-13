@@ -3,13 +3,6 @@ import { redis } from '../redis/client.js';
 import { ClaudeAPI } from '../../integrations/ai/claude/api.js';
 import { ElevenLabsClient } from '../../integrations/ai/voice/client.js';
 import { MessageCategory, MessageAction, MessageContent, ProcessedMessage } from './types.js';
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client
-const supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_ANON_KEY || ''
-);
 
 interface ProcessorConfig {
     voice_enabled: boolean;
@@ -94,13 +87,32 @@ export class MessageProcessor {
             };
 
             // Save to database
-            const { error } = await supabase
-                .from('processed_messages')
-                .insert(processedMessage);
+            const query = `
+                INSERT INTO processed_messages (
+                    id, user_id, original_message_id, source, sender, subject, 
+                    content, category, action, summary, prompt, raw_data, 
+                    requires_voice_response, processed_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            `;
+            
+            const values = [
+                processedMessage.id,
+                processedMessage.user_id,
+                processedMessage.id, // original_message_id
+                processedMessage.source,
+                processedMessage.sender,
+                processedMessage.subject,
+                processedMessage.content,
+                processedMessage.category,
+                processedMessage.action,
+                processedMessage.summary,
+                processedMessage.prompt,
+                JSON.stringify(processedMessage.raw),
+                processedMessage.requires_voice_response,
+                processedMessage.processed_at
+            ];
 
-            if (error) {
-                throw new Error(`Failed to save processed message: ${error.message}`);
-            }
+            await db.query(query, values);
 
             // Generate voice response if needed
             if (processedMessage.requires_voice_response && this.voiceAPI) {
