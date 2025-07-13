@@ -24,6 +24,13 @@ class RedisClient {
         // Railway-specific Redis configuration for TLS connections
         if (process.env.REDIS_URL && isRailway) {
             console.log('🚂 Configuring Redis for Railway with IPv6 and TLS support');
+            console.log('🔍 Redis URL:', process.env.REDIS_URL?.replace(/:[^:]*@/, ':***@')); // Log URL with password masked
+            
+            // Check if Railway template wasn't interpolated
+            if (process.env.REDIS_URL.includes('${{')) {
+                console.error('❌ Railway Redis URL contains uninterpolated template variables:', process.env.REDIS_URL);
+                console.error('💡 Check that Redis service is properly linked in Railway and variables are set');
+            }
             
             // Parse Railway Redis URL to determine if it's TLS
             const url = new URL(process.env.REDIS_URL);
