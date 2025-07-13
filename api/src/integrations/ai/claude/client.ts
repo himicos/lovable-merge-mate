@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { db } from '../../services/database/client.js';
+import { db } from '../../../services/database/client.js';
 
 let anthropicClient: Anthropic | null = null;
 
@@ -79,7 +79,7 @@ export class ClaudeAPI {
         if (this.apiKey) return;
 
         // Try to get API key from environment variables first
-        this.apiKey = process.env.CLAUDE_API_KEY;
+        this.apiKey = process.env.CLAUDE_API_KEY || null;
         
         if (!this.apiKey) {
             // Fallback: try to get from database
