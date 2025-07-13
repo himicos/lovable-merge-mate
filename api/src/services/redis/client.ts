@@ -8,34 +8,67 @@ interface RedisConfig {
     enableReadyCheck?: boolean;
     lazyConnect?: boolean;
     maxRetriesPerRequest?: number;
+    tls?: {
+        rejectUnauthorized?: boolean;
+    };
 }
 
 class RedisClient {
     private client: Redis;
 
     constructor() {
-        const config: RedisConfig = {
-            host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT || '6379'),
-            password: process.env.REDIS_PASSWORD || undefined,
-            db: parseInt(process.env.REDIS_DB || '0'),
-            enableReadyCheck: false,
-            lazyConnect: true,
-            maxRetriesPerRequest: 3,
-        };
-
-        // If Redis URL is provided (Railway format), use it directly
-        if (process.env.REDIS_URL) {
+        // Determine if we're in production (Railway) or development
+        const isProduction = process.env.NODE_ENV === 'production';
+        const isRailway = process.env.RAILWAY_ENVIRONMENT_ID || process.env.REDIS_URL?.includes('railway');
+        
+        // Railway-specific Redis configuration for TLS connections
+        if (process.env.REDIS_URL && isRailway) {
+            console.log('🚂 Configuring Redis for Railway with TLS support');
+            
+            // Parse Railway Redis URL to determine if it's TLS
+            const url = new URL(process.env.REDIS_URL);
+            const isTls = url.protocol === 'rediss:' || url.hostname.includes('railway');
+            
+            this.client = new Redis(process.env.REDIS_URL, {
+                enableReadyCheck: false,
+                lazyConnect: true,
+                maxRetriesPerRequest: 3,
+                // Configure TLS for Railway Redis
+                tls: isTls ? {
+                    rejectUnauthorized: false, // Allow self-signed certificates
+                } : undefined,
+                connectTimeout: 10000,
+                commandTimeout: 5000,
+                // Add custom reconnect strategy
+                reconnectOnError: (err) => {
+                    const targetError = 'READONLY';
+                    return err.message.includes(targetError);
+                },
+            });
+        } else if (process.env.REDIS_URL) {
+            // Standard Redis URL configuration (non-Railway)
+            console.log('🔗 Configuring Redis with provided URL');
             this.client = new Redis(process.env.REDIS_URL, {
                 enableReadyCheck: false,
                 lazyConnect: true,
                 maxRetriesPerRequest: 3,
             });
         } else {
+            // Fallback to individual config parameters
+            console.log('⚙️ Configuring Redis with individual parameters');
+            const config: RedisConfig = {
+                host: process.env.REDIS_HOST || 'localhost',
+                port: parseInt(process.env.REDIS_PORT || '6379'),
+                password: process.env.REDIS_PASSWORD || undefined,
+                db: parseInt(process.env.REDIS_DB || '0'),
+                enableReadyCheck: false,
+                lazyConnect: true,
+                maxRetriesPerRequest: 3,
+            };
             this.client = new Redis(config);
         }
 
-        // Handle Redis events
+        // Handle Redis events with better logging
         this.client.on('connect', () => {
             console.log('✅ Redis connection established');
         });
@@ -45,40 +78,77 @@ class RedisClient {
         });
 
         this.client.on('error', (error: any) => {
-            console.error('❌ Redis connection error:', error);
+            console.error('❌ Redis connection error:', error.message || error);
+            
+            // Log specific Railway-related error guidance
+            if (error.message?.includes('ENOTFOUND') && error.message?.includes('railway')) {
+                console.error('💡 Railway Redis Error: Check if Redis service is linked to your app and private networking is enabled');
+            }
+            
+            if (error.message?.includes('SELF_SIGNED_CERT_IN_CHAIN')) {
+                console.error('💡 TLS Certificate Error: This should be handled automatically for Railway Redis');
+            }
         });
 
         this.client.on('close', () => {
-            console.log('Redis connection closed');
+            console.log('🔌 Redis connection closed');
         });
 
-        this.client.on('reconnecting', () => {
-            console.log('Redis reconnecting...');
+        this.client.on('reconnecting', (ms: number) => {
+            console.log(`🔄 Redis reconnecting in ${ms}ms...`);
         });
 
-        // Test connection
-        this.testConnection();
+        // Test connection only if not in CI/test environment
+        if (!process.env.CI && !process.env.NODE_ENV?.includes('test')) {
+            this.testConnection();
+        }
     }
 
     private async testConnection(): Promise<void> {
         try {
+            console.log('🧪 Testing Redis connection...');
             await this.client.ping();
             console.log('✅ Redis connection test successful');
-        } catch (error) {
-            console.error('❌ Redis connection test failed:', error);
+        } catch (error: any) {
+            console.error('❌ Redis connection test failed:', error.message || error);
+            
+            // Provide helpful debugging information
+            if (error.message?.includes('ECONNREFUSED')) {
+                console.log('💡 Redis not available - this is normal in development without local Redis');
+            } else if (error.message?.includes('ENOTFOUND')) {
+                console.log('💡 Redis hostname not found - check Railway service linking');
+            } else if (error.message?.includes('MaxRetriesPerRequestError')) {
+                console.log('💡 Redis max retries exceeded - connection may be unstable');
+            }
         }
     }
 
-    // Basic Redis operations
+    // Basic Redis operations with fallback handling
     public async get(key: string): Promise<string | null> {
-        return await this.client.get(key);
+        try {
+            return await this.client.get(key);
+        } catch (error: any) {
+            if (process.env.NODE_ENV === 'development') {
+                console.warn(`⚠️ Redis GET failed for key "${key}":`, error.message);
+                return null;
+            }
+            throw error;
+        }
     }
 
     public async set(key: string, value: string, ttl?: number): Promise<string> {
-        if (ttl) {
-            return await this.client.setex(key, ttl, value);
+        try {
+            if (ttl) {
+                return await this.client.setex(key, ttl, value);
+            }
+            return await this.client.set(key, value);
+        } catch (error: any) {
+            if (process.env.NODE_ENV === 'development') {
+                console.warn(`⚠️ Redis SET failed for key "${key}":`, error.message);
+                return 'OK'; // Fake success for development
+            }
+            throw error;
         }
-        return await this.client.set(key, value);
     }
 
     public async setex(key: string, seconds: number, value: string): Promise<string> {
@@ -186,14 +256,38 @@ class RedisClient {
         return await this.client.del(...keys);
     }
 
-    // Health check
+    // Check if Redis is available for use
+    public isAvailable(): boolean {
+        return this.client.status === 'ready' || this.client.status === 'connect';
+    }
+
+    // Graceful operation wrapper
+    private async safeOperation<T>(operation: () => Promise<T>, fallback: T, operationName: string): Promise<T> {
+        try {
+            return await operation();
+        } catch (error: any) {
+            if (process.env.NODE_ENV === 'development') {
+                console.warn(`⚠️ Redis ${operationName} failed:`, error.message);
+                return fallback;
+            }
+            throw error;
+        }
+    }
+
+    // Health check with better error handling
     public async healthCheck(): Promise<boolean> {
         try {
             const result = await this.client.ping();
             return result === 'PONG';
-        } catch (error) {
-            console.error('Redis health check failed:', error);
-            return false;
+        } catch (error: any) {
+            // Log error details but don't crash the app in development
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('⚠️ Redis health check failed (development mode):', error.message || error);
+                return false; // Return false but don't crash
+            } else {
+                console.error('❌ Redis health check failed (production):', error.message || error);
+                return false;
+            }
         }
     }
 

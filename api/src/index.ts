@@ -28,17 +28,36 @@ async function initializeConnections() {
     const dbHealth = await db.healthCheck();
     const redisHealth = await redis.healthCheck();
     
-    if (!dbHealth) {
-      console.error('❌ Database health check failed');
-      process.exit(1);
+    // In development mode, allow the app to start even if Redis is not available
+    if (process.env.NODE_ENV === 'development') {
+      if (!dbHealth) {
+        console.error('❌ Database health check failed');
+        process.exit(1);
+      }
+      
+      if (!redisHealth) {
+        console.warn('⚠️ Redis health check failed - continuing in development mode');
+        console.log('💡 Redis features will be disabled. To enable Redis, set up a local Redis server or configure REDIS_URL');
+      } else {
+        console.log('✅ Redis connection successful');
+      }
+      
+      console.log('✅ Development server initialized');
+    } else {
+      // In production, both services must be healthy
+      if (!dbHealth) {
+        console.error('❌ Database health check failed');
+        process.exit(1);
+      }
+      
+      if (!redisHealth) {
+        console.error('❌ Redis health check failed');
+        console.error('💡 Check Railway Redis service configuration and ensure it\'s linked to your app');
+        process.exit(1);
+      }
+      
+      console.log('✅ All database connections initialized successfully');
     }
-    
-    if (!redisHealth) {
-      console.error('❌ Redis health check failed');
-      process.exit(1);
-    }
-    
-    console.log('✅ All database connections initialized successfully');
   } catch (error) {
     console.error('❌ Failed to initialize database connections:', error);
     process.exit(1);
