@@ -7,7 +7,7 @@ interface DatabaseConfig {
     database: string;
     user: string;
     password: string;
-    ssl?: boolean;
+    ssl?: boolean | { rejectUnauthorized: boolean };
     max?: number;
     idleTimeoutMillis?: number;
     connectionTimeoutMillis?: number;
