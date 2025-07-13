@@ -53,7 +53,7 @@ async function initializeConnections() {
       if (!redisHealth) {
         console.error('❌ Redis health check failed');
         console.error('💡 Check Railway Redis service configuration and ensure it\'s linked to your app');
-        process.exit(1);
+        console.warn('⚠️ Starting server without Redis - some features may be limited');
       }
       
       console.log('✅ All database connections initialized successfully');
