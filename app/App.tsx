@@ -13,7 +13,7 @@ import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
 import Landing from "@/pages/Landing";
 import { useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { authService } from "@/services/auth.service";
 
 
 // Create a client outside of the component
@@ -21,11 +21,10 @@ const queryClient = new QueryClient();
 
 // Auth callback handler component
 function AuthCallback() {
-  const { supabase } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Handle the OAuth callback
+    // Handle OAuth callback (simplified for JWT auth)
     const handleAuthCallback = async () => {
       try {
         const hashParams = new URLSearchParams(
@@ -33,8 +32,6 @@ function AuthCallback() {
         );
         
         const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const expiresIn = hashParams.get('expires_in');
         const error = hashParams.get('error');
         
         if (error) {
@@ -42,28 +39,14 @@ function AuthCallback() {
           throw new Error(`Authentication error: ${error}`);
         }
         
-        if (!accessToken) {
-          console.error('No access token in callback URL');
-          throw new Error('Invalid authentication callback');
+        if (accessToken) {
+          // Handle Google OAuth callback with the JWT auth service
+          await authService.handleGoogleCallback(accessToken);
+          navigate('/', { replace: true });
+        } else {
+          // If no access token, redirect to login
+          navigate('/login', { replace: true });
         }
-        
-        // Set the session with the tokens from the URL
-        const { data: { session }, error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
-          expires_in: parseInt(expiresIn || '3600')
-        });
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          throw sessionError;
-        }
-        
-        if (!session?.user) {
-          throw new Error('No user in session after auth');
-        }
-        
-        navigate('/', { replace: true });
       } catch (error) {
         console.error('Error handling auth callback:', error);
         navigate('/login', { replace: true });
@@ -71,7 +54,7 @@ function AuthCallback() {
     };
     
     handleAuthCallback();
-  }, [supabase, navigate]);
+  }, [navigate]);
   
   return <div className="flex h-screen items-center justify-center">Processing authentication...</div>;
 }
