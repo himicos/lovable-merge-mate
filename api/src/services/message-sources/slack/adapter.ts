@@ -1,7 +1,6 @@
 import { WebClient } from '@slack/web-api';
 import { MessageContent, MessageSource } from '../../message-processor/types.js';
 import type { MessageSourceInterface, MessageSourceConfig, MessageSourceMetadata, MessageFilter } from '../types.js';
-import { supabase, isSupabaseAvailable } from '../../../integrations/supabase/client.js';
 import { db } from '../../database/client.js';
 
 export class SlackAdapter implements MessageSourceInterface {
