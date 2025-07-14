@@ -38,8 +38,90 @@ export class AuthService {
         this.refreshSecret = process.env.REFRESH_TOKEN_SECRET || 'your-default-refresh-secret';
         this.googleClient = new OAuth2Client(
             process.env.GOOGLE_CLIENT_ID,
-            process.env.GOOGLE_CLIENT_SECRET
+            process.env.GOOGLE_CLIENT_SECRET,
+            process.env.GOOGLE_REDIRECT_URI
         );
+    }
+
+    // Generate Google OAuth URL
+    public async getGoogleAuthUrl(): Promise<string> {
+        const scopes = [
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile'
+        ];
+
+        const authUrl = this.googleClient.generateAuthUrl({
+            access_type: 'offline',
+            scope: scopes,
+            include_granted_scopes: true
+        });
+
+        return authUrl;
+    }
+
+    // Handle Google OAuth callback
+    public async handleGoogleCallback(code: string): Promise<{ user: User; tokens: AuthTokens }> {
+        try {
+            // Exchange code for tokens
+            const { tokens } = await this.googleClient.getToken(code);
+            this.googleClient.setCredentials(tokens);
+
+            // Get user info from Google
+            const response = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokens.access_token}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to get user info from Google');
+            }
+            
+            const googleUser = await response.json();
+
+            // Check if user exists
+            let result = await db.query(
+                'SELECT id, email, email_verified, created_at, updated_at FROM users WHERE email = $1',
+                [googleUser.email]
+            );
+
+            let user: User;
+
+            if (result.rows.length === 0) {
+                // Create new user
+                result = await db.query(
+                    `INSERT INTO users (email, email_verified) 
+                     VALUES ($1, $2) 
+                     RETURNING id, email, email_verified, created_at, updated_at`,
+                    [googleUser.email, googleUser.verified_email || true]
+                );
+                user = result.rows[0];
+
+                // Store Google auth provider info
+                await db.query(
+                    `INSERT INTO user_auth_providers (user_id, provider, provider_id, email, access_token) 
+                     VALUES ($1, $2, $3, $4, $5)`,
+                    [user.id, 'google', googleUser.id, googleUser.email, tokens.access_token]
+                );
+            } else {
+                user = result.rows[0];
+
+                // Update or insert Google auth provider info
+                await db.query(
+                    `INSERT INTO user_auth_providers (user_id, provider, provider_id, email, access_token) 
+                     VALUES ($1, $2, $3, $4, $5)
+                     ON CONFLICT (provider, provider_id) 
+                     DO UPDATE SET access_token = $5, updated_at = NOW()`,
+                    [user.id, 'google', googleUser.id, googleUser.email, tokens.access_token]
+                );
+            }
+
+            const authTokens = this.generateTokens(user.id, user.email);
+
+            // Store refresh token in Redis
+            await redis.setex(`refresh_token:${user.id}`, 7 * 24 * 60 * 60, authTokens.refresh_token);
+
+            return { user, tokens: authTokens };
+        } catch (error) {
+            console.error('Google callback error:', error);
+            throw new Error('Failed to handle Google OAuth callback');
+        }
     }
 
     // Generate JWT tokens

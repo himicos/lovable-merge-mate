@@ -63,6 +63,47 @@ router.post('/signin', async (req: Request, res: Response) => {
     }
 });
 
+// Get Google OAuth URL
+router.get('/google/url', async (req: Request, res: Response) => {
+    try {
+        const authUrl = await authService.getGoogleAuthUrl();
+        
+        res.json({
+            url: authUrl
+        });
+    } catch (error: any) {
+        console.error('Google OAuth URL error:', error);
+        res.status(500).json({ error: 'Failed to generate Google OAuth URL' });
+    }
+});
+
+// Handle Google OAuth callback
+router.get('/google/callback', async (req: Request, res: Response) => {
+    try {
+        const { code } = req.query;
+
+        if (!code) {
+            return res.status(400).json({ error: 'Authorization code is required' });
+        }
+
+        const result = await authService.handleGoogleCallback(code as string);
+        
+        // Redirect to frontend with tokens in URL hash (for client-side handling)
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+        const redirectUrl = `${frontendUrl}/auth/callback#access_token=${result.tokens.access_token}&refresh_token=${result.tokens.refresh_token}&expires_in=${result.tokens.expires_in}`;
+        
+        res.redirect(redirectUrl);
+    } catch (error: any) {
+        console.error('Google callback error:', error);
+        
+        // Redirect to frontend with error
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+        const errorUrl = `${frontendUrl}/login?error=oauth_failed`;
+        
+        res.redirect(errorUrl);
+    }
+});
+
 // Sign in with Google
 router.post('/google', async (req: Request, res: Response) => {
     try {
