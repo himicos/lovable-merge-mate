@@ -26,6 +26,14 @@ class AuthService {
   constructor() {
     this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:13337';
     
+    // Debug environment variables
+    console.log('🔧 Auth Service Environment:', {
+      VITE_API_URL: import.meta.env.VITE_API_URL,
+      baseUrl: this.baseUrl,
+      mode: import.meta.env.MODE,
+      prod: import.meta.env.PROD
+    });
+    
     // Load tokens from localStorage on initialization
     this.accessToken = localStorage.getItem('access_token');
     this.refreshToken = localStorage.getItem('refresh_token');
