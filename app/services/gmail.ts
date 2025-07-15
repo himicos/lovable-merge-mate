@@ -5,7 +5,9 @@ export class GmailService {
   private baseUrl: string;
 
   private constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'https://www.verby.eu';
+    this.baseUrl = import.meta.env.PROD 
+      ? 'https://api.verby.eu'
+      : import.meta.env.VITE_API_URL || 'http://localhost:13337';
   }
 
   public static getInstance(): GmailService {

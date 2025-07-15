@@ -1,7 +1,9 @@
 export const GOOGLE_CONFIG = {
   clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
   clientSecret: import.meta.env.VITE_GOOGLE_CLIENT_SECRET || '',
-  redirectUri: import.meta.env.VITE_APP_URL ? `${import.meta.env.VITE_APP_URL}/auth/google/callback` : 'https://localhost:8080/auth/google/callback',
+  redirectUri: import.meta.env.PROD 
+    ? 'https://app.verby.eu/auth/google/callback'
+    : import.meta.env.VITE_APP_URL ? `${import.meta.env.VITE_APP_URL}/auth/google/callback` : 'https://localhost:8080/auth/google/callback',
   backendUrl: 'https://lovable-merge-mate.onrender.com',
   apiEndpoint: 'https://www.googleapis.com/gmail/v1',
   scopes: [

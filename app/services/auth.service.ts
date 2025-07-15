@@ -24,7 +24,10 @@ class AuthService {
   private refreshToken: string | null = null;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:13337';
+    // Use production API URL when in production mode, otherwise use environment variable or localhost
+    this.baseUrl = import.meta.env.PROD 
+      ? 'https://api.verby.eu'
+      : import.meta.env.VITE_API_URL || 'http://localhost:13337';
     
     // Debug environment variables
     console.log('🔧 Auth Service Environment:', {
